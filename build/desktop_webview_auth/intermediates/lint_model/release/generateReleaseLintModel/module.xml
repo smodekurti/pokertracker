@@ -1,0 +1,19 @@
+<lint-module
+    format="1"
+    dir="/Users/hivasu/.pub-cache/hosted/pub.dev/desktop_webview_auth-0.0.15/android"
+    name=":desktop_webview_auth"
+    type="LIBRARY"
+    maven="com.example.desktop_webview_auth:desktop_webview_auth:"
+    agpVersion="8.3.2"
+    buildFolder="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/desktop_webview_auth"
+    bootClassPath="/Users/hivasu/Library/Android/sdk/platforms/android-33/android.jar:/Users/hivasu/Library/Android/sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-33"
+    neverShrinking="true">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

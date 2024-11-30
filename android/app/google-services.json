@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "928140561021",
+    "project_id": "poker-tracker-b2659",
+    "storage_bucket": "poker-tracker-b2659.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:928140561021:android:4c0d7a8441c5353796ff14",
+        "android_client_info": {
+          "package_name": "com.example.poker_tracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "928140561021-4uv9vheiugf5u4hqkmf612l0d6r0pt2s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxDYa2vWlFULDU64jXasYd2yqf7d6t-sU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "928140561021-4uv9vheiugf5u4hqkmf612l0d6r0pt2s.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "928140561021-8ti60dt5lhd70iovbm2i2tnqp1bra9fs.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pokerTracker"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:928140561021:android:9f10f8625c1550bb96ff14",
+        "android_client_info": {
+          "package_name": "com.rajsri.poker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "928140561021-4uv9vheiugf5u4hqkmf612l0d6r0pt2s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxDYa2vWlFULDU64jXasYd2yqf7d6t-sU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "928140561021-4uv9vheiugf5u4hqkmf612l0d6r0pt2s.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "928140561021-8ti60dt5lhd70iovbm2i2tnqp1bra9fs.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pokerTracker"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,18 @@
+<lint-module
+    format="1"
+    dir="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app"
+    name=":app"
+    type="APP"
+    maven="android:app:"
+    agpVersion="8.3.2"
+    buildFolder="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/app"
+    bootClassPath="/Users/hivasu/Library/Android/sdk/platforms/android-35/android.jar:/Users/hivasu/Library/Android/sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-35">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>
