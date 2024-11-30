@@ -1,0 +1,76 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter run --dart-define=ENVIRONMENT=development --no-enable-impeller
+
+## exception
+
+StateError: Bad state: Failed to start Dart Development Service
+
+```
+#0      DartDevelopmentService.startDartDevelopmentService (package:flutter_tools/src/base/dds.dart:114:9)
+<asynchronous suspension>
+#1      FlutterDevice.connect.<anonymous closure> (package:flutter_tools/src/resident_runner.dart:295:11)
+<asynchronous suspension>
+```
+
+## flutter doctor
+
+```
+[32m[✓][39m Flutter (Channel beta, 3.27.0-0.1.pre, on macOS 15.1 24B83 darwin-arm64,
+    locale en-US)
+    [32m•[39m Flutter version 3.27.0-0.1.pre on channel beta at
+      /Users/hivasu/Documents/Vasu/Personal/Development/flutter
+    [32m•[39m Upstream repository https://github.com/flutter/flutter.git
+    [32m•[39m Framework revision 2e2c358c9b (4 weeks ago), 2024-10-22 11:02:13 -0400
+    [32m•[39m Engine revision af0f0d559c
+    [32m•[39m Dart version 3.6.0 (build 3.6.0-334.3.beta)
+    [32m•[39m DevTools version 2.40.1
+
+[31m[✗][39m Android toolchain - develop for Android devices
+    [31m✗[39m Unable to locate Android SDK.
+      Install Android Studio from:
+      https://developer.android.com/studio/index.html
+      On first launch it will assist you in installing the Android SDK
+      components.
+      (or visit https://flutter.dev/to/macos-android-setup for detailed
+      instructions).
+      If the Android SDK has been installed to a custom location, please use
+      `flutter config --android-sdk` to update to that location.
+
+
+[32m[✓][39m Xcode - develop for iOS and macOS (Xcode 16.1)
+    [32m•[39m Xcode at /Applications/Xcode.app/Contents/Developer
+    [32m•[39m Build 16B40
+    [32m•[39m CocoaPods version 1.14.3
+
+[32m[✓][39m Chrome - develop for the web
+    [32m•[39m Chrome at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+
+[33m[!][39m Android Studio (not installed)
+    [32m•[39m Android Studio not found; download from
+      https://developer.android.com/studio/index.html
+      (or visit https://flutter.dev/to/macos-android-setup for detailed
+      instructions).
+
+[32m[✓][39m VS Code (version 1.95.1)
+    [32m•[39m VS Code at /Applications/Visual Studio Code.app/Contents
+    [32m•[39m Flutter extension version 3.100.0
+
+[32m[✓][39m Connected device (4 available)
+    [32m•[39m iPhone 16 Plus (mobile)         • 5DA60176-1AB3-4424-AEDE-0B6BE271E1D6 •
+      ios            • com.apple.CoreSimulator.SimRuntime.iOS-18-1 (simulator)
+    [32m•[39m macOS (desktop)                 • macos                                •
+      darwin-arm64   • macOS 15.1 24B83 darwin-arm64
+    [32m•[39m Mac Designed for iPad (desktop) • mac-designed-for-ipad                •
+      darwin         • macOS 15.1 24B83 darwin-arm64
+    [32m•[39m Chrome (web)                    • chrome                               •
+      web-javascript • Google Chrome 130.0.6723.117
+
+[32m[✓][39m Network resources
+    [32m•[39m All expected network resources are available.
+
+[33m![39m Doctor found issues in 2 categories.
+```
