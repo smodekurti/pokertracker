@@ -6,6 +6,7 @@ import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/core/utils/ui_helpers.dart';
 import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
+import 'package:poker_tracker/features/team/providers/team_provider.dart';
 import 'package:poker_tracker/firebase_options.dart';
 import 'package:poker_tracker/core/app.dart';
 import 'package:provider/provider.dart';
@@ -37,6 +38,20 @@ void main() async {
         child: MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => AuthProvider()),
+
+            ChangeNotifierProxyProvider<AuthProvider, TeamProvider>(
+              create: (context) {
+                final auth = context.read<AuthProvider>();
+                final userId = auth.currentUser?.uid ?? '';
+                print('Creating initial TeamProvider with userId: $userId');
+                return TeamProvider(userId);
+              },
+              update: (context, authProvider, teamProvider) {
+                final userId = authProvider.currentUser?.uid ?? '';
+                print('Updating TeamProvider for userId: $userId');
+                return TeamProvider(userId);
+              },
+            ),
 
             // Player Provider - depends on PlayerRepository and AuthProvider
 
