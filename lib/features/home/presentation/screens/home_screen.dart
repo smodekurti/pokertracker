@@ -143,6 +143,15 @@ class _HomeScreenState extends State<HomeScreen> {
               const Spacer(),
               IconButton(
                 icon: const Icon(
+                  Icons.group,
+                  color: AppColors.textPrimary,
+                  size: AppSizes.iconM,
+                ),
+                onPressed: () => context.go('/teams'),
+                tooltip: 'Team Management',
+              ),
+              IconButton(
+                icon: const Icon(
                   Icons.analytics,
                   color: AppColors.textPrimary,
                   size: AppSizes.iconM,
