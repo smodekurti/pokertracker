@@ -11,6 +11,9 @@ import 'package:poker_tracker/features/game/presentation/screens/game_setup_scre
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/features/home/presentation/screens/home_screen.dart';
 import 'package:poker_tracker/features/home/presentation/screens/poker_reference_screen.dart';
+import 'package:poker_tracker/features/team/presentation/screens/team_list_screen.dart';
+import 'package:poker_tracker/features/team/presentation/screens/team_management_screen.dart';
+import 'package:poker_tracker/features/team/providers/team_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 // ... other imports remain the same
@@ -73,8 +76,13 @@ class AppRouter {
             // Nested Routes under Home
             GoRoute(
               path: 'game-setup',
-              name: 'game-setup',
-              builder: (context, state) => const GameSetupScreen(),
+              builder: (context, state) {
+                // Verify provider availability
+                final teamProvider = context.watch<TeamProvider?>();
+                print(
+                    'Router - TeamProvider available: ${teamProvider != null}');
+                return const GameSetupScreen();
+              },
             ),
             GoRoute(
               path: 'game/:id',
@@ -111,6 +119,22 @@ class AppRouter {
             GoRoute(
               path: 'poker-reference',
               builder: (context, state) => const PokerReferenceScreen(),
+            ),
+            GoRoute(
+              path: 'teams',
+              builder: (context, state) =>
+                  const TeamListScreen(), // List of teams
+            ),
+            GoRoute(
+              path: 'teams/new',
+              builder: (context, state) => const TeamManagementScreen(),
+            ),
+            GoRoute(
+              path: 'teams/:id',
+              builder: (context, state) {
+                final teamId = state.pathParameters['id']!;
+                return TeamManagementScreen(teamId: teamId);
+              },
             ),
 
             GoRoute(

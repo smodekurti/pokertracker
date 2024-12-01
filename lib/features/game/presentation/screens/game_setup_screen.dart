@@ -1,16 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
-import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
-import 'package:poker_tracker/core/presentation/top_notification.dart';
-import 'package:poker_tracker/core/utils/ui_helpers.dart';
-import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
-import 'package:poker_tracker/features/game/providers/game_provider.dart';
-import 'package:poker_tracker/features/game/data/models/player.dart';
-import 'package:poker_tracker/shared/widgets/custom_text_field.dart';
-import 'package:poker_tracker/shared/widgets/loading_overlay.dart';
-import 'package:uuid/uuid.dart';
+// game_setup_screen.dart
 import 'dart:ui';
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
+import 'package:poker_tracker/core/presentation/top_notification.dart';
+import 'package:poker_tracker/features/game/data/models/player.dart';
+import 'package:poker_tracker/features/game/providers/game_provider.dart';
+import 'package:poker_tracker/features/team/data/team.dart';
+import 'package:poker_tracker/features/team/providers/team_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 class GameSetupScreen extends StatefulWidget {
   const GameSetupScreen({super.key});
@@ -20,495 +20,657 @@ class GameSetupScreen extends StatefulWidget {
 }
 
 class _GameSetupScreenState extends State<GameSetupScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _gameNameController = TextEditingController();
   final _buyInController = TextEditingController(text: '20');
-  final _playerNameController = TextEditingController();
-  final List<Player> _players = [];
-  String? _playerNameError;
-  String? _gameNameError;
-  String? _buyInError;
   final _cutPercentageController = TextEditingController(text: '0');
-  String? _cutPercentageError;
+  final Set<Team> _selectedTeams = {};
+  final Set<Player> _selectedPlayers = {};
+  final Set<Player> _players = {};
+  final _playerNameController = TextEditingController();
 
   @override
   void dispose() {
     _gameNameController.dispose();
     _buyInController.dispose();
+    _cutPercentageController.dispose();
     _playerNameController.dispose();
     super.dispose();
   }
 
-  Future<bool> _onWillPop() async {
-    if (_players.isEmpty && _gameNameController.text.trim().isEmpty) {
-      return true;
-    }
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusXL.dp),
-        ),
-        title: Text(
-          'Cancel Game Setup?',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: AppSizes.fontL.sp,
-          ),
-        ),
-        content: Text(
-          'All entered information will be lost. Are you sure you want to cancel?',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: AppSizes.fontM.sp,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'No, Continue Setup',
-              style: TextStyle(
-                color: AppColors.info,
-                fontSize: AppSizes.fontM.sp,
-              ),
-            ),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'Yes, Cancel',
-              style: TextStyle(fontSize: AppSizes.fontM.sp),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    return result ?? false;
-  }
-
-  // ... existing methods remain the same ...
-
   @override
   Widget build(BuildContext context) {
-    Responsive.init(context);
-    final isLoading = context.watch<GameProvider>().isLoading;
-
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: AppColors.backgroundGradient,
-            ),
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: AppColors.backgroundGradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: SafeArea(
-            child: Column(
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    color: AppColors.backgroundDark.withOpacity(0.3),
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left),
+                          onPressed: () => Navigator.pop(context),
+                          color: AppColors.textPrimary,
+                        ),
+                        ShaderMask(
+                          shaderCallback: (bounds) => const LinearGradient(
+                            colors: AppColors.primaryGradient,
+                          ).createShader(bounds),
+                          child: const Text(
+                            'New Game Setup',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Main Content
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _buildGameDetailsCard(),
+                    const SizedBox(height: 16),
+                    _buildPlayersCard(),
+                    const SizedBox(height: 16),
+                    _buildActionButtons(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameDetailsCard() {
+    return Card(
+      color: AppColors.backgroundMedium,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Game Details',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildInputField(
+              controller: _gameNameController,
+              label: 'Game Name',
+              prefixIcon: Icons.casino,
+            ),
+            const SizedBox(height: 16),
+            _buildInputField(
+              controller: _buyInController,
+              label: 'Buy-in Amount',
+              prefixIcon: Icons.attach_money,
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+            _buildInputField(
+              controller: _cutPercentageController,
+              label: 'Cut Percentage',
+              prefixIcon: Icons.percent,
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required IconData prefixIcon,
+    TextInputType? keyboardType,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: const TextStyle(color: AppColors.textPrimary),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: AppColors.textSecondary),
+        prefixIcon: Icon(prefixIcon, color: AppColors.textSecondary),
+        filled: true,
+        fillColor: AppColors.backgroundDark,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamsCard() {
+    return Card(
+      color: AppColors.backgroundMedium,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Floating Header
-                ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      color: Colors.black.withOpacity(0.3),
-                      padding: EdgeInsets.all(AppSizes.paddingL.dp),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: () async {
-                                  if (await _onWillPop()) {
-                                    if (mounted) context.go('/');
-                                  }
-                                },
-                                icon: Icon(
-                                  Icons.arrow_back_ios,
-                                  color: AppColors.textPrimary,
-                                  size: AppSizes.iconS.dp,
-                                ),
-                                tooltip: 'Cancel Game Setup',
-                              ),
-                              Expanded(
-                                child: ShaderMask(
-                                  shaderCallback: (bounds) =>
-                                      const LinearGradient(
-                                    colors: AppColors.primaryGradient,
-                                  ).createShader(bounds),
-                                  child: Text(
-                                    'New Game Setup',
-                                    style: TextStyle(
-                                      fontSize: AppSizes.fontM.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
+                const Text(
+                  'Teams',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                IconButton(
+                  icon: Container(
+                    decoration: const BoxDecoration(
+                      gradient:
+                          LinearGradient(colors: AppColors.primaryGradient),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, color: AppColors.textPrimary),
+                  ),
+                  onPressed: _showTeamSelectionDialog,
+                ),
+              ],
+            ),
+            Consumer<TeamProvider?>(
+              builder: (context, teamProvider, child) {
+                if (teamProvider == null) {
+                  print('TeamProvider is null in Consumer');
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                if (teamProvider.isLoading) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                final availableTeams = teamProvider.teams;
+                if (availableTeams.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: Text(
+                        'No teams available',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: availableTeams.length,
+                  itemBuilder: (context, index) {
+                    final team = availableTeams[index];
+                    return _buildTeamTile(team);
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // In your GameSetupScreen
+  void _showTeamSelectionDialog() {
+    final currentContext = context;
+    Team? selectedTeam; // Move selectedTeam declaration here
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundMedium,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Select Team',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppColors.textPrimary),
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: Builder(
+                  builder: (builderContext) {
+                    final teamProvider = currentContext.watch<TeamProvider?>();
+
+                    if (teamProvider == null) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final teams = teamProvider.teams;
+
+                    if (teams.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'No teams available',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      );
+                    }
+
+                    return StatefulBuilder(
+                      builder: (context, setDialogState) {
+                        return Column(
+                          children: [
+                            // Teams List
+                            Expanded(
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: teams.length,
+                                itemBuilder: (context, index) {
+                                  final team = teams[index];
+                                  final isSelected =
+                                      selectedTeam?.id == team.id;
+
+                                  return ListTile(
+                                    onTap: () {
+                                      setDialogState(() {
+                                        selectedTeam = team;
+                                      });
+                                    },
+                                    selected: isSelected,
+                                    selectedTileColor:
+                                        AppColors.primary.withOpacity(0.1),
+                                    leading: Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: AppColors.primaryGradient,
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.group,
+                                          color: AppColors.textPrimary),
                                     ),
+                                    title: Text(
+                                      team.name,
+                                      style: const TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      '${team.players.length} players',
+                                      style: const TextStyle(
+                                          color: AppColors.textSecondary),
+                                    ),
+                                    trailing: isSelected
+                                        ? const Icon(Icons.check_circle,
+                                            color: AppColors.success)
+                                        : const Icon(Icons.arrow_forward_ios,
+                                            color: AppColors.textSecondary),
+                                  );
+                                },
+                              ),
+                            ),
+
+                            if (selectedTeam != null) ...[
+                              const Divider(color: AppColors.backgroundDark),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  'Players in ${selectedTeam!.name}',
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),
+                              Expanded(
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: selectedTeam!.players.length,
+                                  itemBuilder: (context, index) {
+                                    final player = selectedTeam!.players[index];
+                                    final isAlreadyAdded = _players.any((p) =>
+                                        p.name.toLowerCase() ==
+                                        player.name.toLowerCase());
+
+                                    return ListTile(
+                                      dense: true,
+                                      leading: CircleAvatar(
+                                        backgroundColor: AppColors.primary,
+                                        radius: 16,
+                                        child: Text(
+                                          player.name[0].toUpperCase(),
+                                          style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      title: Text(
+                                        player.name,
+                                        style: const TextStyle(
+                                            color: AppColors.textPrimary),
+                                      ),
+                                      trailing: isAlreadyAdded
+                                          ? const Icon(Icons.check,
+                                              color: AppColors.success)
+                                          : null,
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: AppColors.textPrimary,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    if (mounted && selectedTeam != null) {
+                                      setState(() {
+                                        for (final player
+                                            in selectedTeam!.players) {
+                                          if (!_players.any((p) =>
+                                              p.name.toLowerCase() ==
+                                              player.name.toLowerCase())) {
+                                            _players.add(Player(
+                                              id: player.id,
+                                              name: player.name,
+                                            ));
+                                          }
+                                        }
+                                      });
+                                    }
+                                    Navigator.of(dialogContext).pop();
+                                  },
+                                  child: Text(
+                                      'Add ${selectedTeam!.players.length} Players'),
+                                ),
+                              ),
                             ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                 ),
-
-                // Main Content
-                Expanded(
-                  child: LoadingOverlay(
-                    isLoading: isLoading,
-                    child: Form(
-                      key: _formKey,
-                      child: ListView(
-                        padding: EdgeInsets.all(AppSizes.paddingL.dp),
-                        children: [
-                          _buildGameDetailsSection(),
-                          SizedBox(height: AppSizes.spacing2XL.dp),
-                          _buildPlayersSection(),
-                          SizedBox(height: AppSizes.spacing2XL.dp),
-                          _buildActionButtons(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildGameDetailsSection() {
+  Widget _buildTeamTile(Team team) {
+    final isAllPlayersAdded = team.players.every(
+      (player) => _selectedPlayers.any((p) => p.id == player.id),
+    );
+
     return Container(
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSizes.radiusXL.dp),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.grey[850]!,
-            Colors.grey[900]!,
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8.dp,
-            offset: Offset(0, 2.dp),
-          ),
-        ],
+        color: AppColors.backgroundDark.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
       ),
-      padding: EdgeInsets.all(AppSizes.paddingL.dp),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Game Details',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: AppSizes.fontL.sp,
-              fontWeight: FontWeight.bold,
-            ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(colors: AppColors.primaryGradient),
+            shape: BoxShape.circle,
           ),
-          SizedBox(height: AppSizes.spacingL.dp),
-          Theme(
-            data: Theme.of(context).copyWith(
-              textTheme: Theme.of(context).textTheme.apply(
-                    bodyColor: AppColors.textPrimary,
-                    displayColor: AppColors.textPrimary,
-                  ),
-              inputDecorationTheme: InputDecorationTheme(
-                filled: true,
-                fillColor: Colors.grey[850],
-                labelStyle: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: AppSizes.fontM.sp,
-                ),
-                prefixIconColor: AppColors.textSecondary,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-                  borderSide: BorderSide(color: Colors.grey[700]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-                  borderSide: BorderSide(color: Colors.grey[700]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-                  borderSide: BorderSide(color: AppColors.secondary),
+          child: const Icon(Icons.group, color: AppColors.textPrimary),
+        ),
+        title: Text(
+          team.name,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          '${team.players.length} players',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isAllPlayersAdded)
+              TextButton(
+                onPressed: () => _addAllPlayersFromTeam(team),
+                child: const Text(
+                  'Add All',
+                  style: TextStyle(color: AppColors.primary),
                 ),
               ),
+            IconButton(
+              icon: const Icon(Icons.close, color: AppColors.error),
+              onPressed: () => _removeTeam(team),
             ),
-            child: Column(
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayersCard() {
+    return Card(
+      color: AppColors.backgroundMedium,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with count
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CustomTextField(
-                  label: 'Game Name',
-                  controller: _gameNameController,
-                  errorText: _gameNameError,
-                  prefixIcon: Icons.casino_rounded,
-                  prefixIconSize: AppSizes.iconM.dp,
-                  fontSize: AppSizes.fontL.sp,
-                  textCapitalization: TextCapitalization.words,
-                  onChanged: (_) => setState(() => _gameNameError = null),
+                const Text(
+                  'Players',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-                SizedBox(height: AppSizes.spacingL.dp),
-                CustomTextField(
-                  label: 'Buy-in Amount',
-                  controller: _buyInController,
-                  errorText: _buyInError,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  prefixIcon: Icons.attach_money,
-                  prefixIconSize: AppSizes.iconM.dp,
-                  fontSize: AppSizes.fontL.sp,
-                  onChanged: (_) => setState(() => _buyInError = null),
-                ),
-                SizedBox(height: AppSizes.spacingL.dp),
-                CustomTextField(
-                  label: 'Pot Cut Percentage',
-                  controller: _cutPercentageController,
-                  errorText: _cutPercentageError,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  prefixIcon: Icons.percent,
-                  prefixIconSize: AppSizes.iconM.dp,
-                  fontSize: AppSizes.fontL.sp,
-                  onChanged: (_) => setState(() => _cutPercentageError = null),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.info,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '${_players.length} players',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
                 ),
               ],
             ),
-          )
-        ],
-      ),
-    );
-  }
+            const SizedBox(height: 16),
 
-// ... previous code remains same ...
-
-  Widget _buildPlayersSection() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSizes.radiusXL.dp),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.grey[850]!,
-            Colors.grey[900]!,
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8.dp,
-            offset: Offset(0, 2.dp),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.all(AppSizes.paddingL.dp),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Players',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: AppSizes.fontXL.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppSizes.paddingM.dp,
-                  vertical: AppSizes.paddingXS.dp,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.info,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-                ),
-                child: Text(
-                  '${_players.length} ${_players.length == 1 ? 'player' : 'players'}',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: AppSizes.fontM.sp,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppSizes.spacingL.dp),
-          Row(
-            children: [
-              Expanded(
-                child: Theme(
-                  data: Theme.of(context).copyWith(
-                    textTheme: Theme.of(context).textTheme.apply(
-                          bodyColor: AppColors.textPrimary,
-                          displayColor: AppColors.textPrimary,
-                        ),
-                    inputDecorationTheme: InputDecorationTheme(
+            // Add player input
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _playerNameController,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'Add player',
+                      hintStyle:
+                          const TextStyle(color: AppColors.textSecondary),
+                      prefixIcon: const Icon(Icons.person_add),
                       filled: true,
-                      fillColor: Colors.grey[850],
-                      labelStyle: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: AppSizes.fontM.sp,
-                      ),
-                      prefixIconColor: AppColors.textSecondary,
+                      fillColor: AppColors.backgroundDark,
                       border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppSizes.radiusL.dp),
-                        borderSide: BorderSide(color: Colors.grey[700]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppSizes.radiusL.dp),
-                        borderSide: BorderSide(color: Colors.grey[700]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppSizes.radiusL.dp),
-                        borderSide: BorderSide(color: AppColors.secondary),
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                     ),
-                  ),
-                  child: CustomTextField(
-                    label: 'Player Name',
-                    controller: _playerNameController,
-                    errorText: _playerNameError,
-                    prefixIcon: Icons.person,
-                    prefixIconSize: AppSizes.iconM.dp,
-                    fontSize: AppSizes.fontL.sp,
-                    textCapitalization: TextCapitalization.words,
-                    onSubmitted: (_) => _addPlayer(),
-                    onChanged: (_) => setState(() => _playerNameError = null),
+                    onSubmitted: _addPlayer,
                   ),
                 ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      gradient:
+                          LinearGradient(colors: AppColors.primaryGradient),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, color: AppColors.textPrimary),
+                  ),
+                  onPressed: () => _addPlayer(_playerNameController.text),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Import from teams button
+            OutlinedButton.icon(
+              onPressed: _showTeamSelectionDialog,
+              icon: const Icon(Icons.group_add),
+              label: const Text('Import from Teams'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                side: const BorderSide(color: AppColors.primary),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-              SizedBox(width: AppSizes.spacingS.dp),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: AppColors.primaryGradient,
-                  ),
-                  borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-                ),
-                child: IconButton(
-                  onPressed: _addPlayer,
-                  icon: Icon(
-                    Icons.add,
-                    size: AppSizes.iconM.dp,
-                  ),
-                  color: AppColors.textPrimary,
-                  tooltip: 'Add Player',
-                ),
-              ),
-            ],
-          ),
-          if (_players.isNotEmpty) SizedBox(height: AppSizes.spacingL.dp),
-          ..._buildPlayersList(),
-        ],
+            ),
+            const SizedBox(height: 16),
+
+            // Players list
+            if (_players.isNotEmpty)
+              ...List<Widget>.from(_players.map(_buildPlayerTile)),
+          ],
+        ),
       ),
     );
   }
 
-  List<Widget> _buildPlayersList() {
-    return _players.asMap().entries.map((entry) {
-      final index = entry.key;
-      final player = entry.value;
-      return Container(
-        margin: EdgeInsets.only(bottom: AppSizes.spacingS.dp),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-          gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [
-              AppColors.info.withOpacity(0.1),
-              AppColors.info.withOpacity(0.05),
-            ],
+  Widget _buildPlayerTile(Player player) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundDark.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(colors: AppColors.primaryGradient),
+            shape: BoxShape.circle,
           ),
-        ),
-        child: ListTile(
-          leading: Container(
-            width: AppSizes.iconXL.dp,
-            height: AppSizes.iconXL.dp,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: AppColors.primaryGradient,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                player.name[0].toUpperCase(),
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: AppSizes.fontL.sp,
-                ),
+          child: Center(
+            child: Text(
+              player.name[0].toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          title: Text(
-            player.name,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
-              fontSize: AppSizes.fontL.sp,
-            ),
-          ),
-          trailing: IconButton(
-            icon: Icon(
-              Icons.remove_circle_outline,
-              color: AppColors.error,
-              size: AppSizes.iconM.dp,
-            ),
-            tooltip: 'Remove Player',
-            onPressed: () {
-              setState(() {
-                _players.removeAt(index);
-              });
-            },
+        ),
+        title: Text(
+          player.name,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w500,
           ),
         ),
-      );
-    }).toList();
+        trailing: IconButton(
+          icon: const Icon(Icons.remove_circle_outline, color: AppColors.error),
+          onPressed: () => setState(() => _players.remove(player)),
+        ),
+      ),
+    );
   }
 
-  void _addPlayer() {
-    final name = _playerNameController.text.trim();
-    if (name.isEmpty) {
-      setState(() {
-        _playerNameError = 'Player name is required';
-      });
-      return;
-    }
+  void _addPlayer(String name) {
+    final playerName = name.trim();
+    if (playerName.isEmpty) return;
 
-    if (_players
-        .any((player) => player.name.toLowerCase() == name.toLowerCase())) {
-      setState(() {
-        _playerNameError = 'Player name must be unique';
-      });
-
-      TopNotification.show(
-        context,
-        message: 'Player name must be unique',
-        type: NotificationType.error,
+    if (_players.any((p) => p.name.toLowerCase() == playerName.toLowerCase())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Player already exists')),
       );
       return;
     }
@@ -516,297 +678,302 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     setState(() {
       _players.add(Player(
         id: const Uuid().v4(),
-        name: name,
+        name: playerName,
       ));
       _playerNameController.clear();
-      _playerNameError = null;
     });
-
-    // Show success notification at the top
-    if (mounted) {
-      TopNotification.show(
-        context,
-        message: 'Player "$name" added successfully',
-        type: NotificationType.success,
-        icon: Icons.person_add,
-      );
-    }
   }
 
-  Widget _buildActionButtons() {
-    if (_players.length >= 2) {
-      return Row(
-        children: [
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () async {
-                if (await _onWillPop()) {
-                  if (mounted) context.go('/');
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: AppColors.textPrimary,
-                elevation: 0,
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppSizes.paddingL.dp,
-                  vertical: AppSizes.paddingM.dp,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-                  side: BorderSide(
-                    color: AppColors.primary,
-                    width: 2.dp,
-                  ),
-                ),
-              ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontSize: AppSizes.fontL.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+  /*
+  
+  void _showTeamSelectionDialog() {
+    final currentContext = context;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundMedium,
+            borderRadius: BorderRadius.circular(16),
           ),
-          SizedBox(width: AppSizes.spacingL.dp),
-          Expanded(
-            flex: 2,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: AppColors.primaryGradient,
-                ),
-                borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.secondary.withOpacity(0.3),
-                    blurRadius: 8.dp,
-                    offset: Offset(0, 2.dp),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Select Team',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppColors.textPrimary),
+                    onPressed: () => Navigator.of(dialogContext).pop(),
                   ),
                 ],
               ),
-              child: ElevatedButton(
-                onPressed: _startGame,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: AppColors.textPrimary,
-                  elevation: 0,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSizes.paddingL.dp,
-                    vertical: AppSizes.paddingM.dp,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.play_arrow,
-                      size: AppSizes.iconM.dp,
-                    ),
-                    SizedBox(width: AppSizes.spacingS.dp),
-                    Text(
-                      'Start Game',
-                      style: TextStyle(
-                        fontSize: AppSizes.fontL.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
+              const SizedBox(height: 16),
+              Flexible(
+                child: Builder(
+                  builder: (builderContext) {
+                    final teamProvider = currentContext.watch<TeamProvider?>();
 
-    return Container(
-      padding: EdgeInsets.all(AppSizes.paddingL.dp),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.blue[900]!.withOpacity(0.3),
-            Colors.green[600]!.withOpacity(0.3),
-          ],
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: AppColors.warning,
-                size: AppSizes.iconM.dp,
-              ),
-              SizedBox(width: AppSizes.paddingM.dp),
-              Expanded(
-                child: Text(
-                  'Add at least ${2 - _players.length} more player${2 - _players.length > 1 ? 's' : ''} to start',
-                  style: TextStyle(
-                    color: Colors.orange[100],
-                    fontSize: AppSizes.fontM.sp,
-                  ),
+                    if (teamProvider == null) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final teams = teamProvider.teams;
+
+                    if (teams.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'No teams available',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: teams.length,
+                      itemBuilder: (context, index) {
+                        final team = teams[index];
+                        return ListTile(
+                          onTap: () {
+                            if (mounted) {
+                              setState(() {
+                                // Add team's players to the game
+                                for (final player in team.players) {
+                                  if (!_players.any((p) =>
+                                      p.name.toLowerCase() ==
+                                      player.name.toLowerCase())) {
+                                    _players.add(Player(
+                                      id: player.id,
+                                      name: player.name,
+                                    ));
+                                  }
+                                }
+                              });
+                            }
+                            Navigator.of(dialogContext).pop();
+                          },
+                          leading: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                  colors: AppColors.primaryGradient),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.group,
+                                color: AppColors.textPrimary),
+                          ),
+                          title: Text(
+                            team.name,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${team.players.length} players',
+                            style:
+                                const TextStyle(color: AppColors.textSecondary),
+                          ),
+                          trailing: const Icon(
+                            Icons.add_circle_outline,
+                            color: AppColors.primary,
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
           ),
-          SizedBox(height: AppSizes.spacingL.dp),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () async {
-                if (await _onWillPop()) {
-                  if (mounted) context.go('/');
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: AppColors.textPrimary,
-                elevation: 0,
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppSizes.paddingL.dp,
-                  vertical: AppSizes.paddingM.dp,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
-                  side: BorderSide(
-                    color: AppColors.primary,
-                    width: 2.dp,
-                  ),
-                ),
-              ),
-              child: Text(
-                'Cancel Setup',
-                style: TextStyle(
-                  fontSize: AppSizes.fontL.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
+*/
+  Widget _buildActionButtons() {
+    // Debug prints to verify player count
+    print('Building action buttons');
+    print('Current player count: ${_players.length}');
+    print('Players: ${_players.map((p) => p.name).join(', ')}');
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.primary),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 2,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: _players.length >= 2
+                    ? AppColors.primaryGradient
+                    : [Colors.grey[700]!, Colors.grey[600]!],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                print('Start Game pressed');
+                print('Player count at press: ${_players.length}');
+                if (_players.length >= 2) {
+                  _startGame();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('At least 2 players are required'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.play_arrow, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Start Game ${_players.isNotEmpty ? "(${_players.length})" : ""}',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+// Continuation of GameSetupScreen class...
+
+  void _addAllPlayersFromTeam(Team team) {
+    setState(() {
+      _selectedPlayers.addAll(
+        team.players.map((p) => Player(id: p.id, name: p.name)),
+      );
+    });
+
+    TopNotification.show(
+      context,
+      message: 'Added all players from ${team.name}',
+      type: NotificationType.success,
+      icon: Icons.group_add,
+    );
+  }
+
+  void _removeTeam(Team team) {
+    setState(() {
+      _selectedTeams.remove(team);
+      // Optionally remove players that were added from this team
+      _selectedPlayers.removeWhere(
+        (player) => team.players.any((p) => p.id == player.id),
+      );
+    });
+  }
 
   Future<void> _startGame() async {
+    print('_startGame called');
+    print('Number of players: ${_players.length}');
+
+    // Validate game name
     final gameName = _gameNameController.text.trim();
     if (gameName.isEmpty) {
-      setState(() {
-        _gameNameError = 'Game name is required';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Game name is required'),
+          backgroundColor: AppColors.error,
+        ),
+      );
       return;
     }
 
+    // Double check player count
     if (_players.length < 2) {
+      print('ERROR: Insufficient players at game start');
+      print('Players: ${_players.map((p) => p.name).join(', ')}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'At least 2 players are required',
-            style: TextStyle(
-              fontSize: AppSizes.fontM.sp,
-              color: AppColors.textPrimary,
-            ),
-          ),
+        const SnackBar(
+          content: Text('At least 2 players are required'),
           backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.all(AppSizes.paddingL.dp),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
-          ),
         ),
       );
       return;
     }
 
     try {
-      final buyInAmount = double.tryParse(_buyInController.text);
-      if (buyInAmount == null || buyInAmount <= 0) {
-        setState(() {
-          _buyInError = 'Invalid buy-in amount';
-        });
-        return;
-      }
-
-      final cutPercentage = double.tryParse(_cutPercentageController.text);
-      if (cutPercentage == null || cutPercentage < 0 || cutPercentage > 100) {
-        setState(() {
-          _cutPercentageError = 'Invalid cut percentage';
-        });
-        return;
-      }
-
-      // Show loading indicator while creating game
       final gameProvider = context.read<GameProvider>();
       await gameProvider.createGame(
         gameName,
-        buyInAmount,
-        _players,
-        cutPercentage,
+        double.parse(_buyInController.text),
+        _players.toList(),
+        double.parse(_cutPercentageController.text),
       );
 
+      if (!mounted) return;
+
       final game = gameProvider.currentGame;
-      if (game != null && mounted) {
-        TopNotification.show(
-          context,
-          message: 'Game "${game.name}" created successfully',
-          type: NotificationType.success,
-          icon: Icons.person_add,
+      if (game != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Game "${game.name}" created successfully'),
+            backgroundColor: AppColors.success,
+          ),
         );
 
-        // Navigate to game screen
         context.go('/game/${game.id}');
       } else {
         throw Exception('Failed to create game');
       }
     } catch (e) {
-      if (!mounted) return;
-
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                Icons.error_outline,
-                color: AppColors.textPrimary,
-                size: AppSizes.iconM.dp,
-              ),
-              SizedBox(width: AppSizes.spacingS.dp),
-              Expanded(
-                child: Text(
-                  'Failed to create game: ${e.toString()}',
-                  style: TextStyle(
-                    fontSize: AppSizes.fontM.sp,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          content: Text('Failed to create game: ${e.toString()}'),
           backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.all(AppSizes.paddingL.dp),
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSizes.paddingL.dp,
-            vertical: AppSizes.paddingM.dp,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
-          ),
         ),
       );
     }
   }
 }
-
-  // Update the build method accordingly
-
