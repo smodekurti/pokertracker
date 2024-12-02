@@ -1,6 +1,6 @@
 -- Merging decision tree log ---
 application
-INJECTED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:2:5-33:19
+INJECTED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:2:5-36:19
 INJECTED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/debug/AndroidManifest.xml
 MERGED from [:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-13:19
 MERGED from [:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-13:19
@@ -63,8 +63,8 @@ MERGED from [com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/ca
 	android:name
 		INJECTED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml
 manifest
-ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:1:1-45:12
-MERGED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:1:1-45:12
+ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:1:1-48:12
+MERGED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:1:1-48:12
 INJECTED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/debug/AndroidManifest.xml:1:1-7:12
 INJECTED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/debug/AndroidManifest.xml:1:1-7:12
 INJECTED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/debug/AndroidManifest.xml:1:1-7:12
@@ -139,17 +139,17 @@ MERGED from [com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/ca
 	xmlns:android
 		ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:1:11-69
 queries
-ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:39:5-44:15
+ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:42:5-47:15
 intent#action:name:android.intent.action.PROCESS_TEXT+data:mimeType:text/plain
-ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:40:9-43:18
+ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:43:9-46:18
 action#android.intent.action.PROCESS_TEXT
-ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:41:13-72
+ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:44:13-72
 	android:name
-		ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:41:21-70
+		ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:44:21-70
 data
-ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:42:13-50
+ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:45:13-50
 	android:mimeType
-		ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:42:19-48
+		ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:45:19-48
 uses-permission#android.permission.INTERNET
 ADDED from /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/debug/AndroidManifest.xml:6:5-66
 MERGED from [:firebase_dynamic_links] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_dynamic_links/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-67
