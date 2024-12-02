@@ -122,11 +122,11 @@ class Game {
       'name': name,
       'date': date.toIso8601String(),
       'players': players.map((p) => p.toMap()).toList(),
-      'transactions': transactions.map((t) => t.toMap()).toList(),
-      'isActive': isActive,
       'createdBy': createdBy,
       'buyInAmount': buyInAmount,
       'cutPercentage': cutPercentage,
+      'isActive': isActive,
+      'transactions': transactions.map((t) => t.toMap()).toList(),
       'createdAt': createdAt.toIso8601String(),
       'endedAt': endedAt?.toIso8601String(),
     };
@@ -135,35 +135,31 @@ class Game {
   factory Game.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
-    try {
-      return Game(
-        id: data['id'] ?? doc.id,
-        name: data['name'] ?? '',
-        date: DateTime.parse(data['date']),
-        players: (data['players'] as List?)
-                ?.map((p) => Player.fromMap(p as Map<String, dynamic>))
-                .toList() ??
-            [],
-        transactions: (data['transactions'] as List?)
-                ?.map(
-                    (t) => PokerTransaction.fromMap(t as Map<String, dynamic>))
-                .toList() ??
-            [],
-        isActive: data['isActive'] ?? true,
-        createdBy: data['createdBy'] ?? '',
-        buyInAmount: (data['buyInAmount'] ?? 0.0).toDouble(),
-        cutPercentage: (data['cutPercentage'] ?? 0.0).toDouble(),
-        createdAt: data['createdAt'] != null
-            ? (data['createdAt'] as Timestamp).toDate()
-            : DateTime.now(),
-        endedAt: data['endedAt'] != null
-            ? (data['endedAt'] as Timestamp).toDate()
-            : null,
-      );
-    } catch (e) {
-      print('Error parsing game data: $e');
-      rethrow;
-    }
+    return Game(
+      id: doc.id, // Always use document ID
+      name: data['name'] ?? '',
+      date: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      players: (data['players'] as List<dynamic>?)
+              ?.map((p) => Player.fromMap(p as Map<String, dynamic>))
+              .toList() ??
+          [],
+      createdBy: data['createdBy'] ?? '',
+      buyInAmount: (data['buyInAmount'] as num?)?.toDouble() ?? 0.0,
+      cutPercentage: (data['cutPercentage'] as num?)?.toDouble() ?? 0.0,
+      createdAt: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      isActive: data['isActive'] ?? true,
+      endedAt: data['endedAt'] != null
+          ? (data['endedAt'] as Timestamp).toDate()
+          : null,
+      transactions: (data['transactions'] as List<dynamic>?)
+              ?.map((t) => PokerTransaction.fromMap(t as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
   }
 
   // Create a copy with some fields updated
