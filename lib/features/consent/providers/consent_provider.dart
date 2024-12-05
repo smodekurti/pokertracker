@@ -12,6 +12,16 @@ class ConsentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void acceptConsent() {
+    _isLoading = true;
+    notifyListeners();
+
+    // Simulate any async work if needed
+    _hasAcceptedCurrentSession = true;
+    _isLoading = false;
+    notifyListeners();
+  }
+
   void reset() {
     _hasAcceptedCurrentSession = false;
     notifyListeners();

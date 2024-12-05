@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:poker_tracker/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:poker_tracker/features/auth/presentation/screens/login_screen.dart';
 import 'package:poker_tracker/features/auth/presentation/screens/register_screen.dart';
+import 'package:poker_tracker/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:poker_tracker/features/consent/presentation/screens/consent_screen.dart';
 import 'package:poker_tracker/features/consent/providers/consent_provider.dart';
 import 'package:poker_tracker/features/game/data/models/game.dart';
@@ -10,7 +11,6 @@ import 'package:poker_tracker/features/game/presentation/screens/active_game_scr
 import 'package:poker_tracker/features/game/presentation/screens/game_history_screen.dart';
 import 'package:poker_tracker/features/game/presentation/screens/game_settlement_summary_screen.dart';
 import 'package:poker_tracker/features/game/presentation/screens/game_setup_screen.dart';
-import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/features/home/presentation/screens/home_screen.dart';
 import 'package:poker_tracker/features/home/presentation/screens/poker_reference_screen.dart';
 import 'package:poker_tracker/features/team/presentation/screens/team_list_screen.dart';
@@ -22,6 +22,29 @@ import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+  static CustomTransitionPage<void> _buildPageTransition<T>({
+    required BuildContext context,
+    required GoRouterState state,
+    required Widget child,
+  }) {
+    return CustomTransitionPage<T>(
+      key: state.pageKey,
+      child: child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.05, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
   static GoRouter router(BuildContext context) {
     return GoRouter(
@@ -143,7 +166,16 @@ class AppRouter {
                 return TeamManagementScreen(teamId: teamId);
               },
             ),
-
+            GoRoute(
+              path: 'reset-password/:code',
+              pageBuilder: (context, state) => _buildPageTransition(
+                context: context,
+                state: state,
+                child: ResetPasswordScreen(
+                  resetCode: state.pathParameters['code']!,
+                ),
+              ),
+            ),
             GoRoute(
               path: 'history',
               name: 'history',
