@@ -125,11 +125,17 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Reset password
-  Future<void> resetPassword(String email) async {
+  Future<void> resetPassword({
+    required String code,
+    required String newPassword,
+  }) async {
     try {
       _setLoading(true);
       _clearError();
-      await _auth.sendPasswordResetEmail(email: email);
+      await _auth.confirmPasswordReset(
+        code: code,
+        newPassword: newPassword,
+      );
     } on FirebaseAuthException catch (e) {
       _setError(_getErrorMessage(e));
       rethrow;
@@ -138,6 +144,22 @@ class AuthProvider with ChangeNotifier {
       rethrow;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw _getErrorMessage(e);
+    } catch (e) {
+      throw e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
