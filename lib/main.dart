@@ -5,6 +5,9 @@ import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/core/utils/ui_helpers.dart';
 import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
+import 'package:poker_tracker/features/consent/data/repositories/consent_repository.dart';
+import 'package:poker_tracker/features/consent/data/repositories/firebase_consent_repository.dart';
+import 'package:poker_tracker/features/consent/providers/consent_provider.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/features/team/providers/team_provider.dart';
 import 'package:poker_tracker/firebase_options.dart';
@@ -38,6 +41,7 @@ void main() async {
         child: MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => AuthProvider()),
+            ChangeNotifierProvider(create: (_) => ConsentProvider()),
 
             ChangeNotifierProxyProvider<AuthProvider, TeamProvider>(
               create: (context) {
