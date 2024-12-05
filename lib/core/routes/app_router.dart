@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:poker_tracker/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:poker_tracker/features/auth/presentation/screens/login_screen.dart';
 import 'package:poker_tracker/features/auth/presentation/screens/register_screen.dart';
+import 'package:poker_tracker/features/consent/presentation/screens/consent_screen.dart';
+import 'package:poker_tracker/features/consent/providers/consent_provider.dart';
 import 'package:poker_tracker/features/game/data/models/game.dart';
 import 'package:poker_tracker/features/game/presentation/screens/active_game_screen.dart';
 import 'package:poker_tracker/features/game/presentation/screens/game_history_screen.dart';
@@ -30,26 +32,26 @@ class AppRouter {
           context.read<AuthProvider>(), // Refresh on auth changes
       redirect: (context, state) {
         final auth = context.read<AuthProvider>();
+        final consent = context.read<ConsentProvider>();
         final isLoggedIn = auth.isAuthenticated;
+        final hasAcceptedConsent = consent.hasAcceptedCurrentSession;
         final isAuthRoute = state.matchedLocation == '/login' ||
             state.matchedLocation == '/register';
+        final isConsentRoute = state.matchedLocation == '/consent';
 
-        // Handle authentication redirects
         if (!isLoggedIn) {
+          consent.reset();
           return isAuthRoute ? null : '/login';
         }
 
-        // Redirect authenticated users away from auth routes
-        if (isAuthRoute) {
-          return '/';
+        if (isLoggedIn && !hasAcceptedConsent && !isConsentRoute) {
+          return '/consent';
         }
 
-        // Check if GameProvider is available for game routes
-        if (state.matchedLocation.startsWith('/game')) {
-          final gameProvider = context.read<GameProvider?>();
-          if (gameProvider == null) {
-            return '/'; // Redirect to home if GameProvider isn't ready
-          }
+        if (isLoggedIn &&
+            hasAcceptedConsent &&
+            (isAuthRoute || isConsentRoute)) {
+          return '/';
         }
 
         return null;
@@ -65,6 +67,11 @@ class AppRouter {
           path: '/register',
           name: 'register',
           builder: (context, state) => const RegisterScreen(),
+        ),
+        GoRoute(
+          path: '/consent',
+          name: 'consent',
+          builder: (context, state) => const ConsentScreen(),
         ),
 
         // Home Route
