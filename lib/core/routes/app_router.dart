@@ -4,6 +4,7 @@ import 'package:poker_tracker/features/analytics/presentation/screens/analytics_
 import 'package:poker_tracker/features/auth/presentation/screens/login_screen.dart';
 import 'package:poker_tracker/features/auth/presentation/screens/register_screen.dart';
 import 'package:poker_tracker/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 import 'package:poker_tracker/features/consent/presentation/screens/consent_screen.dart';
 import 'package:poker_tracker/features/consent/providers/consent_provider.dart';
 import 'package:poker_tracker/features/game/data/models/game.dart';
@@ -15,9 +16,7 @@ import 'package:poker_tracker/features/home/presentation/screens/home_screen.dar
 import 'package:poker_tracker/features/home/presentation/screens/poker_reference_screen.dart';
 import 'package:poker_tracker/features/team/presentation/screens/team_list_screen.dart';
 import 'package:poker_tracker/features/team/presentation/screens/team_management_screen.dart';
-import 'package:poker_tracker/features/team/providers/team_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 // ... other imports remain the same
 
 class AppRouter {
@@ -52,25 +51,33 @@ class AppRouter {
       initialLocation: '/',
       debugLogDiagnostics: true,
       refreshListenable:
-          context.read<AuthProvider>(), // Refresh on auth changes
+          context.read<AppAuthProvider>(), // Refresh on auth changes
       redirect: (context, state) {
-        final auth = context.read<AuthProvider>();
+        final auth = context.read<AppAuthProvider>();
         final consent = context.read<ConsentProvider>();
         final isLoggedIn = auth.isAuthenticated;
-        final hasAcceptedConsent = consent.hasAcceptedCurrentSession;
+        final hasAcceptedConsent = consent.hasAcceptedForSession;
         final isAuthRoute = state.matchedLocation == '/login' ||
             state.matchedLocation == '/register';
         final isConsentRoute = state.matchedLocation == '/consent';
 
+        // Not logged in -> login screen
         if (!isLoggedIn) {
-          consent.reset();
+          // Instead of immediately resetting, schedule it for next frame
+          if (hasAcceptedConsent) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              consent.reset();
+            });
+          }
           return isAuthRoute ? null : '/login';
         }
 
+        // Logged in but no consent -> consent screen
         if (isLoggedIn && !hasAcceptedConsent && !isConsentRoute) {
           return '/consent';
         }
 
+        // Logged in with consent, trying to go to auth/consent -> home
         if (isLoggedIn &&
             hasAcceptedConsent &&
             (isAuthRoute || isConsentRoute)) {
@@ -108,9 +115,6 @@ class AppRouter {
               path: 'game-setup',
               builder: (context, state) {
                 // Verify provider availability
-                final teamProvider = context.watch<TeamProvider?>();
-                print(
-                    'Router - TeamProvider available: ${teamProvider != null}');
                 return const GameSetupScreen();
               },
             ),
