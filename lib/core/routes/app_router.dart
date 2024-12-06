@@ -3,20 +3,47 @@ import 'package:go_router/go_router.dart';
 import 'package:poker_tracker/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:poker_tracker/features/auth/presentation/screens/login_screen.dart';
 import 'package:poker_tracker/features/auth/presentation/screens/register_screen.dart';
+import 'package:poker_tracker/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
+import 'package:poker_tracker/features/consent/presentation/screens/consent_screen.dart';
+import 'package:poker_tracker/features/consent/providers/consent_provider.dart';
 import 'package:poker_tracker/features/game/data/models/game.dart';
 import 'package:poker_tracker/features/game/presentation/screens/active_game_screen.dart';
 import 'package:poker_tracker/features/game/presentation/screens/game_history_screen.dart';
 import 'package:poker_tracker/features/game/presentation/screens/game_settlement_summary_screen.dart';
 import 'package:poker_tracker/features/game/presentation/screens/game_setup_screen.dart';
-import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/features/home/presentation/screens/home_screen.dart';
 import 'package:poker_tracker/features/home/presentation/screens/poker_reference_screen.dart';
+import 'package:poker_tracker/features/team/presentation/screens/team_list_screen.dart';
+import 'package:poker_tracker/features/team/presentation/screens/team_management_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 // ... other imports remain the same
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+  static CustomTransitionPage<void> _buildPageTransition<T>({
+    required BuildContext context,
+    required GoRouterState state,
+    required Widget child,
+  }) {
+    return CustomTransitionPage<T>(
+      key: state.pageKey,
+      child: child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.05, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
   static GoRouter router(BuildContext context) {
     return GoRouter(
@@ -24,29 +51,37 @@ class AppRouter {
       initialLocation: '/',
       debugLogDiagnostics: true,
       refreshListenable:
-          context.read<AuthProvider>(), // Refresh on auth changes
+          context.read<AppAuthProvider>(), // Refresh on auth changes
       redirect: (context, state) {
-        final auth = context.read<AuthProvider>();
+        final auth = context.read<AppAuthProvider>();
+        final consent = context.read<ConsentProvider>();
         final isLoggedIn = auth.isAuthenticated;
+        final hasAcceptedConsent = consent.hasAcceptedForSession;
         final isAuthRoute = state.matchedLocation == '/login' ||
             state.matchedLocation == '/register';
+        final isConsentRoute = state.matchedLocation == '/consent';
 
-        // Handle authentication redirects
+        // Not logged in -> login screen
         if (!isLoggedIn) {
+          // Instead of immediately resetting, schedule it for next frame
+          if (hasAcceptedConsent) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              consent.reset();
+            });
+          }
           return isAuthRoute ? null : '/login';
         }
 
-        // Redirect authenticated users away from auth routes
-        if (isAuthRoute) {
-          return '/';
+        // Logged in but no consent -> consent screen
+        if (isLoggedIn && !hasAcceptedConsent && !isConsentRoute) {
+          return '/consent';
         }
 
-        // Check if GameProvider is available for game routes
-        if (state.matchedLocation.startsWith('/game')) {
-          final gameProvider = context.read<GameProvider?>();
-          if (gameProvider == null) {
-            return '/'; // Redirect to home if GameProvider isn't ready
-          }
+        // Logged in with consent, trying to go to auth/consent -> home
+        if (isLoggedIn &&
+            hasAcceptedConsent &&
+            (isAuthRoute || isConsentRoute)) {
+          return '/';
         }
 
         return null;
@@ -63,6 +98,11 @@ class AppRouter {
           name: 'register',
           builder: (context, state) => const RegisterScreen(),
         ),
+        GoRoute(
+          path: '/consent',
+          name: 'consent',
+          builder: (context, state) => const ConsentScreen(),
+        ),
 
         // Home Route
         GoRoute(
@@ -73,8 +113,10 @@ class AppRouter {
             // Nested Routes under Home
             GoRoute(
               path: 'game-setup',
-              name: 'game-setup',
-              builder: (context, state) => const GameSetupScreen(),
+              builder: (context, state) {
+                // Verify provider availability
+                return const GameSetupScreen();
+              },
             ),
             GoRoute(
               path: 'game/:id',
@@ -112,7 +154,32 @@ class AppRouter {
               path: 'poker-reference',
               builder: (context, state) => const PokerReferenceScreen(),
             ),
-
+            GoRoute(
+              path: 'teams',
+              builder: (context, state) =>
+                  const TeamListScreen(), // List of teams
+            ),
+            GoRoute(
+              path: 'teams/new',
+              builder: (context, state) => const TeamManagementScreen(),
+            ),
+            GoRoute(
+              path: 'teams/:id',
+              builder: (context, state) {
+                final teamId = state.pathParameters['id']!;
+                return TeamManagementScreen(teamId: teamId);
+              },
+            ),
+            GoRoute(
+              path: 'reset-password/:code',
+              pageBuilder: (context, state) => _buildPageTransition(
+                context: context,
+                state: state,
+                child: ResetPasswordScreen(
+                  resetCode: state.pathParameters['code']!,
+                ),
+              ),
+            ),
             GoRoute(
               path: 'history',
               name: 'history',

@@ -1,10 +1,37 @@
+// Remove the general Firebase import and keep the specific one with prefix
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:poker_tracker/core/presentation/widgets/poker_logo.dart';
 import 'package:provider/provider.dart';
-import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
+// Import your auth provider with a specific name
+import 'package:poker_tracker/features/auth/providers/auth_provider.dart'
+    show AppAuthProvider;
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
+
+enum GoogleSignInError {
+  cancelled,
+  networkError,
+  alreadyInUse,
+  invalidCredential,
+  unknown;
+
+  String get message {
+    switch (this) {
+      case GoogleSignInError.cancelled:
+        return 'Sign in was cancelled';
+      case GoogleSignInError.networkError:
+        return 'A network error occurred. Please check your connection';
+      case GoogleSignInError.alreadyInUse:
+        return 'An account already exists with this email';
+      case GoogleSignInError.invalidCredential:
+        return 'Invalid credentials. Please try again';
+      case GoogleSignInError.unknown:
+        return 'An unknown error occurred';
+    }
+  }
+}
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      await context.read<AuthProvider>().signInWithEmailAndPassword(
+      await context.read<AppAuthProvider>().signInWithEmailAndPassword(
             _emailController.text.trim(),
             _passwordController.text,
           );
@@ -59,9 +86,144 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Add this method to your _LoginScreenState class
+  Future<void> _handleForgotPassword() async {
+    if (_emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Please enter your email address first',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: AppSizes.fontM,
+            ),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(AppSizes.paddingL),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          ),
+        ),
+      );
+      return;
+    }
+
+    try {
+      await context.read<AppAuthProvider>().sendPasswordResetEmail(
+            _emailController.text.trim(),
+          );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Password reset email sent to ${_emailController.text}',
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: AppSizes.fontM,
+              ),
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(AppSizes.paddingL),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to send reset email: ${e.toString()}',
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: AppSizes.fontM,
+              ),
+            ),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(AppSizes.paddingL),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      await context.read<AppAuthProvider>().signInWithGoogle();
+      if (mounted) context.go('/');
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        final error = _mapFirebaseError(e);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error.message,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: AppSizes.fontM,
+              ),
+            ),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(AppSizes.paddingL),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              GoogleSignInError.unknown.message,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: AppSizes.fontM,
+              ),
+            ),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(AppSizes.paddingL),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  GoogleSignInError _mapFirebaseError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'sign_in_canceled':
+      case 'canceled':
+        return GoogleSignInError.cancelled;
+      case 'network-request-failed':
+        return GoogleSignInError.networkError;
+      case 'account-exists-with-different-credential':
+      case 'email-already-in-use':
+        return GoogleSignInError.alreadyInUse;
+      case 'invalid-credential':
+        return GoogleSignInError.invalidCredential;
+      default:
+        return GoogleSignInError.unknown;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.watch<AuthProvider>().isLoading;
+    final isLoading = context.watch<AppAuthProvider>().isLoading;
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -183,7 +345,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSizes.spacing2XL),
+
+                  const SizedBox(height: AppSizes.spacingM),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: isLoading ? null : _handleForgotPassword,
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: AppSizes.fontM,
+                        ),
+                      ),
+                    ),
+                  ),
 
                   // Login Button with gradient
                   // Replace the existing login button code with this:
@@ -228,6 +404,51 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Colors.white,
                               ),
                             ),
+                    ),
+                  ),
+
+                  // Replace the previous Google Sign-In button with this:
+                  const SizedBox(height: AppSizes.spacingL),
+                  SizedBox(
+                    height: 56,
+                    child: OutlinedButton(
+                      onPressed: isLoading ? null : _handleGoogleSignIn,
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey[700]!),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (!isLoading) ...[
+                            Image.asset(
+                              'assets/google_logo.png',
+                              height: 34,
+                            ),
+                            const SizedBox(width: AppSizes.spacingM),
+                          ],
+                          isLoading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Text(
+                                  'Continue with Google',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSizes.spacing2XL),

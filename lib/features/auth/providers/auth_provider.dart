@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class AuthProvider with ChangeNotifier {
+class AppAuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   bool _isLoading = false;
@@ -13,7 +13,7 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   String? _error;
 
-  AuthProvider() {
+  AppAuthProvider() {
     _init();
   }
 
@@ -125,11 +125,17 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Reset password
-  Future<void> resetPassword(String email) async {
+  Future<void> resetPassword({
+    required String code,
+    required String newPassword,
+  }) async {
     try {
       _setLoading(true);
       _clearError();
-      await _auth.sendPasswordResetEmail(email: email);
+      await _auth.confirmPasswordReset(
+        code: code,
+        newPassword: newPassword,
+      );
     } on FirebaseAuthException catch (e) {
       _setError(_getErrorMessage(e));
       rethrow;
@@ -138,6 +144,22 @@ class AuthProvider with ChangeNotifier {
       rethrow;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw _getErrorMessage(e);
+    } catch (e) {
+      throw e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

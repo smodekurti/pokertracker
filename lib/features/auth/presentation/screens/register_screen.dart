@@ -34,7 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      await context.read<AuthProvider>().registerWithEmailAndPassword(
+      await context.read<AppAuthProvider>().registerWithEmailAndPassword(
             _emailController.text.trim(),
             _passwordController.text,
             _nameController.text.trim(),
@@ -68,7 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.watch<AuthProvider>().isLoading;
+    final isLoading = context.watch<AppAuthProvider>().isLoading;
     final size = MediaQuery.of(context).size;
 
     return Scaffold(

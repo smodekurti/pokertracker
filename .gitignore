@@ -1,0 +1,6 @@
+key.properties
+.jks
+.env.production
+.env.development
+.env
+.env.staging
