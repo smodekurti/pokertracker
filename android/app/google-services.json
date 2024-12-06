@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "928140561021-p8v1qg9jn7fvgqugvn1pd330it8a10oh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.poker_tracker",
+            "certificate_hash": "e5f48390e2a554352e7ece8f539e5a76cf305367"
+          }
+        },
+        {
           "client_id": "928140561021-4uv9vheiugf5u4hqkmf612l0d6r0pt2s.apps.googleusercontent.com",
           "client_type": 3
         }

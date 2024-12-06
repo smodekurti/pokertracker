@@ -1,29 +1,24 @@
 import 'package:flutter/foundation.dart';
 
-class ConsentProvider extends ChangeNotifier {
-  bool _hasAcceptedCurrentSession = false;
+class ConsentProvider with ChangeNotifier {
+  bool _hasAcceptedForSession = false;
   bool _isLoading = false;
 
-  bool get hasAcceptedCurrentSession => _hasAcceptedCurrentSession;
+  bool get hasAcceptedForSession => _hasAcceptedForSession;
   bool get isLoading => _isLoading;
 
-  void setAccepted() {
-    _hasAcceptedCurrentSession = true;
-    notifyListeners();
-  }
-
   void acceptConsent() {
-    _isLoading = true;
-    notifyListeners();
-
-    // Simulate any async work if needed
-    _hasAcceptedCurrentSession = true;
-    _isLoading = false;
+    _hasAcceptedForSession = true;
     notifyListeners();
   }
 
   void reset() {
-    _hasAcceptedCurrentSession = false;
+    _hasAcceptedForSession = false;
+    notifyListeners();
+  }
+
+  void setLoading(bool value) {
+    _isLoading = value;
     notifyListeners();
   }
 }

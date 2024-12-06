@@ -5,8 +5,6 @@ import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/core/utils/ui_helpers.dart';
 import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
-import 'package:poker_tracker/features/consent/data/repositories/consent_repository.dart';
-import 'package:poker_tracker/features/consent/data/repositories/firebase_consent_repository.dart';
 import 'package:poker_tracker/features/consent/providers/consent_provider.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/features/team/providers/team_provider.dart';
@@ -40,26 +38,24 @@ void main() async {
       ErrorBoundary(
         child: MultiProvider(
           providers: [
-            ChangeNotifierProvider(create: (_) => AuthProvider()),
+            ChangeNotifierProvider(create: (_) => AppAuthProvider()),
             ChangeNotifierProvider(create: (_) => ConsentProvider()),
 
-            ChangeNotifierProxyProvider<AuthProvider, TeamProvider>(
+            ChangeNotifierProxyProvider<AppAuthProvider, TeamProvider>(
               create: (context) {
-                final auth = context.read<AuthProvider>();
+                final auth = context.read<AppAuthProvider>();
                 final userId = auth.currentUser?.uid ?? '';
-                print('Creating initial TeamProvider with userId: $userId');
                 return TeamProvider(userId);
               },
               update: (context, authProvider, teamProvider) {
                 final userId = authProvider.currentUser?.uid ?? '';
-                print('Updating TeamProvider for userId: $userId');
                 return TeamProvider(userId);
               },
             ),
 
             // Player Provider - depends on PlayerRepository and AuthProvider
 
-            ChangeNotifierProxyProvider<AuthProvider, GameProvider?>(
+            ChangeNotifierProxyProvider<AppAuthProvider, GameProvider?>(
               create: (_) => null, // Initially null
               update: (context, authProvider, previousGameProvider) {
                 final userId = authProvider.currentUser?.uid;
