@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
+import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/features/home/presentation/widgets/active_game_card.dart';
 import 'dart:ui';
-import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _handleLogout() async {
     try {
-      await context.read<AuthProvider>().signOut();
+      await context.read<AppAuthProvider>().signOut();
       if (mounted) {
         context.go('/login');
       }
@@ -141,6 +141,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const Spacer(),
+              IconButton(
+                icon: const Icon(
+                  Icons.group,
+                  color: AppColors.textPrimary,
+                  size: AppSizes.iconM,
+                ),
+                onPressed: () => context.go('/teams'),
+                tooltip: 'Team Management',
+              ),
               IconButton(
                 icon: const Icon(
                   Icons.analytics,

@@ -127,6 +127,14 @@ class AuthRepository {
     }
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
   // Helper method to create or update user document
   Future<void> _createOrUpdateUserDocument(
       User user, Map<String, dynamic> data) async {
