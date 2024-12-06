@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:poker_tracker/features/settings/providers/settings_provider.dart';
 import 'package:poker_tracker/shared/widgets/custom_text_field.dart';
 import 'package:poker_tracker/shared/widgets/loading_overlay.dart';
@@ -35,7 +35,7 @@ class SettingsScreen extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       try {
-        await context.read<AuthProvider>().signOut();
+        await context.read<AppAuthProvider>().signOut();
         if (context.mounted) {
           context.go('/login');
         }
@@ -83,7 +83,7 @@ class SettingsScreen extends StatelessWidget {
                 _buildSection(
                   title: 'Account',
                   children: [
-                    Consumer<AuthProvider>(
+                    Consumer<AppAuthProvider>(
                       builder: (context, authProvider, _) {
                         final user = authProvider.user;
                         return Column(

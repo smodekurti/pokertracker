@@ -6,7 +6,7 @@
     shrinking="true"
     mergedManifest="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/app/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml"
     manifestMergeReport="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/app/outputs/logs/manifest-merger-release-report.txt"
-    proguardFiles="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/app/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.3.2:/Users/hivasu/Documents/Vasu/Personal/Development/flutter/packages/flutter_tools/gradle/flutter_proguard_rules.pro:proguard-rules.pro"
+    proguardFiles="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/app/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.3.2:/Users/hivasu/Documents/Vasu/Personal/Development/flutter/packages/flutter_tools/gradle/flutter_proguard_rules.pro:proguard-rules.pro:/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/app/intermediates/default_proguard_files/global/proguard-android.txt-8.3.2:proguard-rules.pro"
     partialResultsDir="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/app/intermediates/lint_vital_partial_results/release/lintVitalAnalyzeRelease/out">
   <buildFeatures
       namespacing="REQUIRED"/>

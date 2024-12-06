@@ -7,458 +7,466 @@
 7    <uses-sdk
 8        android:minSdkVersion="23"
 9        android:targetSdkVersion="35" />
-10    <!--
-11         Required to query activities that can process text, see:
-12         https://developer.android.com/training/package-visibility and
-13         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
-14
-15         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin.
-16    -->
-17    <queries>
-17-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:39:5-44:15
-18        <intent>
-18-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:40:9-43:18
-19            <action android:name="android.intent.action.PROCESS_TEXT" />
-19-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:41:13-72
-19-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:41:21-70
-20
-21            <data android:mimeType="text/plain" />
-21-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:42:13-50
-21-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:42:19-48
-22        </intent>
-23    </queries>
-24
-25    <uses-permission android:name="android.permission.INTERNET" />
-25-->[:firebase_dynamic_links] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_dynamic_links/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:7:5-67
-25-->[:firebase_dynamic_links] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_dynamic_links/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:7:22-64
-26    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-26-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:26:5-79
-26-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:26:22-76
-27    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
-27-->[com.google.android.recaptcha:recaptcha:18.5.1] /Users/hivasu/.gradle/caches/transforms-3/d8ad706cfa1dee021d99e57bfa2f8c2f/transformed/jetified-recaptcha-18.5.1/AndroidManifest.xml:9:5-98
-27-->[com.google.android.recaptcha:recaptcha:18.5.1] /Users/hivasu/.gradle/caches/transforms-3/d8ad706cfa1dee021d99e57bfa2f8c2f/transformed/jetified-recaptcha-18.5.1/AndroidManifest.xml:9:22-95
-28
-29    <permission
-29-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
-30        android:name="com.example.poker_tracker.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-30-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
-31        android:protectionLevel="signature" />
-31-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
-32
-33    <uses-permission android:name="com.example.poker_tracker.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-33-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
-33-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
-34
-35    <application
-36        android:name="android.app.Application"
-36-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:4:9-42
-37        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-37-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
-38        android:extractNativeLibs="false"
-39        android:icon="@mipmap/ic_launcher"
-39-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:5:9-43
-40        android:label="poker_tracker" >
-40-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:3:9-38
-41        <activity
-41-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:6:9-27:20
-42            android:name="com.example.poker_tracker.MainActivity"
-42-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:7:13-41
-43            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-43-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:12:13-163
-44            android:exported="true"
-44-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:8:13-36
-45            android:hardwareAccelerated="true"
-45-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:13:13-47
-46            android:launchMode="singleTop"
-46-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:9:13-43
-47            android:taskAffinity=""
+10
+11    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+11-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:2:2-68
+11-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:2:19-66
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:3:2-64
+12-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:3:19-61
+13    <!--
+14         Required to query activities that can process text, see:
+15         https://developer.android.com/training/package-visibility and
+16         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+17
+18         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin.
+19    -->
+20    <queries>
+20-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:45:5-50:15
+21        <intent>
+21-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:46:9-49:18
+22            <action android:name="android.intent.action.PROCESS_TEXT" />
+22-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:47:13-72
+22-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:47:21-70
+23
+24            <data android:mimeType="text/plain" />
+24-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:48:13-50
+24-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:48:19-48
+25        </intent>
+26    </queries>
+27
+28    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- suppress DeprecatedClassUsageInspection -->
+28-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:26:5-79
+28-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:26:22-76
+29    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+29-->[androidx.biometric:biometric:1.1.0] /Users/hivasu/.gradle/caches/transforms-3/69f967a71c91552bed2421fc1e6228de/transformed/biometric-1.1.0/AndroidManifest.xml:27:5-74
+29-->[androidx.biometric:biometric:1.1.0] /Users/hivasu/.gradle/caches/transforms-3/69f967a71c91552bed2421fc1e6228de/transformed/biometric-1.1.0/AndroidManifest.xml:27:22-71
+30    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+30-->[com.google.android.recaptcha:recaptcha:18.5.1] /Users/hivasu/.gradle/caches/transforms-3/d8ad706cfa1dee021d99e57bfa2f8c2f/transformed/jetified-recaptcha-18.5.1/AndroidManifest.xml:9:5-98
+30-->[com.google.android.recaptcha:recaptcha:18.5.1] /Users/hivasu/.gradle/caches/transforms-3/d8ad706cfa1dee021d99e57bfa2f8c2f/transformed/jetified-recaptcha-18.5.1/AndroidManifest.xml:9:22-95
+31
+32    <permission
+32-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+33        android:name="com.example.poker_tracker.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+33-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+34        android:protectionLevel="signature" />
+34-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+35
+36    <uses-permission android:name="com.example.poker_tracker.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+36-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+36-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+37
+38    <application
+39        android:name="android.app.Application"
+39-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:6:9-42
+40        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+40-->[androidx.core:core:1.13.1] /Users/hivasu/.gradle/caches/transforms-3/820d27518728a81d863b2472c16c0f51/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
+41        android:extractNativeLibs="false"
+42        android:icon="@mipmap/ic_launcher"
+42-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:7:9-43
+43        android:label="poker_tracker" >
+43-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:5:9-38
+44        <activity
+44-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:8:9-32:20
+45            android:name="com.example.poker_tracker.MainActivity"
+45-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:9:13-41
+46            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+46-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:14:13-163
+47            android:exported="true"
 47-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:10:13-36
-48            android:theme="@style/LaunchTheme"
-48-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:11:13-47
-49            android:windowSoftInputMode="adjustResize" >
-49-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:14:13-55
-50
-51            <!--
-52                 Specifies an Android theme to apply to this Activity as soon as
-53                 the Android process has started. This theme is visible to the user
-54                 while the Flutter UI initializes. After that, this theme continues
-55                 to determine the Window background behind the Flutter UI.
-56            -->
-57            <meta-data
-57-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:19:13-22:17
-58                android:name="io.flutter.embedding.android.NormalTheme"
-58-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:20:15-70
-59                android:resource="@style/NormalTheme" />
-59-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:21:15-52
-60
-61            <intent-filter>
-61-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:23:13-26:29
-62                <action android:name="android.intent.action.MAIN" />
-62-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:24:17-68
-62-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:24:25-66
-63
-64                <category android:name="android.intent.category.LAUNCHER" />
-64-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:25:17-76
-64-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:25:27-74
-65            </intent-filter>
-66        </activity>
-67        <!--
-68             Don't delete the meta-data below.
-69             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
-70        -->
-71        <meta-data
-71-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:30:9-32:33
-72            android:name="flutterEmbedding"
-72-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:31:13-44
-73            android:value="2" />
-73-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:32:13-30
-74
-75        <service
-75-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:8:9-12:19
-76            android:name="com.google.firebase.components.ComponentDiscoveryService"
-76-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:8:18-89
-77            android:directBootAware="true"
-77-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:32:13-43
-78            android:exported="false" >
-78-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:68:13-37
-79            <meta-data
-79-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:9:13-11:85
-80                android:name="com.google.firebase.components:io.flutter.plugins.firebase.firestore.FlutterFirebaseFirestoreRegistrar"
-80-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:10:17-134
-81                android:value="com.google.firebase.components.ComponentRegistrar" />
-81-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:17-82
-82            <meta-data
-82-->[:firebase_auth] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_auth/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:9:13-11:85
-83                android:name="com.google.firebase.components:io.flutter.plugins.firebase.auth.FlutterFirebaseAuthRegistrar"
-83-->[:firebase_auth] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_auth/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:10:17-124
-84                android:value="com.google.firebase.components.ComponentRegistrar" />
-84-->[:firebase_auth] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_auth/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:17-82
-85            <meta-data
-85-->[:firebase_dynamic_links] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_dynamic_links/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:13-13:85
-86                android:name="com.google.firebase.components:io.flutter.plugins.firebase.dynamiclinks.FlutterFirebaseAppRegistrar"
-86-->[:firebase_dynamic_links] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_dynamic_links/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:12:17-131
-87                android:value="com.google.firebase.components.ComponentRegistrar" />
-87-->[:firebase_dynamic_links] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_dynamic_links/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:13:17-82
-88            <meta-data
-88-->[:firebase_core] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_core/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:9:13-11:85
-89                android:name="com.google.firebase.components:io.flutter.plugins.firebase.core.FlutterFirebaseCoreRegistrar"
-89-->[:firebase_core] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_core/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:10:17-124
-90                android:value="com.google.firebase.components.ComponentRegistrar" />
-90-->[:firebase_core] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_core/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:17-82
-91            <meta-data
-91-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:69:13-71:85
-92                android:name="com.google.firebase.components:com.google.firebase.auth.FirebaseAuthRegistrar"
-92-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:70:17-109
-93                android:value="com.google.firebase.components.ComponentRegistrar" />
-93-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:71:17-82
-94            <meta-data
-94-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:17:13-19:85
-95                android:name="com.google.firebase.components:com.google.firebase.firestore.FirebaseFirestoreKtxRegistrar"
-95-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:18:17-122
-96                android:value="com.google.firebase.components.ComponentRegistrar" />
-96-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:19:17-82
-97            <meta-data
-97-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:20:13-22:85
-98                android:name="com.google.firebase.components:com.google.firebase.firestore.FirestoreRegistrar"
-98-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:21:17-111
-99                android:value="com.google.firebase.components.ComponentRegistrar" />
-99-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:22:17-82
-100            <meta-data
-100-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:24:13-26:85
-101                android:name="com.google.firebase.components:com.google.firebase.dynamiclinks.FirebaseDynamicLinksKtxRegistrar"
-101-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:25:17-128
-102                android:value="com.google.firebase.components.ComponentRegistrar" />
-102-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:26:17-82
-103            <meta-data
-103-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:27:13-29:85
-104                android:name="com.google.firebase.components:com.google.firebase.dynamiclinks.internal.FirebaseDynamicLinkRegistrar"
-104-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:28:17-133
-105                android:value="com.google.firebase.components.ComponentRegistrar" />
-105-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:29:17-82
-106            <meta-data
-106-->[com.google.firebase:firebase-common-ktx:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/c43d880063bbeba2659c5b8418bfb6dd/transformed/jetified-firebase-common-ktx-21.0.0/AndroidManifest.xml:12:13-14:85
-107                android:name="com.google.firebase.components:com.google.firebase.ktx.FirebaseCommonLegacyRegistrar"
-107-->[com.google.firebase:firebase-common-ktx:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/c43d880063bbeba2659c5b8418bfb6dd/transformed/jetified-firebase-common-ktx-21.0.0/AndroidManifest.xml:13:17-116
-108                android:value="com.google.firebase.components.ComponentRegistrar" />
-108-->[com.google.firebase:firebase-common-ktx:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/c43d880063bbeba2659c5b8418bfb6dd/transformed/jetified-firebase-common-ktx-21.0.0/AndroidManifest.xml:14:17-82
-109            <meta-data
-109-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:35:13-37:85
-110                android:name="com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar"
-110-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:36:17-109
-111                android:value="com.google.firebase.components.ComponentRegistrar" />
-111-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:37:17-82
-112        </service>
-113        <!--
-114           Declares a provider which allows us to store files to share in
-115           '.../caches/share_plus' and grant the receiving action access
-116        -->
-117        <provider
-117-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:13:9-21:20
-118            android:name="dev.fluttercommunity.plus.share.ShareFileProvider"
-118-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:14:13-77
-119            android:authorities="com.example.poker_tracker.flutter.share_provider"
-119-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:15:13-74
-120            android:exported="false"
-120-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:16:13-37
-121            android:grantUriPermissions="true" >
-121-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:17:13-47
-122            <meta-data
-122-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:18:13-20:68
-123                android:name="android.support.FILE_PROVIDER_PATHS"
-123-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:19:17-67
-124                android:resource="@xml/flutter_share_file_paths" />
-124-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:20:17-65
-125        </provider>
-126        <!--
-127           This manifest declared broadcast receiver allows us to use an explicit
-128           Intent when creating a PendingItent to be informed of the user's choice
-129        -->
-130        <receiver
-130-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:26:9-32:20
-131            android:name="dev.fluttercommunity.plus.share.SharePlusPendingIntent"
-131-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:27:13-82
-132            android:exported="false" >
-132-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:28:13-37
-133            <intent-filter>
-133-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:29:13-31:29
-134                <action android:name="EXTRA_CHOSEN_COMPONENT" />
-134-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:30:17-65
-134-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:30:25-62
-135            </intent-filter>
-136        </receiver>
-137
-138        <activity
-138-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:29:9-46:20
-139            android:name="com.google.firebase.auth.internal.GenericIdpActivity"
-139-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:30:13-80
-140            android:excludeFromRecents="true"
-140-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:31:13-46
-141            android:exported="true"
-141-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:32:13-36
-142            android:launchMode="singleTask"
-142-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:33:13-44
-143            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-143-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:34:13-72
-144            <intent-filter>
-144-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:35:13-45:29
-145                <action android:name="android.intent.action.VIEW" />
-145-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:36:17-69
-145-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:36:25-66
-146
-147                <category android:name="android.intent.category.DEFAULT" />
-147-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:38:17-76
-147-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:38:27-73
-148                <category android:name="android.intent.category.BROWSABLE" />
-148-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:39:17-78
-148-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:39:27-75
-149
-150                <data
-150-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:42:13-50
-151                    android:host="firebase.auth"
-152                    android:path="/"
-153                    android:scheme="genericidp" />
-154            </intent-filter>
-155        </activity>
-156        <activity
-156-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:47:9-64:20
-157            android:name="com.google.firebase.auth.internal.RecaptchaActivity"
-157-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:48:13-79
-158            android:excludeFromRecents="true"
-158-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:49:13-46
-159            android:exported="true"
-159-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:50:13-36
-160            android:launchMode="singleTask"
-160-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:51:13-44
-161            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-161-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:52:13-72
-162            <intent-filter>
-162-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:53:13-63:29
-163                <action android:name="android.intent.action.VIEW" />
-163-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:36:17-69
-163-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:36:25-66
-164
-165                <category android:name="android.intent.category.DEFAULT" />
-165-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:38:17-76
-165-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:38:27-73
-166                <category android:name="android.intent.category.BROWSABLE" />
-166-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:39:17-78
-166-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:39:27-75
-167
-168                <data
-168-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:42:13-50
-169                    android:host="firebase.auth"
-170                    android:path="/"
-171                    android:scheme="recaptcha" />
-172            </intent-filter>
-173        </activity>
-174
-175        <provider
-175-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:23:9-28:39
-176            android:name="com.google.firebase.provider.FirebaseInitProvider"
-176-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:24:13-77
-177            android:authorities="com.example.poker_tracker.firebaseinitprovider"
-177-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:25:13-72
-178            android:directBootAware="true"
-178-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:26:13-43
-179            android:exported="false"
-179-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:27:13-37
-180            android:initOrder="100" />
-180-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:28:13-36
-181
-182        <service
-182-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:24:9-32:19
-183            android:name="androidx.credentials.playservices.CredentialProviderMetadataHolder"
-183-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:25:13-94
-184            android:enabled="true"
-184-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:26:13-35
-185            android:exported="false" >
-185-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:27:13-37
-186            <meta-data
-186-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:29:13-31:104
-187                android:name="androidx.credentials.CREDENTIAL_PROVIDER_KEY"
-187-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:30:17-76
-188                android:value="androidx.credentials.playservices.CredentialProviderPlayServicesImpl" />
-188-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:31:17-101
-189        </service>
-190
-191        <activity
-191-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:34:9-41:20
-192            android:name="androidx.credentials.playservices.HiddenActivity"
-192-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:35:13-76
-193            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-193-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:36:13-87
-194            android:enabled="true"
-194-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:37:13-35
-195            android:exported="false"
-195-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:38:13-37
-196            android:fitsSystemWindows="true"
-196-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:39:13-45
-197            android:theme="@style/Theme.Hidden" >
-197-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:40:13-48
-198        </activity>
-199        <activity
-199-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:23:9-27:75
-200            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
-200-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:24:13-93
-201            android:excludeFromRecents="true"
-201-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:25:13-46
-202            android:exported="false"
-202-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:26:13-37
-203            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-203-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:27:13-72
-204        <!--
-205            Service handling Google Sign-In user revocation. For apps that do not integrate with
-206            Google Sign-In, this service will never be started.
-207        -->
-208        <service
-208-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:33:9-37:51
-209            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
-209-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:34:13-89
-210            android:exported="true"
-210-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:35:13-36
-211            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
-211-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:36:13-107
-212            android:visibleToInstantApps="true" />
-212-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:37:13-48
-213
-214        <activity
-214-->[com.google.android.gms:play-services-base:18.0.1] /Users/hivasu/.gradle/caches/transforms-3/aa37c3a4c91037926610e5b113ae051e/transformed/jetified-play-services-base-18.0.1/AndroidManifest.xml:20:9-22:45
-215            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-215-->[com.google.android.gms:play-services-base:18.0.1] /Users/hivasu/.gradle/caches/transforms-3/aa37c3a4c91037926610e5b113ae051e/transformed/jetified-play-services-base-18.0.1/AndroidManifest.xml:20:19-85
-216            android:exported="false"
-216-->[com.google.android.gms:play-services-base:18.0.1] /Users/hivasu/.gradle/caches/transforms-3/aa37c3a4c91037926610e5b113ae051e/transformed/jetified-play-services-base-18.0.1/AndroidManifest.xml:22:19-43
-217            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-217-->[com.google.android.gms:play-services-base:18.0.1] /Users/hivasu/.gradle/caches/transforms-3/aa37c3a4c91037926610e5b113ae051e/transformed/jetified-play-services-base-18.0.1/AndroidManifest.xml:21:19-78
-218
-219        <uses-library
-219-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:23:9-25:40
-220            android:name="androidx.window.extensions"
-220-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:24:13-54
-221            android:required="false" />
-221-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:25:13-37
-222        <uses-library
-222-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:26:9-28:40
-223            android:name="androidx.window.sidecar"
-223-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:27:13-51
-224            android:required="false" />
-224-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:28:13-37
-225
-226        <meta-data
-226-->[com.google.android.gms:play-services-basement:18.4.0] /Users/hivasu/.gradle/caches/transforms-3/e9a43f157c33349c7c69011833332454/transformed/jetified-play-services-basement-18.4.0/AndroidManifest.xml:6:9-122
-227            android:name="com.google.android.gms.version"
-227-->[com.google.android.gms:play-services-basement:18.4.0] /Users/hivasu/.gradle/caches/transforms-3/e9a43f157c33349c7c69011833332454/transformed/jetified-play-services-basement-18.4.0/AndroidManifest.xml:6:20-65
-228            android:value="@integer/google_play_services_version" />
-228-->[com.google.android.gms:play-services-basement:18.4.0] /Users/hivasu/.gradle/caches/transforms-3/e9a43f157c33349c7c69011833332454/transformed/jetified-play-services-basement-18.4.0/AndroidManifest.xml:6:66-119
-229
-230        <provider
-230-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:24:9-32:20
-231            android:name="androidx.startup.InitializationProvider"
-231-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:25:13-67
-232            android:authorities="com.example.poker_tracker.androidx-startup"
-232-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:26:13-68
-233            android:exported="false" >
-233-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:27:13-37
-234            <meta-data
-234-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:29:13-31:52
-235                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-235-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:30:17-78
-236                android:value="androidx.startup" />
-236-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:31:17-49
-237            <meta-data
-237-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
-238                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-238-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
-239                android:value="androidx.startup" />
-239-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
-240        </provider>
-241
-242        <receiver
-242-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
-243            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-243-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
-244            android:directBootAware="false"
-244-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
-245            android:enabled="true"
-245-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
-246            android:exported="true"
-246-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
-247            android:permission="android.permission.DUMP" >
-247-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
-248            <intent-filter>
-248-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
-249                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-249-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
-249-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
-250            </intent-filter>
+48            android:hardwareAccelerated="true"
+48-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:15:13-47
+49            android:launchMode="singleTop"
+49-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:11:13-43
+50            android:screenOrientation="portrait"
+50-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:17:13-49
+51            android:taskAffinity=""
+51-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:12:13-36
+52            android:theme="@style/LaunchTheme"
+52-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:13:13-47
+53            android:windowSoftInputMode="adjustResize" >
+53-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:16:13-55
+54
+55            <!--
+56                 Specifies an Android theme to apply to this Activity as soon as
+57                 the Android process has started. This theme is visible to the user
+58                 while the Flutter UI initializes. After that, this theme continues
+59                 to determine the Window background behind the Flutter UI.
+60            -->
+61            <meta-data
+61-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:24:13-27:17
+62                android:name="io.flutter.embedding.android.NormalTheme"
+62-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:25:15-70
+63                android:resource="@style/NormalTheme" />
+63-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:26:15-52
+64
+65            <intent-filter>
+65-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:28:13-31:29
+66                <action android:name="android.intent.action.MAIN" />
+66-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:29:17-68
+66-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:29:25-66
+67
+68                <category android:name="android.intent.category.LAUNCHER" />
+68-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:30:17-76
+68-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:30:27-74
+69            </intent-filter>
+70        </activity>
+71        <!--
+72             Don't delete the meta-data below.
+73             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
+74        -->
+75        <meta-data
+75-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:35:9-37:33
+76            android:name="flutterEmbedding"
+76-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:36:13-44
+77            android:value="2" />
+77-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:37:13-30
+78
+79        <service
+79-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:8:9-12:19
+80            android:name="com.google.firebase.components.ComponentDiscoveryService"
+80-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:8:18-89
+81            android:directBootAware="true"
+81-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:32:13-43
+82            android:exported="false" >
+82-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:68:13-37
+83            <meta-data
+83-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:9:13-11:85
+84                android:name="com.google.firebase.components:io.flutter.plugins.firebase.firestore.FlutterFirebaseFirestoreRegistrar"
+84-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:10:17-134
+85                android:value="com.google.firebase.components.ComponentRegistrar" />
+85-->[:cloud_firestore] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/cloud_firestore/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:17-82
+86            <meta-data
+86-->[:firebase_auth] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_auth/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:9:13-11:85
+87                android:name="com.google.firebase.components:io.flutter.plugins.firebase.auth.FlutterFirebaseAuthRegistrar"
+87-->[:firebase_auth] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_auth/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:10:17-124
+88                android:value="com.google.firebase.components.ComponentRegistrar" />
+88-->[:firebase_auth] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_auth/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:17-82
+89            <meta-data
+89-->[:firebase_dynamic_links] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_dynamic_links/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:13-13:85
+90                android:name="com.google.firebase.components:io.flutter.plugins.firebase.dynamiclinks.FlutterFirebaseAppRegistrar"
+90-->[:firebase_dynamic_links] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_dynamic_links/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:12:17-131
+91                android:value="com.google.firebase.components.ComponentRegistrar" />
+91-->[:firebase_dynamic_links] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_dynamic_links/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:13:17-82
+92            <meta-data
+92-->[:firebase_core] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_core/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:9:13-11:85
+93                android:name="com.google.firebase.components:io.flutter.plugins.firebase.core.FlutterFirebaseCoreRegistrar"
+93-->[:firebase_core] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_core/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:10:17-124
+94                android:value="com.google.firebase.components.ComponentRegistrar" />
+94-->[:firebase_core] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/firebase_core/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:17-82
+95            <meta-data
+95-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:69:13-71:85
+96                android:name="com.google.firebase.components:com.google.firebase.auth.FirebaseAuthRegistrar"
+96-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:70:17-109
+97                android:value="com.google.firebase.components.ComponentRegistrar" />
+97-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:71:17-82
+98            <meta-data
+98-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:17:13-19:85
+99                android:name="com.google.firebase.components:com.google.firebase.firestore.FirebaseFirestoreKtxRegistrar"
+99-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:18:17-122
+100                android:value="com.google.firebase.components.ComponentRegistrar" />
+100-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:19:17-82
+101            <meta-data
+101-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:20:13-22:85
+102                android:name="com.google.firebase.components:com.google.firebase.firestore.FirestoreRegistrar"
+102-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:21:17-111
+103                android:value="com.google.firebase.components.ComponentRegistrar" />
+103-->[com.google.firebase:firebase-firestore:25.1.1] /Users/hivasu/.gradle/caches/transforms-3/1933ded4615cb9e3089c362d35dada90/transformed/jetified-firebase-firestore-25.1.1/AndroidManifest.xml:22:17-82
+104            <meta-data
+104-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:24:13-26:85
+105                android:name="com.google.firebase.components:com.google.firebase.dynamiclinks.FirebaseDynamicLinksKtxRegistrar"
+105-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:25:17-128
+106                android:value="com.google.firebase.components.ComponentRegistrar" />
+106-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:26:17-82
+107            <meta-data
+107-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:27:13-29:85
+108                android:name="com.google.firebase.components:com.google.firebase.dynamiclinks.internal.FirebaseDynamicLinkRegistrar"
+108-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:28:17-133
+109                android:value="com.google.firebase.components.ComponentRegistrar" />
+109-->[com.google.firebase:firebase-dynamic-links:22.1.0] /Users/hivasu/.gradle/caches/transforms-3/5c58700e95b9534132552a9da46c40d2/transformed/jetified-firebase-dynamic-links-22.1.0/AndroidManifest.xml:29:17-82
+110            <meta-data
+110-->[com.google.firebase:firebase-common-ktx:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/c43d880063bbeba2659c5b8418bfb6dd/transformed/jetified-firebase-common-ktx-21.0.0/AndroidManifest.xml:12:13-14:85
+111                android:name="com.google.firebase.components:com.google.firebase.ktx.FirebaseCommonLegacyRegistrar"
+111-->[com.google.firebase:firebase-common-ktx:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/c43d880063bbeba2659c5b8418bfb6dd/transformed/jetified-firebase-common-ktx-21.0.0/AndroidManifest.xml:13:17-116
+112                android:value="com.google.firebase.components.ComponentRegistrar" />
+112-->[com.google.firebase:firebase-common-ktx:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/c43d880063bbeba2659c5b8418bfb6dd/transformed/jetified-firebase-common-ktx-21.0.0/AndroidManifest.xml:14:17-82
+113            <meta-data
+113-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:35:13-37:85
+114                android:name="com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar"
+114-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:36:17-109
+115                android:value="com.google.firebase.components.ComponentRegistrar" />
+115-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:37:17-82
+116        </service>
+117        <!--
+118           Declares a provider which allows us to store files to share in
+119           '.../caches/share_plus' and grant the receiving action access
+120        -->
+121        <provider
+121-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:13:9-21:20
+122            android:name="dev.fluttercommunity.plus.share.ShareFileProvider"
+122-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:14:13-77
+123            android:authorities="com.example.poker_tracker.flutter.share_provider"
+123-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:15:13-74
+124            android:exported="false"
+124-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:16:13-37
+125            android:grantUriPermissions="true" >
+125-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:17:13-47
+126            <meta-data
+126-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:18:13-20:68
+127                android:name="android.support.FILE_PROVIDER_PATHS"
+127-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:19:17-67
+128                android:resource="@xml/flutter_share_file_paths" />
+128-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:20:17-65
+129        </provider>
+130        <!--
+131           This manifest declared broadcast receiver allows us to use an explicit
+132           Intent when creating a PendingItent to be informed of the user's choice
+133        -->
+134        <receiver
+134-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:26:9-32:20
+135            android:name="dev.fluttercommunity.plus.share.SharePlusPendingIntent"
+135-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:27:13-82
+136            android:exported="false" >
+136-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:28:13-37
+137            <intent-filter>
+137-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:29:13-31:29
+138                <action android:name="EXTRA_CHOSEN_COMPONENT" />
+138-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:30:17-65
+138-->[:share_plus] /Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/share_plus/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:30:25-62
+139            </intent-filter>
+140        </receiver>
+141
+142        <activity
+142-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:29:9-46:20
+143            android:name="com.google.firebase.auth.internal.GenericIdpActivity"
+143-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:30:13-80
+144            android:excludeFromRecents="true"
+144-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:31:13-46
+145            android:exported="true"
+145-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:32:13-36
+146            android:launchMode="singleTask"
+146-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:33:13-44
+147            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+147-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:34:13-72
+148            <intent-filter>
+148-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:35:13-45:29
+149                <action android:name="android.intent.action.VIEW" />
+149-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:36:17-69
+149-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:36:25-66
+150
+151                <category android:name="android.intent.category.DEFAULT" />
+151-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:38:17-76
+151-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:38:27-73
+152                <category android:name="android.intent.category.BROWSABLE" />
+152-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:39:17-78
+152-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:39:27-75
+153
+154                <data
+154-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:48:13-50
+155                    android:host="firebase.auth"
+156                    android:path="/"
+157                    android:scheme="genericidp" />
+158            </intent-filter>
+159        </activity>
+160        <activity
+160-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:47:9-64:20
+161            android:name="com.google.firebase.auth.internal.RecaptchaActivity"
+161-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:48:13-79
+162            android:excludeFromRecents="true"
+162-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:49:13-46
+163            android:exported="true"
+163-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:50:13-36
+164            android:launchMode="singleTask"
+164-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:51:13-44
+165            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+165-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:52:13-72
+166            <intent-filter>
+166-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:53:13-63:29
+167                <action android:name="android.intent.action.VIEW" />
+167-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:36:17-69
+167-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:36:25-66
+168
+169                <category android:name="android.intent.category.DEFAULT" />
+169-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:38:17-76
+169-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:38:27-73
+170                <category android:name="android.intent.category.BROWSABLE" />
+170-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:39:17-78
+170-->[com.google.firebase:firebase-auth:23.1.0] /Users/hivasu/.gradle/caches/transforms-3/216ac74dc98bf86400d546675d071bc0/transformed/jetified-firebase-auth-23.1.0/AndroidManifest.xml:39:27-75
+171
+172                <data
+172-->/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/android/app/src/main/AndroidManifest.xml:48:13-50
+173                    android:host="firebase.auth"
+174                    android:path="/"
+175                    android:scheme="recaptcha" />
+176            </intent-filter>
+177        </activity>
+178
+179        <uses-library
+179-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:23:9-25:40
+180            android:name="androidx.window.extensions"
+180-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:24:13-54
+181            android:required="false" />
+181-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:25:13-37
+182        <uses-library
+182-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:26:9-28:40
+183            android:name="androidx.window.sidecar"
+183-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:27:13-51
+184            android:required="false" />
+184-->[androidx.window:window:1.2.0] /Users/hivasu/.gradle/caches/transforms-3/485891b247fd2bb3dd8be86154b9265c/transformed/jetified-window-1.2.0/AndroidManifest.xml:28:13-37
+185
+186        <service
+186-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:24:9-32:19
+187            android:name="androidx.credentials.playservices.CredentialProviderMetadataHolder"
+187-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:25:13-94
+188            android:enabled="true"
+188-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:26:13-35
+189            android:exported="false" >
+189-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:27:13-37
+190            <meta-data
+190-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:29:13-31:104
+191                android:name="androidx.credentials.CREDENTIAL_PROVIDER_KEY"
+191-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:30:17-76
+192                android:value="androidx.credentials.playservices.CredentialProviderPlayServicesImpl" />
+192-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:31:17-101
+193        </service>
+194
+195        <activity
+195-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:34:9-41:20
+196            android:name="androidx.credentials.playservices.HiddenActivity"
+196-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:35:13-76
+197            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+197-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:36:13-87
+198            android:enabled="true"
+198-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:37:13-35
+199            android:exported="false"
+199-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:38:13-37
+200            android:fitsSystemWindows="true"
+200-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:39:13-45
+201            android:theme="@style/Theme.Hidden" >
+201-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/hivasu/.gradle/caches/transforms-3/1a5d33530252d07fe395261628432776/transformed/jetified-credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:40:13-48
+202        </activity>
+203        <activity
+203-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:23:9-27:75
+204            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
+204-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:24:13-93
+205            android:excludeFromRecents="true"
+205-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:25:13-46
+206            android:exported="false"
+206-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:26:13-37
+207            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+207-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:27:13-72
+208        <!--
+209            Service handling Google Sign-In user revocation. For apps that do not integrate with
+210            Google Sign-In, this service will never be started.
+211        -->
+212        <service
+212-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:33:9-37:51
+213            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
+213-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:34:13-89
+214            android:exported="true"
+214-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:35:13-36
+215            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
+215-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:36:13-107
+216            android:visibleToInstantApps="true" />
+216-->[com.google.android.gms:play-services-auth:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/2c71243dc6fe11f935961968874273d8/transformed/jetified-play-services-auth-21.0.0/AndroidManifest.xml:37:13-48
+217
+218        <activity
+218-->[com.google.android.gms:play-services-base:18.0.1] /Users/hivasu/.gradle/caches/transforms-3/aa37c3a4c91037926610e5b113ae051e/transformed/jetified-play-services-base-18.0.1/AndroidManifest.xml:20:9-22:45
+219            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+219-->[com.google.android.gms:play-services-base:18.0.1] /Users/hivasu/.gradle/caches/transforms-3/aa37c3a4c91037926610e5b113ae051e/transformed/jetified-play-services-base-18.0.1/AndroidManifest.xml:20:19-85
+220            android:exported="false"
+220-->[com.google.android.gms:play-services-base:18.0.1] /Users/hivasu/.gradle/caches/transforms-3/aa37c3a4c91037926610e5b113ae051e/transformed/jetified-play-services-base-18.0.1/AndroidManifest.xml:22:19-43
+221            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+221-->[com.google.android.gms:play-services-base:18.0.1] /Users/hivasu/.gradle/caches/transforms-3/aa37c3a4c91037926610e5b113ae051e/transformed/jetified-play-services-base-18.0.1/AndroidManifest.xml:21:19-78
+222
+223        <provider
+223-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:23:9-28:39
+224            android:name="com.google.firebase.provider.FirebaseInitProvider"
+224-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:24:13-77
+225            android:authorities="com.example.poker_tracker.firebaseinitprovider"
+225-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:25:13-72
+226            android:directBootAware="true"
+226-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:26:13-43
+227            android:exported="false"
+227-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:27:13-37
+228            android:initOrder="100" />
+228-->[com.google.firebase:firebase-common:21.0.0] /Users/hivasu/.gradle/caches/transforms-3/695f0ffc2e48def36a82d4f667f1b8fc/transformed/jetified-firebase-common-21.0.0/AndroidManifest.xml:28:13-36
+229        <provider
+229-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:24:9-32:20
+230            android:name="androidx.startup.InitializationProvider"
+230-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:25:13-67
+231            android:authorities="com.example.poker_tracker.androidx-startup"
+231-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:26:13-68
+232            android:exported="false" >
+232-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:27:13-37
+233            <meta-data
+233-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:29:13-31:52
+234                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+234-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:30:17-78
+235                android:value="androidx.startup" />
+235-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/hivasu/.gradle/caches/transforms-3/61a4281c12af85f6211e50f08d16d5d2/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:31:17-49
+236            <meta-data
+236-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+237                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+237-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+238                android:value="androidx.startup" />
+238-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+239        </provider>
+240
+241        <meta-data
+241-->[com.google.android.gms:play-services-basement:18.4.0] /Users/hivasu/.gradle/caches/transforms-3/e9a43f157c33349c7c69011833332454/transformed/jetified-play-services-basement-18.4.0/AndroidManifest.xml:6:9-122
+242            android:name="com.google.android.gms.version"
+242-->[com.google.android.gms:play-services-basement:18.4.0] /Users/hivasu/.gradle/caches/transforms-3/e9a43f157c33349c7c69011833332454/transformed/jetified-play-services-basement-18.4.0/AndroidManifest.xml:6:20-65
+243            android:value="@integer/google_play_services_version" />
+243-->[com.google.android.gms:play-services-basement:18.4.0] /Users/hivasu/.gradle/caches/transforms-3/e9a43f157c33349c7c69011833332454/transformed/jetified-play-services-basement-18.4.0/AndroidManifest.xml:6:66-119
+244
+245        <receiver
+245-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+246            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+246-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+247            android:directBootAware="false"
+247-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+248            android:enabled="true"
+248-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+249            android:exported="true"
+249-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+250            android:permission="android.permission.DUMP" >
+250-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
 251            <intent-filter>
-251-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
-252                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-252-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
-252-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+251-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+252                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+252-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+252-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
 253            </intent-filter>
 254            <intent-filter>
-254-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
-255                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-255-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
-255-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+254-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+255                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+255-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+255-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
 256            </intent-filter>
 257            <intent-filter>
-257-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
-258                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-258-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
-258-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+257-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+258                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+258-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+258-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
 259            </intent-filter>
-260        </receiver> <!-- The activities will be merged into the manifest of the hosting app. -->
-261        <activity
-261-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:14:9-18:65
-262            android:name="com.google.android.play.core.common.PlayCoreDialogWrapperActivity"
-262-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:15:13-93
-263            android:exported="false"
-263-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:16:13-37
-264            android:stateNotNeeded="true"
-264-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:17:13-42
-265            android:theme="@style/Theme.PlayCore.Transparent" />
-265-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:18:13-62
-266    </application>
-267
-268</manifest>
+260            <intent-filter>
+260-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+261                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+261-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+261-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hivasu/.gradle/caches/transforms-3/1256abb7b9e763df1f5e908bb5d02bd2/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+262            </intent-filter>
+263        </receiver> <!-- The activities will be merged into the manifest of the hosting app. -->
+264        <activity
+264-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:14:9-18:65
+265            android:name="com.google.android.play.core.common.PlayCoreDialogWrapperActivity"
+265-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:15:13-93
+266            android:exported="false"
+266-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:16:13-37
+267            android:stateNotNeeded="true"
+267-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:17:13-42
+268            android:theme="@style/Theme.PlayCore.Transparent" />
+268-->[com.google.android.play:core-common:2.0.3] /Users/hivasu/.gradle/caches/transforms-3/a26e3c58a20c74addb37251aa02c5b5c/transformed/jetified-core-common-2.0.3/AndroidManifest.xml:18:13-62
+269    </application>
+270
+271</manifest>
