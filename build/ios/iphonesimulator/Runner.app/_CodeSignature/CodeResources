@@ -46,7 +46,7 @@
 		</data>
 		<key>Frameworks/App.framework/App</key>
 		<data>
-		HpRh4zjSv4D7jyyrrHVZ6r1GdIE=
+		OcnFBvY0uwoQGBo7da4wLH+3SGA=
 		</data>
 		<key>Frameworks/App.framework/Info.plist</key>
 		<data>
@@ -54,7 +54,7 @@
 		</data>
 		<key>Frameworks/App.framework/_CodeSignature/CodeResources</key>
 		<data>
-		tBWT25BuJJMpYD/WYACvBpOB7EA=
+		dWvS2s2M8PkQxIhv78oYe51S7eQ=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/.env</key>
 		<data>
@@ -82,11 +82,11 @@
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/NOTICES.Z</key>
 		<data>
-		K77rd2GziYV27clo7/2bhSb9R0Y=
+		BlAS5Jx4FHp42O8teGLqhmleQCo=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/assets/google_logo.png</key>
 		<data>
-		rba+GaSp0phAiClBG03/y3u5rjs=
+		/j0fNPUboZs/31KgPIpjJgu298c=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/fonts/MaterialIcons-Regular.otf</key>
 		<data>
@@ -98,7 +98,7 @@
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/kernel_blob.bin</key>
 		<data>
-		cDpVr0vF8Z0x95/LBAXPuqwc7Gk=
+		GZ796fWpm9QPtaD+KzlIcX+HUvc=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<data>
@@ -998,6 +998,26 @@
 		<data>
 		JTGYQTSkuJ7uGfD1SfjQTq3ngyk=
 		</data>
+		<key>Frameworks/local_auth_darwin.framework/Info.plist</key>
+		<data>
+		U+guN6r0XQPuZyFC+S5yBDzNjc0=
+		</data>
+		<key>Frameworks/local_auth_darwin.framework/_CodeSignature/CodeResources</key>
+		<data>
+		g5f9ZivwYX6QXYWiSlx5S2cze6g=
+		</data>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin</key>
+		<data>
+		Gb+P2gRhRO1ok/X0V7d+jl/hg5k=
+		</data>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin_privacy.bundle/Info.plist</key>
+		<data>
+		ICmm9XBoXrIqKAbC8CRZ07l1xKY=
+		</data>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin_privacy.bundle/PrivacyInfo.xcprivacy</key>
+		<data>
+		/LX0ZlwxwIAIhjZaDB8EiH5KpXA=
+		</data>
 		<key>Frameworks/nanopb.framework/Info.plist</key>
 		<data>
 		y/jEDcjkGUAGZLf5pheIGKcuWGU=
@@ -1096,7 +1116,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		Mw3N4ToPfEt+JOEXnr7mUyLZ1eQ=
+		MypCXw4abYNiHSWKvaJpjO3NC9w=
 		</data>
 		<key>PkgInfo</key>
 		<data>
@@ -1104,7 +1124,7 @@
 		</data>
 		<key>Runner.debug.dylib</key>
 		<data>
-		bbfEeXgIxNRwC9lZYzZtaRkO0Io=
+		OA25LNg0hlK06Q11Okmn/8Iwdnw=
 		</data>
 		<key>__preview.dylib</key>
 		<data>
@@ -1195,7 +1215,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			UvmJqoJ6hPYmHKdguLNPl5t4nEF9C7C+5P6F2yhoPbM=
+			h9nAp/t4VEGKhC3F7tWhcdjiT9O2s6m8X8iUT/eJiHw=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/Info.plist</key>
@@ -1209,7 +1229,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			D93GIrnnqSe1XmADO3t1vwDTKyxrbjGy1j+Ky8sp6+k=
+			4qZL82h5muu5qFwGKuF/gOMqK55ziR4iDOk25rEagXU=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/.env</key>
@@ -1258,14 +1278,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			XYmFPn5ARBYasz/gx2s0ccLdNZuWX4yKbgoCj6LzfdI=
+			UgrLgO8vj4A63ZIyjCSI9la20werRkSqfeYIgwCfs8k=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/assets/google_logo.png</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			/NGMVKD6ibEZ5/1Vav59knDKd8iWfHqDPi7/IzTleeg=
+			goxP4X+rVQen6rUMfO0zEVBDdaVREFvYqTjwkMyIF3I=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/fonts/MaterialIcons-Regular.otf</key>
@@ -1286,7 +1306,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			QGWlD2nm1Wdui4k+2uFnHtLXn4VlYzEdCAG7TA6Glhc=
+			rGnE7EI8NpVWoHzhEowa6lzinKw3JQwdbIAyOm0lwUU=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
@@ -2604,6 +2624,41 @@
 			CsAKC37/AHnc4lLimrQdcc9YxslP5OROoRDO9cYpcOE=
 			</data>
 		</dict>
+		<key>Frameworks/local_auth_darwin.framework/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			q1bwi/QmvGNUVA3+AADMz2/yYWv4JN8bW48d4Ez8cMQ=
+			</data>
+		</dict>
+		<key>Frameworks/local_auth_darwin.framework/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			3YDNIM/dg26l2MSFWLkx3VpV28W597TN3K2Vo8AlGvs=
+			</data>
+		</dict>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			7pE/Q2PkNhYl7zqqBAkn2gFStMqxTNDs7zXPLdWtquQ=
+			</data>
+		</dict>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin_privacy.bundle/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			uDZ0dIgUV3cR+HevtMaioKtS4d2VA9KFqbMrmWxbFj8=
+			</data>
+		</dict>
+		<key>Frameworks/local_auth_darwin.framework/local_auth_darwin_privacy.bundle/PrivacyInfo.xcprivacy</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			bS2g2NkwIn1CjB2TY7CtbjoS4sm2jFzilxWKdBL8jDE=
+			</data>
+		</dict>
 		<key>Frameworks/nanopb.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
@@ -2776,7 +2831,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			F9Fsc+lqrADv4KQFMvFC/rn/QolKFvOzNjDYNBw0ZUI=
+			KYHm530pbJ/HYQubuwH0za/7Ue3cY9LIF2YzWpFlJaw=
 			</data>
 		</dict>
 		<key>__preview.dylib</key>

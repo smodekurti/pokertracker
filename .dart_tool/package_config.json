@@ -230,6 +230,12 @@
       "languageVersion": "3.2"
     },
     {
+      "name": "flutter_plugin_android_lifecycle",
+      "rootUri": "file:///Users/hivasu/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.23",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
       "name": "flutter_screenutil",
       "rootUri": "file:///Users/hivasu/.pub-cache/hosted/pub.dev/flutter_screenutil-5.9.3",
       "packageUri": "lib/",
@@ -336,6 +342,36 @@
       "rootUri": "file:///Users/hivasu/.pub-cache/hosted/pub.dev/lints-3.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
+    },
+    {
+      "name": "local_auth",
+      "rootUri": "file:///Users/hivasu/.pub-cache/hosted/pub.dev/local_auth-2.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "local_auth_android",
+      "rootUri": "file:///Users/hivasu/.pub-cache/hosted/pub.dev/local_auth_android-1.0.46",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "local_auth_darwin",
+      "rootUri": "file:///Users/hivasu/.pub-cache/hosted/pub.dev/local_auth_darwin-1.4.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "local_auth_platform_interface",
+      "rootUri": "file:///Users/hivasu/.pub-cache/hosted/pub.dev/local_auth_platform_interface-1.0.10",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "local_auth_windows",
+      "rootUri": "file:///Users/hivasu/.pub-cache/hosted/pub.dev/local_auth_windows-1.0.11",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
     },
     {
       "name": "logging",
@@ -644,7 +680,7 @@
       "languageVersion": "3.6"
     }
   ],
-  "generated": "2024-12-06T15:06:53.727634Z",
+  "generated": "2024-12-06T15:09:02.942651Z",
   "generator": "pub",
   "generatorVersion": "3.6.0-334.3.beta",
   "flutterRoot": "file:///Users/hivasu/Documents/Vasu/Personal/Development/flutter",
