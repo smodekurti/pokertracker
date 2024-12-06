@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class AuthProvider with ChangeNotifier {
+class AppAuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   bool _isLoading = false;
@@ -13,7 +13,7 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   String? _error;
 
-  AuthProvider() {
+  AppAuthProvider() {
     _init();
   }
 

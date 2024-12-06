@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 import 'package:poker_tracker/features/consent/providers/consent_provider.dart';
 
 class ConsentScreen extends StatefulWidget {
@@ -15,12 +15,28 @@ class _ConsentScreenState extends State<ConsentScreen> {
   bool _cloudStorage = false;
   bool _disclaimer = false;
 
+  void _handleCloudStorageChange(bool? value) {
+    if (value != null) {
+      setState(() => _cloudStorage = value);
+    }
+  }
+
+  void _handleDisclaimerChange(bool? value) {
+    if (value != null) {
+      setState(() => _disclaimer = value);
+    }
+  }
+
   Future<void> _handleAccept() async {
     if (!_cloudStorage || !_disclaimer) return;
 
     try {
-      final consentProvider = context.read<ConsentProvider>();
-      consentProvider.acceptConsent();
+      // Avoid using context.read inside build
+      await Future.microtask(() {
+        final consentProvider = context.read<ConsentProvider>();
+        consentProvider.acceptConsent();
+      });
+
       if (mounted) context.go('/');
     } catch (e) {
       if (mounted) {
@@ -39,7 +55,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
 
   Future<void> _handleDecline() async {
     try {
-      await context.read<AuthProvider>().signOut();
+      await context.read<AppAuthProvider>().signOut();
       if (mounted) {
         context.go('/login');
       }
@@ -141,8 +157,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                   ),
                                   Switch(
                                     value: _cloudStorage,
-                                    onChanged: (value) =>
-                                        setState(() => _cloudStorage = value),
+                                    onChanged:
+                                        _handleCloudStorageChange, // Changed this line
                                     activeColor: const Color(0xFF4ade80),
                                   ),
                                 ],
@@ -200,8 +216,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                   ),
                                   Switch(
                                     value: _disclaimer,
-                                    onChanged: (value) =>
-                                        setState(() => _disclaimer = value),
+                                    onChanged:
+                                        _handleDisclaimerChange, // Changed this line
                                     activeColor: const Color(0xFF4ade80),
                                   ),
                                 ],

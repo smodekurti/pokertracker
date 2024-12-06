@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:poker_tracker/config/theme_config.dart';
-import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/features/settings/providers/settings_provider.dart';
 import 'package:poker_tracker/features/team/providers/team_provider.dart';
@@ -16,11 +16,11 @@ class PokerTrackerApp extends StatelessWidget {
       providers: [
         // Auth Provider
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(),
+          create: (_) => AppAuthProvider(),
         ),
 
         // Team Provider - depends on Auth
-        ChangeNotifierProxyProvider<AuthProvider, TeamProvider?>(
+        ChangeNotifierProxyProvider<AppAuthProvider, TeamProvider?>(
           create: (_) => null,
           update: (context, auth, previous) {
             if (!auth.isAuthenticated) return null;
@@ -36,7 +36,7 @@ class PokerTrackerApp extends StatelessWidget {
         ),
 
         // Game Provider - depends on Auth
-        ChangeNotifierProxyProvider<AuthProvider, GameProvider?>(
+        ChangeNotifierProxyProvider<AppAuthProvider, GameProvider?>(
           create: (_) => null,
           update: (context, auth, previous) {
             if (!auth.isAuthenticated) return null;
@@ -45,7 +45,7 @@ class PokerTrackerApp extends StatelessWidget {
         ),
 
         // Settings Provider - depends on Auth
-        ChangeNotifierProxyProvider<AuthProvider, SettingsProvider?>(
+        ChangeNotifierProxyProvider<AppAuthProvider, SettingsProvider?>(
           create: (_) => null,
           update: (context, auth, previous) {
             if (!auth.isAuthenticated) return null;
