@@ -35,7 +35,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      await context.read<AuthProvider>().resetPassword(
+      await context.read<AppAuthProvider>().resetPassword(
             code: widget.resetCode,
             newPassword: _passwordController.text,
           );
