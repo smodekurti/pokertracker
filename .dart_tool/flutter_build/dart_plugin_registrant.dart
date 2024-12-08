@@ -10,10 +10,12 @@ import 'package:google_sign_in_android/google_sign_in_android.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 import 'package:path_provider_android/path_provider_android.dart';
 import 'package:shared_preferences_android/shared_preferences_android.dart';
+import 'package:sqflite_android/sqflite_android.dart';
 import 'package:google_sign_in_ios/google_sign_in_ios.dart';
 import 'package:local_auth_darwin/local_auth_darwin.dart';
 import 'package:path_provider_foundation/path_provider_foundation.dart';
 import 'package:shared_preferences_foundation/shared_preferences_foundation.dart';
+import 'package:sqflite_darwin/sqflite_darwin.dart';
 import 'package:path_provider_linux/path_provider_linux.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences_linux/shared_preferences_linux.dart';
@@ -22,6 +24,7 @@ import 'package:google_sign_in_ios/google_sign_in_ios.dart';
 import 'package:local_auth_darwin/local_auth_darwin.dart';
 import 'package:path_provider_foundation/path_provider_foundation.dart';
 import 'package:shared_preferences_foundation/shared_preferences_foundation.dart';
+import 'package:sqflite_darwin/sqflite_darwin.dart';
 import 'package:local_auth_windows/local_auth_windows.dart';
 import 'package:path_provider_windows/path_provider_windows.dart';
 import 'package:share_plus/share_plus.dart';
@@ -70,6 +73,15 @@ class _PluginRegistrant {
         );
       }
 
+      try {
+        SqfliteAndroid.registerWith();
+      } catch (err) {
+        print(
+          '`sqflite_android` threw an error: $err. '
+          'The app may not function as expected until you remove this plugin from pubspec.yaml'
+        );
+      }
+
     } else if (Platform.isIOS) {
       try {
         GoogleSignInIOS.registerWith();
@@ -103,6 +115,15 @@ class _PluginRegistrant {
       } catch (err) {
         print(
           '`shared_preferences_foundation` threw an error: $err. '
+          'The app may not function as expected until you remove this plugin from pubspec.yaml'
+        );
+      }
+
+      try {
+        SqfliteDarwin.registerWith();
+      } catch (err) {
+        print(
+          '`sqflite_darwin` threw an error: $err. '
           'The app may not function as expected until you remove this plugin from pubspec.yaml'
         );
       }
@@ -177,6 +198,15 @@ class _PluginRegistrant {
       } catch (err) {
         print(
           '`shared_preferences_foundation` threw an error: $err. '
+          'The app may not function as expected until you remove this plugin from pubspec.yaml'
+        );
+      }
+
+      try {
+        SqfliteDarwin.registerWith();
+      } catch (err) {
+        print(
+          '`sqflite_darwin` threw an error: $err. '
           'The app may not function as expected until you remove this plugin from pubspec.yaml'
         );
       }

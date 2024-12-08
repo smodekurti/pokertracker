@@ -10,6 +10,7 @@ import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/features/team/providers/team_provider.dart';
 import 'package:poker_tracker/firebase_options.dart';
 import 'package:poker_tracker/core/app.dart';
+import 'package:poker_tracker/core/database/database_initializer.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -21,6 +22,14 @@ void main() async {
       await EnvironmentConfig.init();
     } catch (e) {
       debugPrint('Error initializing environment: $e');
+      rethrow;
+    }
+
+    // Initialize SQLite database
+    try {
+      await DatabaseInitializer.initDatabase();
+    } catch (e) {
+      debugPrint('Error initializing SQLite database: $e');
       rethrow;
     }
 
@@ -40,7 +49,6 @@ void main() async {
           providers: [
             ChangeNotifierProvider(create: (_) => AppAuthProvider()),
             ChangeNotifierProvider(create: (_) => ConsentProvider()),
-
             ChangeNotifierProxyProvider<AppAuthProvider, TeamProvider>(
               create: (context) {
                 final auth = context.read<AppAuthProvider>();
@@ -49,26 +57,18 @@ void main() async {
               },
               update: (context, authProvider, teamProvider) {
                 final userId = authProvider.currentUser?.uid ?? '';
+                teamProvider?.dispose();
                 return TeamProvider(userId);
               },
             ),
-
-            // Player Provider - depends on PlayerRepository and AuthProvider
-
             ChangeNotifierProxyProvider<AppAuthProvider, GameProvider?>(
-              create: (_) => null, // Initially null
+              create: (_) => null,
               update: (context, authProvider, previousGameProvider) {
                 final userId = authProvider.currentUser?.uid;
-                // Only create GameProvider if we have a userId
                 if (userId != null) {
-                  // If we already have a GameProvider with the same userId, reuse it
-                  if (previousGameProvider != null) {
-                    return previousGameProvider;
-                  }
-                  // Otherwise create a new one
+                  previousGameProvider?.dispose();
                   return GameProvider(userId);
                 }
-                // Return null if no user is authenticated
                 return null;
               },
             ),
