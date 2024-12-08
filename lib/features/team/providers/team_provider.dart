@@ -20,6 +20,7 @@ class TeamProvider with ChangeNotifier {
   String? get error => _error;
 
   void _initializeStream() {
+    _teamsSubscription?.cancel();
     _teamsSubscription = _repository.getTeams().listen(
       (teams) {
         _teams = teams;
@@ -33,16 +34,17 @@ class TeamProvider with ChangeNotifier {
   }
 
   Team? getTeamById(String id) {
-    return _teams.firstWhere(
-      (team) => team.id == id,
-      orElse: () => throw Exception('Team not found'),
-    );
+    try {
+      return _teams.firstWhere((team) => team.id == id);
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> createTeam(String name, List<TeamPlayer> players) async {
     try {
-      _isLoading = true;
-      notifyListeners();
+      _setLoading(true);
+      _clearError();
 
       final team = Team(
         id: const Uuid().v4(),
@@ -54,18 +56,17 @@ class TeamProvider with ChangeNotifier {
 
       await _repository.createTeam(team);
     } catch (e) {
-      _error = e.toString();
-      rethrow; // Rethrow to handle in UI
+      _setError(e.toString());
+      rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> updateTeam(Team team) async {
     try {
-      _isLoading = true;
-      notifyListeners();
+      _setLoading(true);
+      _clearError();
 
       final exists = await _repository.teamExists(team.id);
       if (!exists) {
@@ -73,33 +74,30 @@ class TeamProvider with ChangeNotifier {
       }
       await _repository.updateTeam(team);
     } catch (e) {
-      _error = e.toString();
-      rethrow; // Rethrow to handle in UI
+      _setError(e.toString());
+      rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> deleteTeam(String teamId) async {
     try {
-      _isLoading = true;
-      notifyListeners();
-
+      _setLoading(true);
+      _clearError();
       await _repository.deleteTeam(teamId);
     } catch (e) {
-      _error = e.toString();
-      rethrow; // Rethrow to handle in UI
+      _setError(e.toString());
+      rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> refreshTeams() async {
     try {
-      _isLoading = true;
-      notifyListeners();
+      _setLoading(true);
+      _clearError();
 
       // Cancel existing subscription
       await _teamsSubscription?.cancel();
@@ -107,17 +105,32 @@ class TeamProvider with ChangeNotifier {
       // Reinitialize stream
       _initializeStream();
     } catch (e) {
-      _error = e.toString();
+      _setError(e.toString());
       rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
+  }
+
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  void _setError(String? error) {
+    _error = error;
+    notifyListeners();
+  }
+
+  void _clearError() {
+    _error = null;
+    notifyListeners();
   }
 
   @override
   void dispose() {
     _teamsSubscription?.cancel();
+    _repository.dispose();
     super.dispose();
   }
 }

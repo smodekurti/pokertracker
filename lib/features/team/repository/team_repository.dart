@@ -1,109 +1,170 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:poker_tracker/features/team/data/team.dart';
+import 'package:sqflite/sqflite.dart';
+import 'dart:async';
+
+import '../../../core/database/database_helper.dart';
 
 class TeamRepository {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final DatabaseHelper _db = DatabaseHelper.instance;
   final String userId;
+  final _teamsController = StreamController<List<Team>>.broadcast();
+  Timer? _refreshTimer;
 
   TeamRepository({required this.userId}) {
     if (userId.isEmpty) {
       throw ArgumentError('userId cannot be empty');
     }
-  }
-
-  CollectionReference get _teamsCollection {
-    return _db.collection('users').doc(userId).collection('teams');
-  }
-
-  Future<String> createTeam(Team team) async {
-    try {
-      final teamRef = _teamsCollection.doc();
-      final teamData = {
-        'id': teamRef.id,
-        ...team.toMap(),
-        'createdAt': FieldValue.serverTimestamp(),
-      };
-
-      await teamRef.set(teamData);
-      return teamRef.id;
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  Future<void> updateTeam(Team team) async {
-    try {
-      // Get the document reference
-      final docRef = _teamsCollection.doc(team.id);
-
-      // Check if document exists
-      final docSnapshot = await docRef.get();
-      if (!docSnapshot.exists) {
-        throw Exception('Team not found in database');
-      }
-
-      // Prepare the update data
-      final teamData = {
-        'name': team.name,
-        'players': team.players.map((p) => p.toMap()).toList(),
-        // Don't update createdAt and createdBy as they should remain unchanged
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-
-      // Perform the update
-      await docRef.update(teamData);
-    } catch (e) {
-      rethrow;
-    }
+    // Simulate Firestore realtime updates
+    _refreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _refreshTeams();
+    });
   }
 
   Stream<List<Team>> getTeams() {
-    try {
-      return _teamsCollection
-          .orderBy('createdAt', descending: true)
-          .snapshots()
-          .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          // Ensure the ID is included in the data
-          data['id'] = doc.id;
-          return Team.fromFirestore(doc);
-        }).toList();
+    _refreshTeams();
+    return _teamsController.stream;
+  }
+
+  Future<String> createTeam(Team team) async {
+    final db = await _db.database;
+
+    await db.transaction((txn) async {
+      // Insert team
+      await txn.insert(DatabaseHelper.tableTeams, {
+        'id': team.id,
+        'name': team.name,
+        'createdBy': userId,
+        'createdAt': team.createdAt.toIso8601String(),
+        'userId': userId,
       });
-    } catch (e) {
-      rethrow;
-    }
+
+      // Insert team players
+      for (final player in team.players) {
+        await txn.insert(DatabaseHelper.tableTeamPlayers, {
+          'id': player.id,
+          'teamId': team.id,
+          'name': player.name,
+        });
+      }
+    });
+
+    _refreshTeams();
+    return team.id;
+  }
+
+  Future<void> updateTeam(Team team) async {
+    final db = await _db.database;
+
+    await db.transaction((txn) async {
+      // Update team
+      await txn.update(
+        DatabaseHelper.tableTeams,
+        {
+          'name': team.name,
+        },
+        where: 'id = ? AND userId = ?',
+        whereArgs: [team.id, userId],
+      );
+
+      // Delete existing players
+      await txn.delete(
+        DatabaseHelper.tableTeamPlayers,
+        where: 'teamId = ?',
+        whereArgs: [team.id],
+      );
+
+      // Insert updated players
+      for (final player in team.players) {
+        await txn.insert(DatabaseHelper.tableTeamPlayers, {
+          'id': player.id,
+          'teamId': team.id,
+          'name': player.name,
+        });
+      }
+    });
+
+    _refreshTeams();
   }
 
   Future<Team?> getTeamById(String teamId) async {
-    try {
-      final docSnapshot = await _teamsCollection.doc(teamId).get();
-      if (!docSnapshot.exists) {
-        return null;
-      }
+    final db = await _db.database;
+    final rows = await db.query(
+      DatabaseHelper.tableTeams,
+      where: 'id = ? AND userId = ?',
+      whereArgs: [teamId, userId],
+    );
 
-      final data = docSnapshot.data() as Map<String, dynamic>;
-      data['id'] = docSnapshot.id; // Ensure ID is included
-      return Team.fromFirestore(docSnapshot);
-    } catch (e) {
-      rethrow;
-    }
+    if (rows.isEmpty) return null;
+    return _createTeamFromRow(db, rows.first);
   }
 
   Future<bool> teamExists(String teamId) async {
-    try {
-      final docSnapshot = await _teamsCollection.doc(teamId).get();
-      return docSnapshot.exists;
-    } catch (e) {
-      rethrow;
-    }
+    final db = await _db.database;
+    final count = Sqflite.firstIntValue(await db.query(
+      DatabaseHelper.tableTeams,
+      columns: ['COUNT(*)'],
+      where: 'id = ? AND userId = ?',
+      whereArgs: [teamId, userId],
+    ));
+    return (count ?? 0) > 0;
   }
 
   Future<void> deleteTeam(String teamId) async {
+    final db = await _db.database;
+    await db.delete(
+      DatabaseHelper.tableTeams,
+      where: 'id = ? AND userId = ?',
+      whereArgs: [teamId, userId],
+    );
+    _refreshTeams();
+  }
+
+  // Private helper methods
+  Future<void> _refreshTeams() async {
     try {
-      await _teamsCollection.doc(teamId).delete();
+      final db = await _db.database;
+      final rows = await db.query(
+        DatabaseHelper.tableTeams,
+        where: 'userId = ?',
+        whereArgs: [userId],
+        orderBy: 'createdAt DESC',
+      );
+
+      final teams = await Future.wait(
+        rows.map((row) => _createTeamFromRow(db, row)),
+      );
+
+      _teamsController.add(teams);
     } catch (e) {
-      rethrow;
+      _teamsController.addError(e);
     }
+  }
+
+  Future<Team> _createTeamFromRow(Database db, Map<String, dynamic> row) async {
+    final playerRows = await db.query(
+      DatabaseHelper.tableTeamPlayers,
+      where: 'teamId = ?',
+      whereArgs: [row['id']],
+    );
+
+    final players = playerRows
+        .map((p) => TeamPlayer(
+              id: p['id'] as String,
+              name: p['name'] as String,
+            ))
+        .toList();
+
+    return Team(
+      id: row['id'],
+      name: row['name'],
+      createdBy: row['createdBy'],
+      createdAt: DateTime.parse(row['createdAt']),
+      players: players,
+    );
+  }
+
+  void dispose() {
+    _refreshTimer?.cancel();
+    _teamsController.close();
   }
 }
