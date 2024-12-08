@@ -37,6 +37,9 @@
       name=":@@:shared_preferences_android::release"
       project=":shared_preferences_android"/>
   <library
+      name=":@@:sqflite_android::release"
+      project=":sqflite_android"/>
+  <library
       name="io.flutter:flutter_embedding_release:1.0.0-af0f0d559c8a87d912a20971bbd84afc80a54b0f@jar"
       jars="/Users/hivasu/.gradle/caches/modules-2/files-2.1/io.flutter/flutter_embedding_release/1.0.0-af0f0d559c8a87d912a20971bbd84afc80a54b0f/4025819371f8e120ce3ed01fad69742a9f2b9546/flutter_embedding_release-1.0.0-af0f0d559c8a87d912a20971bbd84afc80a54b0f.jar"
       resolved="io.flutter:flutter_embedding_release:1.0.0-af0f0d559c8a87d912a20971bbd84afc80a54b0f"/>

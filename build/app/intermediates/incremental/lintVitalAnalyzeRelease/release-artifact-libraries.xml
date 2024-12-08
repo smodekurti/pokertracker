@@ -158,6 +158,20 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
+      name=":@@:sqflite_android::release"
+      jars="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/sqflite_android/.transforms/6c3933665890198ed413f4141658ea3c/transformed/out/jars/classes.jar:/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/sqflite_android/.transforms/6c3933665890198ed413f4141658ea3c/transformed/out/jars/libs/R.jar"
+      resolved="com.tekartik.sqflite:sqflite_android:unspecified"
+      partialResultsDir="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/sqflite_android/intermediates/lint_vital_partial_results/release/lintVitalAnalyzeRelease/out"
+      folder="/Users/hivasu/Documents/Vasu/Personal/Development/flutterApps/poker_tracker/build/sqflite_android/.transforms/6c3933665890198ed413f4141658ea3c/transformed/out"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
       name="io.flutter:flutter_embedding_release:1.0.0-af0f0d559c8a87d912a20971bbd84afc80a54b0f@jar"
       jars="/Users/hivasu/.gradle/caches/modules-2/files-2.1/io.flutter/flutter_embedding_release/1.0.0-af0f0d559c8a87d912a20971bbd84afc80a54b0f/4025819371f8e120ce3ed01fad69742a9f2b9546/flutter_embedding_release-1.0.0-af0f0d559c8a87d912a20971bbd84afc80a54b0f.jar"
       resolved="io.flutter:flutter_embedding_release:1.0.0-af0f0d559c8a87d912a20971bbd84afc80a54b0f"/>

@@ -60,6 +60,10 @@ dependencies:
   
   fl_chart: ^0.65.0
 
+  sqflite: ^2.3.2    # For SQLite database functionality
+  path: ^1.8.3       # For managing database file paths
+  path_provider: ^2.1.2  # For accessing system directories
+
 
 dev_dependencies:
   flutter_test:

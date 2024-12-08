@@ -1,272 +1,379 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import 'package:poker_tracker/features/game/data/models/game.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
 import 'package:poker_tracker/features/game/data/models/poker_transaction.dart';
+import 'package:sqflite/sqlite_api.dart';
+
+import '../../../../core/database/database_helper.dart';
 
 class GameRepository {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final DatabaseHelper _db = DatabaseHelper.instance;
   final String userId;
+  final _activeGamesController = StreamController<List<Game>>.broadcast();
+  final _gameHistoryController = StreamController<List<Game>>.broadcast();
+  Timer? _refreshTimer;
 
   GameRepository({required this.userId}) {
     if (userId.isEmpty) {
       throw ArgumentError('userId cannot be empty');
     }
-    print('Initializing GameRepository with userId: $userId'); // Debug log
+    _refreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _refreshStreams();
+    });
   }
 
-  // Collection reference
-  CollectionReference get _gamesCollection {
-    return _db
-        .collection('users') // Make sure this matches your Firebase structure
-        .doc(userId)
-        .collection('games');
+  // Add missing getAllGames method
+  Future<List<Game>> getAllGames() async {
+    final db = await _db.database;
+    final rows = await db.query(
+      DatabaseHelper.tableGames,
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'createdAt DESC',
+    );
+
+    return Future.wait(
+      rows.map((row) => _createGameFromRow(db, row)),
+    );
   }
 
-  // Get active games
   Stream<List<Game>> getActiveGames() {
-    try {
-      return _gamesCollection
-          .where('isActive', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
-          .snapshots()
-          .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          try {
-            return Game.fromFirestore(doc);
-          } catch (e) {
-            print('Error parsing game document: $e');
-            rethrow;
-          }
-        }).toList();
-      });
-    } catch (e) {
-      print('Error getting active games: $e');
-      throw _handleFirestoreException(e);
-    }
+    _refreshActiveGames();
+    return _activeGamesController.stream;
   }
 
-  // Get game history
   Stream<List<Game>> getGameHistory() {
-    try {
-      return _gamesCollection
-          .where('isActive', isEqualTo: false)
-          .orderBy('endedAt', descending: true)
-          .snapshots()
-          .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          try {
-            return Game.fromFirestore(doc);
-          } catch (e) {
-            print('Error parsing game document: $e');
-            rethrow;
-          }
-        }).toList();
-      });
-    } catch (e) {
-      print('Error getting game history: $e');
-      throw _handleFirestoreException(e);
-    }
+    _refreshGameHistory();
+    return _gameHistoryController.stream;
   }
 
-  // Create new game
-  Future<String> createGame(Game game) async {
-    try {
-      final gameRef = _gamesCollection.doc();
+  // Fix type safety in createGameFromRow
+  // In GameRepository class, modify the _createGameFromRow method:
+  Future<Game> _createGameFromRow(Database db, Map<String, dynamic> row) async {
+    final playerRows = await db.query(
+      DatabaseHelper.tablePlayers,
+      where: 'gameId = ?',
+      whereArgs: [row['id'] as String],
+    );
 
-      final gameData = {
-        'id': gameRef.id,
+    final players = playerRows
+        .map((p) => Player(
+              id: p['id'] as String,
+              name: p['name'] as String,
+              buyIns: p['buyIns'] as int,
+              loans: (p['loans'] as num).toDouble(),
+              cashOut: p['cashOut'] != null
+                  ? (p['cashOut'] as num).toDouble()
+                  : null,
+              isSettled: (p['isSettled'] as int) == 1, // Convert int to bool
+            ))
+        .toList();
+
+    final transactionRows = await db.query(
+      DatabaseHelper.tableTransactions,
+      where: 'gameId = ?',
+      whereArgs: [row['id'] as String],
+    );
+
+    final transactions = transactionRows
+        .map((t) => PokerTransaction(
+              id: t['id'] as String,
+              playerId: t['playerId'] as String,
+              type: TransactionType.values.firstWhere(
+                (e) => e.toString() == t['type'],
+              ),
+              amount: (t['amount'] as num).toDouble(),
+              timestamp: DateTime.parse(t['timestamp'] as String),
+              note: t['note'] as String?,
+              relatedPlayerId: t['relatedPlayerId'] as String?,
+              isReverted: (t['isReverted'] as int) == 1, // Convert int to bool
+              revertedBy: t['revertedBy'] as String?,
+              revertedAt: t['revertedAt'] != null
+                  ? DateTime.parse(t['revertedAt'] as String)
+                  : null,
+            ))
+        .toList();
+
+    return Game(
+      id: row['id'] as String,
+      name: row['name'] as String,
+      date: DateTime.parse(row['date'] as String),
+      players: players,
+      transactions: transactions,
+      isActive: (row['isActive'] as int) == 1, // Convert int to bool
+      createdBy: row['createdBy'] as String,
+      buyInAmount: (row['buyInAmount'] as num).toDouble(),
+      cutPercentage: (row['cutPercentage'] as num).toDouble(),
+      createdAt: DateTime.parse(row['createdAt'] as String),
+      endedAt: row['endedAt'] != null
+          ? DateTime.parse(row['endedAt'] as String)
+          : null,
+    );
+  }
+
+  // ... rest of the existing methods ...
+
+  Future<String> createGame(Game game) async {
+    final db = await _db.database;
+
+    await db.transaction((txn) async {
+      // First, insert the game
+      await txn.insert(DatabaseHelper.tableGames, {
+        'id': game.id,
         'name': game.name,
         'date': game.date.toIso8601String(),
-        'players': game.players.map((p) => p.toMap()).toList(),
-        'transactions': [],
-        'isActive': true,
+        'isActive': 1,
         'createdBy': userId,
         'buyInAmount': game.buyInAmount,
         'cutPercentage': game.cutPercentage,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
+        'createdAt': game.createdAt.toIso8601String(),
+        'userId': userId,
+      });
 
-      await gameRef.set(gameData);
-      return gameRef.id;
-    } catch (e) {
-      print('Error creating game: $e');
-      throw _handleFirestoreException(e);
-    }
-  }
-
-// In GameRepository class
-  Future<void> deleteGame(String gameId) async {
-    try {
-      print('Attempting to delete game: $gameId'); // Debug log
-
-      // Get reference to the game document
-      final gameRef = _gamesCollection.doc(gameId);
-
-      // Delete the game document
-      await gameRef.delete();
-
-      print('Game deleted successfully from Firebase'); // Debug log
-    } catch (e) {
-      print('Error deleting game: $e');
-      throw _handleFirestoreException(e);
-    }
-  }
-
-// Get single game
-  Stream<Game?> getGame(String gameId) {
-    try {
-      return _gamesCollection.doc(gameId).snapshots().map((doc) {
-        if (!doc.exists) return null;
+      // For each player, try to insert or update
+      for (final player in game.players) {
         try {
-          return Game.fromFirestore(doc);
-        } catch (e) {
-          print('Error parsing game data: $e');
+          await txn.insert(DatabaseHelper.tablePlayers, {
+            'id': player.id,
+            'gameId': game.id,
+            'name': player.name,
+            'buyIns': player.buyIns,
+            'loans': player.loans,
+            'cashOut': player.cashOut,
+            'isSettled': player.isSettled ? 1 : 0,
+          });
+        } on DatabaseException catch (e) {
+          if (e.isUniqueConstraintError()) {
+            // If player already exists, update instead
+            await txn.update(
+              DatabaseHelper.tablePlayers,
+              {
+                'gameId': game.id,
+                'name': player.name,
+                'buyIns': player.buyIns,
+                'loans': player.loans,
+                'cashOut': player.cashOut,
+                'isSettled': player.isSettled ? 1 : 0,
+              },
+              where: 'id = ?',
+              whereArgs: [player.id],
+            );
+          } else {
+            rethrow;
+          }
+        }
+      }
+    });
+
+    _refreshStreams();
+    return game.id;
+  }
+
+// Also modify the addPlayer method:
+  Future<void> addPlayer(String gameId, Player player) async {
+    final db = await _db.database;
+
+    await db.transaction((txn) async {
+      try {
+        await txn.insert(DatabaseHelper.tablePlayers, {
+          'id': player.id,
+          'gameId': gameId,
+          'name': player.name,
+          'buyIns': player.buyIns,
+          'loans': player.loans,
+          'cashOut': player.cashOut,
+          'isSettled': player.isSettled ? 1 : 0,
+        });
+      } on DatabaseException catch (e) {
+        if (e.isUniqueConstraintError()) {
+          await txn.update(
+            DatabaseHelper.tablePlayers,
+            {
+              'gameId': gameId,
+              'name': player.name,
+              'buyIns': player.buyIns,
+              'loans': player.loans,
+              'cashOut': player.cashOut,
+              'isSettled': player.isSettled ? 1 : 0,
+            },
+            where: 'id = ?',
+            whereArgs: [player.id],
+          );
+        } else {
           rethrow;
         }
-      });
-    } catch (e) {
-      print('Error getting game: $e');
-      throw _handleFirestoreException(e);
-    }
+      }
+    });
+
+    _refreshStreams();
   }
 
-  // Add transaction
-  Future<void> addTransaction(
-      String gameId, PokerTransaction transaction) async {
-    try {
-      return _db.runTransaction((txn) async {
-        final gameDoc = await txn.get(_gamesCollection.doc(gameId));
+  Stream<Game?> getGame(String gameId) {
+    final controller = StreamController<Game?>();
 
-        if (!gameDoc.exists) {
-          throw Exception('Game not found');
+    void queryGame() async {
+      try {
+        final db = await _db.database;
+        final rows = await db.query(
+          DatabaseHelper.tableGames,
+          where: 'id = ? AND userId = ?',
+          whereArgs: [gameId, userId],
+        );
+
+        if (rows.isEmpty) {
+          controller.add(null);
+        } else {
+          final game = await _createGameFromRow(db, rows.first);
+          controller.add(game);
         }
-
-        final data = gameDoc.data() as Map<String, dynamic>;
-        final currentTransactions = List<Map<String, dynamic>>.from(
-            data['transactions'] as List<dynamic>? ?? []);
-
-        final currentGame = Game.fromFirestore(gameDoc);
-
-        if (!currentGame.players.any((p) => p.id == transaction.playerId)) {
-          throw Exception('Player not found in this game');
-        }
-
-        currentTransactions.add(transaction.toMap());
-
-        final updatedPlayers = currentGame.players.map((player) {
-          if (player.id == transaction.playerId) {
-            switch (transaction.type) {
-              case TransactionType.buyIn:
-              case TransactionType.reEntry:
-                return player.copyWith(buyIns: player.buyIns + 1);
-              case TransactionType.loan:
-                return player.copyWith(
-                    loans: player.loans + transaction.amount);
-              case TransactionType.settlement:
-                return player.copyWith(
-                  isSettled: true,
-                  cashOut: transaction.amount,
-                );
-            }
-          }
-          return player;
-        }).toList();
-
-        txn.update(gameDoc.reference, {
-          'transactions': currentTransactions,
-          'players': updatedPlayers.map((p) => p.toMap()).toList(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      });
-    } catch (e) {
-      print('Error adding transaction: $e');
-      throw _handleFirestoreException(e);
-    }
-  }
-
-  Future<List<Game>> getAllGames() async {
-    final QuerySnapshot snapshot = await _db
-        .collection('users') // Make sure this matches your Firebase structure
-        .doc(userId)
-        .collection('games')
-        .get();
-
-    return snapshot.docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-      return Game.fromJson({
-        'id': doc.id,
-        ...data,
-      });
-    }).toList();
-  }
-
-  // Add player
-  Future<void> addPlayer(String gameId, Player player) async {
-    try {
-      return _db.runTransaction((txn) async {
-        final gameDoc = await txn.get(_gamesCollection.doc(gameId));
-
-        if (!gameDoc.exists) {
-          throw Exception('Game not found');
-        }
-
-        final data = gameDoc.data() as Map<String, dynamic>;
-        final currentPlayers = List<Map<String, dynamic>>.from(
-            data['players'] as List<dynamic>? ?? []);
-
-        if (currentPlayers.any((p) => p['id'] == player.id)) {
-          throw Exception('Player already exists in this game');
-        }
-
-        currentPlayers.add(player.toMap());
-
-        txn.update(gameDoc.reference, {
-          'players': currentPlayers,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      });
-    } catch (e) {
-      print('Error adding player: $e');
-      throw _handleFirestoreException(e);
-    }
-  }
-
-  // End game
-// In GameRepository class
-  Future<void> endGame(String gameId) async {
-    try {
-      await _gamesCollection.doc(gameId).update({
-        'isActive': false,
-        'endedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // Optional: Log for debugging
-      print('Game $gameId ended successfully');
-    } catch (e) {
-      print('Error ending game: $e');
-      throw _handleFirestoreException(e);
-    }
-  }
-
-  Exception _handleFirestoreException(dynamic e) {
-    if (e is FirebaseException) {
-      print('Firebase Error Code: ${e.code}');
-      print('Firebase Error Message: ${e.message}');
-
-      switch (e.code) {
-        case 'permission-denied':
-          return Exception(
-              'You don\'t have permission to access this resource');
-        case 'not-found':
-          return Exception('The requested resource was not found');
-        case 'already-exists':
-          return Exception('The resource already exists');
-        default:
-          return Exception(e.message ?? 'An unknown error occurred');
+      } catch (e) {
+        controller.addError(e);
       }
     }
-    return Exception('Failed to perform operation: ${e.toString()}');
+
+    // Initial query
+    queryGame();
+
+    // Setup periodic refresh
+    final timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => queryGame(),
+    );
+
+    // Clean up
+    controller.onCancel = () {
+      timer.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  Future<void> addTransaction(
+      String gameId, PokerTransaction transaction) async {
+    final db = await _db.database;
+
+    await db.transaction((txn) async {
+      await txn.insert(DatabaseHelper.tableTransactions, {
+        'id': transaction.id,
+        'gameId': gameId,
+        'playerId': transaction.playerId,
+        'type': transaction.type.toString(),
+        'amount': transaction.amount,
+        'timestamp': transaction.timestamp.toIso8601String(),
+        'note': transaction.note,
+        'relatedPlayerId': transaction.relatedPlayerId,
+        'isReverted': transaction.isReverted ? 1 : 0,
+        'revertedBy': transaction.revertedBy,
+        'revertedAt': transaction.revertedAt?.toIso8601String(),
+      });
+
+      await _updatePlayerForTransaction(txn, gameId, transaction);
+    });
+
+    _refreshStreams();
+  }
+
+  Future<void> endGame(String gameId) async {
+    final db = await _db.database;
+
+    await db.update(
+      DatabaseHelper.tableGames,
+      {
+        'isActive': 0,
+        'endedAt': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ? AND userId = ?',
+      whereArgs: [gameId, userId],
+    );
+
+    _refreshStreams();
+  }
+
+  Future<void> deleteGame(String gameId) async {
+    final db = await _db.database;
+
+    await db.delete(
+      DatabaseHelper.tableGames,
+      where: 'id = ? AND userId = ?',
+      whereArgs: [gameId, userId],
+    );
+
+    _refreshStreams();
+  }
+
+  Future<void> _refreshStreams() async {
+    await _refreshActiveGames();
+    await _refreshGameHistory();
+  }
+
+  Future<void> _refreshActiveGames() async {
+    try {
+      final db = await _db.database;
+      final games = await _queryGames(db, isActive: true);
+      _activeGamesController.add(games);
+    } catch (e) {
+      _activeGamesController.addError(e);
+    }
+  }
+
+  Future<void> _refreshGameHistory() async {
+    try {
+      final db = await _db.database;
+      final games = await _queryGames(db, isActive: false);
+      _gameHistoryController.add(games);
+    } catch (e) {
+      _gameHistoryController.addError(e);
+    }
+  }
+
+  Future<List<Game>> _queryGames(Database db, {required bool isActive}) async {
+    final rows = await db.query(
+      DatabaseHelper.tableGames,
+      where: 'isActive = ? AND userId = ?',
+      whereArgs: [isActive ? 1 : 0, userId],
+      orderBy: isActive ? 'createdAt DESC' : 'endedAt DESC',
+    );
+
+    return Future.wait(rows.map((row) => _createGameFromRow(db, row)));
+  }
+
+  Future<void> _updatePlayerForTransaction(
+      Transaction txn, String gameId, PokerTransaction transaction) async {
+    switch (transaction.type) {
+      case TransactionType.buyIn:
+      case TransactionType.reEntry:
+        await txn.rawUpdate('''
+          UPDATE ${DatabaseHelper.tablePlayers}
+          SET buyIns = buyIns + 1
+          WHERE id = ? AND gameId = ?
+        ''', [transaction.playerId, gameId]);
+        break;
+      case TransactionType.loan:
+        await txn.rawUpdate('''
+          UPDATE ${DatabaseHelper.tablePlayers}
+          SET loans = loans + ?
+          WHERE id = ? AND gameId = ?
+        ''', [transaction.amount, transaction.playerId, gameId]);
+        break;
+      case TransactionType.settlement:
+        await txn.rawUpdate('''
+          UPDATE ${DatabaseHelper.tablePlayers}
+          SET cashOut = ?, isSettled = 1
+          WHERE id = ? AND gameId = ?
+        ''', [transaction.amount, transaction.playerId, gameId]);
+        break;
+    }
+  }
+
+  void dispose() {
+    _refreshTimer?.cancel();
+    _activeGamesController.close();
+    _gameHistoryController.close();
+  }
+}
+
+extension DatabaseExceptionExt on DatabaseException {
+  bool isUniqueConstraintError() {
+    return this.toString().contains('UNIQUE constraint failed');
   }
 }

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:poker_tracker/features/game/data/models/game.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
@@ -10,7 +9,6 @@ import 'package:uuid/uuid.dart';
 class GameProvider with ChangeNotifier {
   final GameRepository _repository;
   Game? _currentGame;
-  late String _userId;
   List<Game> _activeGames = [];
   List<Game> _gameHistory = [];
   bool _isLoading = false;
@@ -21,7 +19,6 @@ class GameProvider with ChangeNotifier {
 
   GameProvider(String userId) : _repository = GameRepository(userId: userId) {
     if (userId.isNotEmpty) {
-      this._userId = userId;
       _initializeStreams();
     }
   }
@@ -37,7 +34,6 @@ class GameProvider with ChangeNotifier {
       _currentGame?.players.any((p) => !p.isSettled) ?? false;
   double get totalPot => _currentGame?.totalPot ?? 0.0;
 
-  // Stream Management
   void _initializeStreams() {
     _listenToActiveGames();
     _listenToGameHistory();
@@ -88,14 +84,8 @@ class GameProvider with ChangeNotifier {
     }
   }
 
-  // Game Management
-// Update the createGame method in GameProvider
-  Future<void> createGame(
-    String name,
-    double buyInAmount,
-    List<Player> players,
-    double cutPercentage,
-  ) async {
+  Future<void> createGame(String name, double buyInAmount, List<Player> players,
+      double cutPercentage) async {
     try {
       _setLoading(true);
       _clearError();
@@ -133,19 +123,6 @@ class GameProvider with ChangeNotifier {
     }
   }
 
-  Game? _findGameInCache(String gameId) {
-    final activeGame = _activeGames.cast<Game?>().firstWhere(
-          (game) => game?.id == gameId,
-          orElse: () => null,
-        );
-    if (activeGame != null) return activeGame;
-
-    return _gameHistory.cast<Game?>().firstWhere(
-          (game) => game?.id == gameId,
-          orElse: () => null,
-        );
-  }
-
   Future<void> loadGame(String gameId) async {
     try {
       _setLoading(true);
@@ -153,13 +130,12 @@ class GameProvider with ChangeNotifier {
 
       _currentGameSubscription?.cancel();
 
+      // Find the game in cached lists first
       final cachedGame = _findGameInCache(gameId);
       if (cachedGame != null) {
         _currentGame = cachedGame;
         notifyListeners();
       }
-      // Wrap the stream subscription in a delayed future
-      await Future.delayed(const Duration(milliseconds: 100));
 
       _currentGameSubscription = _repository.getGame(gameId).listen(
         (game) {
@@ -184,12 +160,19 @@ class GameProvider with ChangeNotifier {
     }
   }
 
-  // Player Management
+  Game? _findGameInCache(String gameId) {
+    return _activeGames.cast<Game?>().firstWhere(
+          (game) => game?.id == gameId,
+          orElse: () => _gameHistory.cast<Game?>().firstWhere(
+                (game) => game?.id == gameId,
+                orElse: () => null,
+              ),
+        );
+  }
+
   Future<void> addPlayer(Player player) async {
     try {
-      if (_currentGame == null) {
-        throw Exception('No active game');
-      }
+      if (_currentGame == null) throw Exception('No active game');
       _setLoading(true);
       await _repository.addPlayer(_currentGame!.id, player);
     } catch (e) {
@@ -200,17 +183,9 @@ class GameProvider with ChangeNotifier {
     }
   }
 
-  // Transaction Management
   Future<void> addTransaction(PokerTransaction transaction) async {
     try {
-      if (_currentGame == null) {
-        throw Exception('No active game');
-      }
-
-      if (!_currentGame!.players.any((p) => p.id == transaction.playerId)) {
-        throw Exception('Player not found in this game');
-      }
-
+      if (_currentGame == null) throw Exception('No active game');
       _setLoading(true);
       await _repository.addTransaction(_currentGame!.id, transaction);
     } catch (e) {
@@ -223,9 +198,7 @@ class GameProvider with ChangeNotifier {
 
   Future<void> handleReEntry(String playerId) async {
     try {
-      if (_currentGame == null) {
-        throw Exception('No active game');
-      }
+      if (_currentGame == null) throw Exception('No active game');
       _setLoading(true);
 
       final transaction = PokerTransaction(
@@ -246,16 +219,13 @@ class GameProvider with ChangeNotifier {
     }
   }
 
-  // Loan Management
   Future<void> handleLoan({
     required String lenderId,
     required String recipientId,
     required double amount,
   }) async {
     try {
-      if (_currentGame == null) {
-        throw Exception('No active game');
-      }
+      if (_currentGame == null) throw Exception('No active game');
 
       final lender = _currentGame!.players.firstWhere(
         (p) => p.id == lenderId,
@@ -267,32 +237,11 @@ class GameProvider with ChangeNotifier {
         orElse: () => throw Exception('Recipient not found in this game'),
       );
 
-      // Update player states with the loan
-      final updatedPlayers = _currentGame!.players.map((player) {
-        if (player.id == lenderId) {
-          // Reduce lender's amount by the loan amount
-          return player.copyWith(
-            buyIns: player.buyIns,
-            loans:
-                player.loans - amount, // Reduce lender's money by loan amount
-          );
-        } else if (player.id == recipientId) {
-          // Add loan amount to recipient
-          return player.copyWith(
-            buyIns: player.buyIns,
-            loans: player.loans +
-                amount, // Increase recipient's money by loan amount
-          );
-        }
-        return player;
-      }).toList();
-
-      // Create transactions to track the loan
       final lenderTransaction = PokerTransaction(
         id: const Uuid().v4(),
         playerId: lenderId,
         type: TransactionType.loan,
-        amount: -amount, // Negative as they're giving money
+        amount: -amount,
         timestamp: DateTime.now(),
         note: 'Loan to ${recipient.name}',
         relatedPlayerId: recipientId,
@@ -302,35 +251,23 @@ class GameProvider with ChangeNotifier {
         id: const Uuid().v4(),
         playerId: recipientId,
         type: TransactionType.loan,
-        amount: amount, // Positive as they're receiving money
+        amount: amount,
         timestamp: DateTime.now(),
         note: 'Loan from ${lender.name}',
         relatedPlayerId: lenderId,
       );
 
-      // Update game state with new players
-      _currentGame = _currentGame!.copyWith(
-        players: updatedPlayers,
-      );
-
-      // Execute transactions
       await addTransaction(lenderTransaction);
       await addTransaction(recipientTransaction);
-
-      notifyListeners();
     } catch (e) {
       _setError(e.toString());
       rethrow;
     }
   }
 
-  // Settlement Management
   Future<void> settlePlayer(String playerId, double amount) async {
     try {
-      if (_currentGame == null) {
-        throw Exception('No active game');
-      }
-
+      if (_currentGame == null) throw Exception('No active game');
       _setLoading(true);
 
       final transaction = PokerTransaction(
@@ -343,17 +280,6 @@ class GameProvider with ChangeNotifier {
       );
 
       await addTransaction(transaction);
-
-      // Update the current game's player with new settlement
-      final updatedPlayers = _currentGame!.players.map((player) {
-        if (player.id == playerId) {
-          return player.copyWith(cashOut: amount, isSettled: true);
-        }
-        return player;
-      }).toList();
-
-      _currentGame = _currentGame!.copyWith(players: updatedPlayers);
-      notifyListeners();
     } catch (e) {
       _setError(e.toString());
       rethrow;
@@ -364,10 +290,7 @@ class GameProvider with ChangeNotifier {
 
   Future<Game> settleAllAndEnd() async {
     try {
-      if (_currentGame == null) {
-        throw Exception('No active game');
-      }
-
+      if (_currentGame == null) throw Exception('No active game');
       _setLoading(true);
 
       if (!_currentGame!.players.every((p) => p.isSettled)) {
@@ -375,23 +298,16 @@ class GameProvider with ChangeNotifier {
       }
 
       await _repository.endGame(_currentGame!.id);
-
       final endedGame = _currentGame!.copyWith(
         isActive: false,
         endedAt: DateTime.now(),
       );
 
-      _activeGames.removeWhere((game) => game.id == endedGame.id);
-      _gameHistory.insert(0, endedGame);
-
-      // Store the ended game before clearing current game
-      final finalGameState = endedGame;
-
       _currentGame = null;
       _currentGameSubscription?.cancel();
 
       notifyListeners();
-      return finalGameState; // Return the final game state
+      return endedGame;
     } catch (e) {
       _setError(e.toString());
       rethrow;
@@ -400,7 +316,6 @@ class GameProvider with ChangeNotifier {
     }
   }
 
-  // Game End Management
   Future<void> endGame() async {
     try {
       if (_currentGame == null) {
@@ -433,7 +348,27 @@ class GameProvider with ChangeNotifier {
     }
   }
 
-  // Settlement Calculations
+  Future<void> deleteGame(String gameId) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      await _repository.deleteGame(gameId);
+
+      if (_currentGame?.id == gameId) {
+        _currentGame = null;
+        _currentGameSubscription?.cancel();
+      }
+
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   List<Map<String, dynamic>> calculateSettlements() {
     if (_currentGame == null) {
       throw Exception('No active game');
@@ -442,7 +377,6 @@ class GameProvider with ChangeNotifier {
     final settlements = <Map<String, dynamic>>[];
     final balances = <String, double>{};
 
-    // Calculate net balance for each player
     for (final player in _currentGame!.players) {
       if (!player.isSettled) {
         throw Exception(
@@ -460,7 +394,9 @@ class GameProvider with ChangeNotifier {
       final debtor = sortedBalances.first;
       final creditor = sortedBalances.last;
 
-      final amount = math.min(debtor.value.abs(), creditor.value.abs());
+      final amount = debtor.value.abs() < creditor.value.abs()
+          ? debtor.value.abs()
+          : creditor.value.abs();
 
       if (amount > 0.01) {
         final fromPlayer =
@@ -482,32 +418,6 @@ class GameProvider with ChangeNotifier {
     return settlements;
   }
 
-  // Game Deletion
-  Future<void> deleteGame(String gameId) async {
-    try {
-      _setLoading(true);
-      _clearError();
-
-      await _repository.deleteGame(gameId);
-
-      _activeGames = _activeGames.where((game) => game.id != gameId).toList();
-      _gameHistory = _gameHistory.where((game) => game.id != gameId).toList();
-
-      if (_currentGame?.id == gameId) {
-        _currentGame = null;
-        _currentGameSubscription?.cancel();
-      }
-
-      notifyListeners();
-    } catch (e) {
-      _setError(e.toString());
-      rethrow;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Helper Methods
   bool canSettlePlayer(String playerId) {
     if (_currentGame == null) return false;
     final player = _currentGame!.players.firstWhere(
@@ -537,6 +447,7 @@ class GameProvider with ChangeNotifier {
     _currentGameSubscription?.cancel();
     _activeGamesSubscription?.cancel();
     _gameHistorySubscription?.cancel();
+    _repository.dispose();
     super.dispose();
   }
 }
