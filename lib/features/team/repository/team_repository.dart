@@ -28,28 +28,46 @@ class TeamRepository {
   Future<String> createTeam(Team team) async {
     final db = await _db.database;
 
-    await db.transaction((txn) async {
-      // Insert team
-      await txn.insert(DatabaseHelper.tableTeams, {
-        'id': team.id,
-        'name': team.name,
-        'createdBy': userId,
-        'createdAt': team.createdAt.toIso8601String(),
-        'userId': userId,
+    try {
+      await db.transaction((txn) async {
+        // First check if team name already exists for this user
+        final existingTeam = await txn.query(
+          DatabaseHelper.tableTeams,
+          where: 'name = ? AND userId = ?',
+          whereArgs: [team.name, userId],
+        );
+
+        if (existingTeam.isNotEmpty) {
+          throw Exception('A team with this name already exists');
+        }
+
+        // Insert team
+        await txn.insert(DatabaseHelper.tableTeams, {
+          'id': team.id,
+          'name': team.name,
+          'createdBy': userId,
+          'createdAt': team.createdAt.toIso8601String(),
+          'userId': userId,
+        });
+
+        // Insert team players
+        for (final player in team.players) {
+          await txn.insert(DatabaseHelper.tableTeamPlayers, {
+            'id': player.id,
+            'teamId': team.id,
+            'name': player.name,
+          });
+        }
       });
 
-      // Insert team players
-      for (final player in team.players) {
-        await txn.insert(DatabaseHelper.tableTeamPlayers, {
-          'id': player.id,
-          'teamId': team.id,
-          'name': player.name,
-        });
+      _refreshTeams();
+      return team.id;
+    } catch (e) {
+      if (e.toString().contains('UNIQUE constraint failed')) {
+        throw Exception('A team with this name already exists');
       }
-    });
-
-    _refreshTeams();
-    return team.id;
+      throw Exception('Failed to create team: ${e.toString()}');
+    }
   }
 
   Future<void> updateTeam(Team team) async {

@@ -60,6 +60,12 @@ class Game {
     return (player.cashOut ?? 0) - totalIn;
   }
 
+  double getPlayerAmountAfterCut(String playerId) {
+    double originalAmount = getPlayerNetAmount(playerId);
+    double cut = totalPot * (cutPercentage / 100);
+    return originalAmount - (originalAmount / totalPot) * cut;
+  }
+
   // Verify if settlements are balanced
   bool get isSettlementBalanced {
     if (!players.every((p) => p.isSettled)) return false;

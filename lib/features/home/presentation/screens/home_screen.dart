@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/features/auth/providers/auth_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/features/home/presentation/widgets/active_game_card.dart';
-import 'dart:ui';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late FocusNode _focusNode;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -80,115 +81,69 @@ class _HomeScreenState extends State<HomeScreen> {
     return Focus(
       focusNode: _focusNode,
       child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: AppColors.backgroundGradient,
-            ),
-          ),
-          child: SafeArea(
-            child: Consumer<GameProvider?>(
-              builder: (context, gameProvider, child) {
-                if (gameProvider == null) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.secondary,
-                      ),
-                    ),
-                  );
-                }
-
-                return Column(
-                  children: [
-                    _buildAppBar(),
-                    Expanded(
-                      child: _buildMainContent(gameProvider),
-                    ),
-                  ],
+        backgroundColor: AppColors.backgroundDark,
+        body: SafeArea(
+          child: Consumer<GameProvider?>(
+            builder: (context, gameProvider, child) {
+              if (gameProvider == null) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.secondary),
+                  ),
                 );
-              },
-            ),
+              }
+
+              return Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: _buildMainContent(gameProvider),
+                  ),
+                ],
+              );
+            },
           ),
         ),
         floatingActionButton: _buildFloatingActionButton(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        bottomNavigationBar: _buildBottomNavigation(),
       ),
     );
   }
 
-  Widget _buildAppBar() {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          color: Colors.black.withOpacity(0.3),
-          padding: const EdgeInsets.all(AppSizes.paddingL),
-          child: Row(
-            children: [
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: AppColors.primaryGradient,
-                ).createShader(bounds),
-                child: const Text(
-                  'Poker Tracker',
-                  style: TextStyle(
-                    fontSize: AppSizes.fontXL,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(
-                  Icons.group,
-                  color: AppColors.textPrimary,
-                  size: AppSizes.iconM,
-                ),
-                onPressed: () => context.go('/teams'),
-                tooltip: 'Team Management',
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.analytics,
-                  color: AppColors.textPrimary,
-                  size: AppSizes.iconM,
-                ),
-                onPressed: () => context.go('/analytics'),
-                tooltip: 'Player Analytics',
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.history,
-                  color: AppColors.textPrimary,
-                  size: AppSizes.iconM,
-                ),
-                onPressed: () => context.go('/history'),
-                tooltip: 'Game History',
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.help,
-                  color: AppColors.textPrimary,
-                  size: AppSizes.iconM,
-                ),
-                onPressed: () => context.go('/poker-reference'),
-                tooltip: 'Poker Reference',
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.logout_rounded,
-                  color: AppColors.textPrimary,
-                  size: AppSizes.iconM,
-                ),
-                onPressed: _handleLogout,
-                tooltip: 'Logout',
-              ),
-            ],
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.backgroundMedium,
+            width: 1,
           ),
         ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: AppColors.primaryGradient,
+            ).createShader(bounds),
+            child: const Text(
+              'Poker Tracker',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppColors.textSecondary),
+            onPressed: _handleLogout,
+          ),
+        ],
       ),
     );
   }
@@ -197,221 +152,399 @@ class _HomeScreenState extends State<HomeScreen> {
     return RefreshIndicator(
       onRefresh: _refreshGames,
       color: AppColors.secondary,
-      backgroundColor: Colors.grey[900],
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: gameProvider.activeGames.isEmpty
-                ? _buildEnhancedStats(gameProvider)
-                : _buildRegularStats(gameProvider),
-          ),
-          if (gameProvider.activeGames.isNotEmpty) ...[
-            _buildActiveGamesHeader(),
-            _buildActiveGamesList(gameProvider),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRegularStats(GameProvider gameProvider) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSizes.paddingL),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.grey[850]!,
-              Colors.grey[900]!,
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(AppSizes.paddingXL),
-        child: Row(
+      backgroundColor: AppColors.backgroundMedium,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: _buildStatItem(
-                'Active Games',
-                gameProvider.activeGames.length.toString(),
-                Icons.casino,
-                AppColors.primaryGradient,
-              ),
-            ),
-            Container(
-              width: 1,
-              height: 40,
-              color: Colors.grey[700],
-            ),
-            Expanded(
-              child: _buildStatItem(
-                'Total Games',
-                gameProvider.gameHistory.length.toString(),
-                Icons.history,
-                [Colors.purple[400]!, Colors.purple[600]!],
-              ),
-            ),
+            _buildOverviewStats(gameProvider),
+            const SizedBox(height: 16),
+            if (gameProvider.activeGames.isNotEmpty) ...[
+              _buildActiveGamesList(gameProvider),
+              const SizedBox(height: 16),
+            ],
+            _buildTopPlayers(gameProvider),
+            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatItem(
-    String label,
-    String value,
-    IconData icon,
-    List<Color> colors,
-  ) {
-    return Column(
+  Widget _buildOverviewStats(GameProvider gameProvider) {
+    return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(AppSizes.paddingM),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                colors[0].withOpacity(0.2),
-                colors[1].withOpacity(0.1),
-              ],
+        Expanded(
+          child: _buildStatCard(
+            'Total Games',
+            gameProvider.gameHistory.length.toString(),
+            const Icon(
+              Icons.history,
+              color: AppColors.secondary,
+              size: 16,
             ),
           ),
-          child: Icon(
-            icon,
-            color: colors[0],
-            size: AppSizes.iconL,
-          ),
         ),
-        const SizedBox(height: AppSizes.spacingS),
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: AppSizes.fontL,
-          ),
-        ),
-        const SizedBox(height: AppSizes.spacingXS),
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: AppSizes.font2XL,
-            fontWeight: FontWeight.bold,
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatCard(
+            'Total Pot',
+            '\$${_calculateTotalPot(gameProvider).toStringAsFixed(2)}',
+            const Icon(
+              Icons.trending_up,
+              color: AppColors.primary,
+              size: 16,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildActiveGamesHeader() {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.paddingL,
-          vertical: AppSizes.paddingS,
-        ),
-        child: ShaderMask(
+  double _calculateTotalPot(GameProvider gameProvider) {
+    double totalPot = 0;
+    for (final game in gameProvider.gameHistory) {
+      double gameTotal = game.totalPot;
+      if (game.cutPercentage > 0) {
+        gameTotal = game.totalPot * (game.cutPercentage / 100);
+      }
+      totalPot += gameTotal;
+    }
+    return totalPot;
+  }
+
+  Widget _buildStatCard(String title, String value, Icon icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundMedium.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              icon,
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveGamesList(GameProvider gameProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
             colors: AppColors.primaryGradient,
           ).createShader(bounds),
           child: const Text(
             'Active Games',
             style: TextStyle(
+              color: AppColors.textPrimary,
               fontSize: AppSizes.font2XL,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
             ),
           ),
         ),
-      ),
+        const SizedBox(height: 12),
+        ...gameProvider.activeGames
+            .map((game) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ActiveGameCard(
+                    key: ValueKey(game.id),
+                    game: game,
+                    onDeleted: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            'Game deleted successfully',
+                            style: TextStyle(
+                              fontSize: AppSizes.fontM,
+                            ),
+                          ),
+                          backgroundColor: AppColors.success,
+                          behavior: SnackBarBehavior.floating,
+                          margin: const EdgeInsets.all(AppSizes.paddingL),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusM),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ))
+            .toList(),
+      ],
     );
   }
 
-  Widget _buildActiveGamesList(GameProvider gameProvider) {
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.paddingL,
-      ),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final game = gameProvider.activeGames[index];
-            return ActiveGameCard(
-              key: ValueKey(game.id),
-              game: game,
-              onDeleted: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text(
-                      'Game deleted successfully',
-                      style: TextStyle(
-                        fontSize: AppSizes.fontM,
-                      ),
-                    ),
-                    backgroundColor: AppColors.success,
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.all(AppSizes.paddingL),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSizes.radiusM),
+  Widget _buildTopPlayers(GameProvider gameProvider) {
+    final playerStats = _calculatePlayerStats(gameProvider);
+    final topPlayers = playerStats.entries.toList()
+      ..sort((a, b) => b.value.earnings.compareTo(a.value.earnings));
+
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.emoji_events,
+                    color: AppColors.rankGold,
+                    size: 24,
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Leaderboard',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
-            );
-          },
-          childCount: gameProvider.activeGames.length,
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
+        ...topPlayers.take(3).map((player) => _buildPlayerCard(
+              rank: topPlayers.indexOf(player) + 1,
+              name: player.key,
+              stats: player.value,
+            )),
+      ],
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSizes.padding2XL),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Colors.blue[900]!.withOpacity(0.2),
-                  Colors.blue[700]!.withOpacity(0.1),
+  Map<String, PlayerStats> _calculatePlayerStats(GameProvider gameProvider) {
+    final stats = <String, PlayerStats>{};
+
+    for (var game in gameProvider.gameHistory) {
+      for (var player in game.players) {
+        final netAmount = game.getPlayerNetAmount(player.id);
+        final currentStats = stats[player.name];
+
+        // Calculate wins (positive net amount counts as a win)
+        final isWin = netAmount > 0;
+
+        if (currentStats == null) {
+          stats[player.name] = PlayerStats(
+            earnings: netAmount,
+            gamesPlayed: 1,
+            winRate: isWin ? 100 : 0,
+          );
+        } else {
+          final newGamesPlayed = currentStats.gamesPlayed + 1;
+          final totalWins =
+              (currentStats.winRate * currentStats.gamesPlayed / 100) +
+                  (isWin ? 1 : 0);
+
+          stats[player.name] = PlayerStats(
+            earnings: currentStats.earnings + netAmount,
+            gamesPlayed: newGamesPlayed,
+            winRate: (totalWins / newGamesPlayed) * 100,
+          );
+        }
+      }
+    }
+
+    return stats;
+  }
+
+  Widget _buildPlayerCard({
+    required int rank,
+    required String name,
+    required PlayerStats stats,
+  }) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundMedium,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Rank Circle
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _getRankColor(rank),
+              ),
+              child: Center(
+                child: Text(
+                  rank.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Player Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${stats.gamesPlayed} games • ${stats.winRate.toStringAsFixed(0)}% win rate',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
             ),
-            child: Icon(
-              Icons.casino,
-              size: AppSizes.iconXL,
-              color: Colors.blue[400],
+            // Earnings
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '\$${stats.earnings.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color:
+                        stats.earnings > 0 ? AppColors.primary : Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  'lifetime',
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getRankColor(int rank) {
+    switch (rank) {
+      case 1:
+        return AppColors.rankGold;
+      case 2:
+        return AppColors.rankSilver;
+      case 3:
+        return AppColors.rankBronze;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildAdditionalStats(GameProvider gameProvider) {
+    final totalPot = _calculateTotalPot(gameProvider);
+    final gamesCount = gameProvider.gameHistory.length;
+    final averagePot = gamesCount > 0 ? totalPot / gamesCount : 0.0;
+
+    final largestPot = gameProvider.gameHistory.fold<double>(
+      0,
+      (max, game) => game.totalPot > max ? game.totalPot : max,
+    );
+
+    final currentMonthGames = gameProvider.gameHistory
+        .where((game) =>
+            game.date.month == DateTime.now().month &&
+            game.date.year == DateTime.now().year)
+        .length;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundMedium.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          _buildStatRow(
+            'Average Pot Size',
+            '\$${averagePot.toStringAsFixed(2)}',
+            Icons.bar_chart,
           ),
-          const SizedBox(height: AppSizes.spacingXL),
-          const Text(
-            'No Active Games',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: AppSizes.fontL,
-              fontWeight: FontWeight.bold,
-            ),
+          _buildStatRow(
+            'Largest Pot',
+            '\$${largestPot.toStringAsFixed(2)}',
+            Icons.trending_up,
           ),
-          const SizedBox(height: AppSizes.spacingS),
-          const Text(
-            'Start a new game to begin tracking',
-            textAlign: TextAlign.center,
-            style: TextStyle(
+          _buildStatRow(
+            'Games This Month',
+            currentMonthGames.toString(),
+            Icons.calendar_today,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: AppColors.textSecondary,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
               color: AppColors.textSecondary,
-              fontSize: AppSizes.fontM,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -420,320 +553,107 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFloatingActionButton() {
-    return Consumer<GameProvider?>(
-      builder: (context, gameProvider, child) {
-        if (gameProvider == null) return const SizedBox.shrink();
-
-        return Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: AppColors.primaryGradient,
-            ),
-            borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.secondary.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => context.go('/game-setup'),
-              borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppSizes.paddingL,
-                  vertical: AppSizes.paddingM,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.add,
-                      color: AppColors.textPrimary,
-                      size: AppSizes.iconM,
-                    ),
-                    SizedBox(width: AppSizes.spacingS),
-                    Text(
-                      'New Game',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: AppSizes.fontM,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildEnhancedStats(GameProvider gameProvider) {
-    final totalPot = gameProvider.gameHistory.fold<double>(
-      0,
-      (sum, game) => sum + game.totalPot,
-    );
-
-    // Calculate player statistics
-    final playerStats = <String, double>{};
-    for (var game in gameProvider.gameHistory) {
-      for (var player in game.players) {
-        final netAmount = game.getPlayerNetAmount(player.id);
-        playerStats[player.name] = (playerStats[player.name] ?? 0) + netAmount;
-      }
-    }
-
-    final topPlayers = playerStats.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    // Calculate largest pot
-    final largestPot = gameProvider.gameHistory.fold<double>(
-      0,
-      (max, game) => game.totalPot > max ? game.totalPot : max,
-    );
-
-    // Calculate current month's games
-    final currentMonthGames = gameProvider.gameHistory
-        .where((game) =>
-            game.date.month == DateTime.now().month &&
-            game.date.year == DateTime.now().year)
-        .length;
-
-    return Padding(
-      padding: const EdgeInsets.all(AppSizes.paddingL),
-      child: Column(
-        children: [
-          // Primary Stats Card
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.grey[850]!,
-                  Colors.grey[900]!,
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(AppSizes.paddingXL),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatItem(
-                        'Total Games',
-                        gameProvider.gameHistory.length.toString(),
-                        Icons.history,
-                        [Colors.purple[400]!, Colors.purple[600]!],
-                      ),
-                    ),
-                    Container(
-                      width: 1,
-                      height: 40,
-                      color: Colors.grey[700],
-                    ),
-                    Expanded(
-                      child: _buildStatItem(
-                        'Total Pot Size',
-                        '\$${totalPot.toStringAsFixed(2)}',
-                        Icons.account_balance_wallet,
-                        AppColors.primaryGradient,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Top Players Card
-          if (topPlayers.isNotEmpty) ...[
-            const SizedBox(height: AppSizes.spacingL),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-                color: Colors.grey[850],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(AppSizes.paddingL),
-                    child: Row(
-                      children: [
-                        ShaderMask(
-                          shaderCallback: (bounds) => const LinearGradient(
-                            colors: AppColors.primaryGradient,
-                          ).createShader(bounds),
-                          child: const Icon(
-                            Icons.emoji_events,
-                            size: AppSizes.iconL,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: AppSizes.spacingM),
-                        const Text(
-                          'Top Players',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: AppSizes.fontXL,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ...topPlayers.take(3).map((player) => _buildPlayerStatsRow(
-                        player.key,
-                        player.value,
-                        topPlayers.indexOf(player) + 1,
-                      )),
-                ],
-              ),
-            ),
-          ],
-
-          // Additional Stats
-          const SizedBox(height: AppSizes.spacingL),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-              color: Colors.grey[850],
-            ),
-            padding: const EdgeInsets.all(AppSizes.paddingL),
-            child: Column(
-              children: [
-                if (totalPot > 0)
-                  _buildDetailRow(
-                    'Average Pot Size',
-                    '\$${(totalPot / gameProvider.gameHistory.length).toStringAsFixed(2)}',
-                    Icons.casino,
-                  ),
-                _buildDetailRow(
-                  'Largest Pot',
-                  '\$${largestPot.toStringAsFixed(2)}',
-                  Icons.trending_up,
-                ),
-                _buildDetailRow(
-                  'Games This Month',
-                  currentMonthGames.toString(),
-                  Icons.calendar_today,
-                ),
-              ],
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: AppColors.primaryGradient,
+        ),
+        borderRadius: BorderRadius.circular(100),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.go('/game-setup'),
+          borderRadius: BorderRadius.circular(100),
+          child: const Padding(
+            padding: EdgeInsets.all(16),
+            child: Icon(
+              Icons.add,
+              color: AppColors.textPrimary,
+              size: 24,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildPlayerStatsRow(String playerName, double earnings, int rank) {
-    final colors = [
-      const Color(0xFFFFD700), // Gold
-      const Color(0xFFC0C0C0), // Silver
-      const Color(0xFFCD7F32), // Bronze
-    ];
-
+  Widget _buildBottomNavigation() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.paddingL,
-        vertical: AppSizes.paddingM,
-      ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundMedium,
         border: Border(
-          bottom: BorderSide(
-            color: Colors.grey[800]!,
+          top: BorderSide(
+            color: AppColors.backgroundMedium,
             width: 1,
           ),
         ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colors[rank - 1].withOpacity(0.2),
-            ),
-            child: Center(
-              child: Text(
-                '$rank',
-                style: TextStyle(
-                  color: colors[rank - 1],
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.home, 'Home', 0,
+                  () => setState(() => _currentIndex = 0)),
+              _buildNavItem(
+                  Icons.group, 'Teams', 1, () => context.go('/teams')),
+              _buildNavItem(Icons.bar_chart, 'Game Stats', 2,
+                  () => context.go('/analytics')),
+              _buildNavItem(Icons.history, 'Game History', 3,
+                  () => context.go('/history')),
+              _buildNavItem(Icons.tips_and_updates, 'Tips', 4,
+                  () => context.go('/poker-reference')),
+            ],
           ),
-          const SizedBox(width: AppSizes.spacingM),
-          Expanded(
-            child: Text(
-              playerName,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: AppSizes.fontL,
-              ),
-            ),
-          ),
-          Text(
-            '\$${earnings.toStringAsFixed(2)}',
-            style: TextStyle(
-              color: earnings >= 0 ? AppColors.success : AppColors.error,
-              fontSize: AppSizes.fontL,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingS),
-      child: Row(
+  Widget _buildNavItem(
+      IconData icon, String label, int index, VoidCallback onTap) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            size: AppSizes.iconM,
-            color: AppColors.textSecondary,
+            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            size: 24,
           ),
-          const SizedBox(width: AppSizes.spacingM),
+          const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: AppSizes.fontM,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: AppSizes.fontL,
-              fontWeight: FontWeight.bold,
+            style: TextStyle(
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              fontSize: 12,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class PlayerStats {
+  final double earnings;
+  final int gamesPlayed;
+  final double winRate;
+
+  PlayerStats({
+    required this.earnings,
+    required this.gamesPlayed,
+    required this.winRate,
+  });
 }

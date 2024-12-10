@@ -3,6 +3,7 @@ import 'package:poker_tracker/features/game/data/models/game.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
 import 'package:poker_tracker/features/game/data/models/poker_transaction.dart';
 import 'package:sqflite/sqlite_api.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/database_helper.dart';
 
@@ -22,19 +23,37 @@ class GameRepository {
     });
   }
 
-  // Add missing getAllGames method
+  // Get all games with optimized query
   Future<List<Game>> getAllGames() async {
     final db = await _db.database;
-    final rows = await db.query(
-      DatabaseHelper.tableGames,
-      where: 'userId = ?',
-      whereArgs: [userId],
-      orderBy: 'createdAt DESC',
-    );
+    final rows = await db.rawQuery('''
+      SELECT 
+        g.*,
+        GROUP_CONCAT(p.id || ',' || 
+                    p.name || ',' || 
+                    p.buyIns || ',' || 
+                    p.loans || ',' || 
+                    COALESCE(p.cashOut, '') || ',' || 
+                    p.isSettled) as player_data,
+        GROUP_CONCAT(t.id || ',' || 
+                    t.playerId || ',' || 
+                    t.type || ',' || 
+                    t.amount || ',' || 
+                    t.timestamp || ',' || 
+                    COALESCE(t.note, '') || ',' || 
+                    COALESCE(t.relatedPlayerId, '') || ',' || 
+                    t.isReverted || ',' || 
+                    COALESCE(t.revertedBy, '') || ',' || 
+                    COALESCE(t.revertedAt, '')) as transaction_data
+      FROM ${DatabaseHelper.tableGames} g
+      LEFT JOIN ${DatabaseHelper.tablePlayers} p ON g.id = p.gameId
+      LEFT JOIN ${DatabaseHelper.tableTransactions} t ON g.id = t.gameId
+      WHERE g.userId = ?
+      GROUP BY g.id
+      ORDER BY g.createdAt DESC
+    ''', [userId]);
 
-    return Future.wait(
-      rows.map((row) => _createGameFromRow(db, row)),
-    );
+    return rows.map((row) => _createGameFromRowOptimized(row)).toList();
   }
 
   Stream<List<Game>> getActiveGames() {
@@ -47,52 +66,11 @@ class GameRepository {
     return _gameHistoryController.stream;
   }
 
-  // Fix type safety in createGameFromRow
-  // In GameRepository class, modify the _createGameFromRow method:
-  Future<Game> _createGameFromRow(Database db, Map<String, dynamic> row) async {
-    final playerRows = await db.query(
-      DatabaseHelper.tablePlayers,
-      where: 'gameId = ?',
-      whereArgs: [row['id'] as String],
-    );
-
-    final players = playerRows
-        .map((p) => Player(
-              id: p['id'] as String,
-              name: p['name'] as String,
-              buyIns: p['buyIns'] as int,
-              loans: (p['loans'] as num).toDouble(),
-              cashOut: p['cashOut'] != null
-                  ? (p['cashOut'] as num).toDouble()
-                  : null,
-              isSettled: (p['isSettled'] as int) == 1, // Convert int to bool
-            ))
-        .toList();
-
-    final transactionRows = await db.query(
-      DatabaseHelper.tableTransactions,
-      where: 'gameId = ?',
-      whereArgs: [row['id'] as String],
-    );
-
-    final transactions = transactionRows
-        .map((t) => PokerTransaction(
-              id: t['id'] as String,
-              playerId: t['playerId'] as String,
-              type: TransactionType.values.firstWhere(
-                (e) => e.toString() == t['type'],
-              ),
-              amount: (t['amount'] as num).toDouble(),
-              timestamp: DateTime.parse(t['timestamp'] as String),
-              note: t['note'] as String?,
-              relatedPlayerId: t['relatedPlayerId'] as String?,
-              isReverted: (t['isReverted'] as int) == 1, // Convert int to bool
-              revertedBy: t['revertedBy'] as String?,
-              revertedAt: t['revertedAt'] != null
-                  ? DateTime.parse(t['revertedAt'] as String)
-                  : null,
-            ))
-        .toList();
+  // Optimized game creation from row
+  Game _createGameFromRowOptimized(Map<String, dynamic> row) {
+    final players = _parsePlayersFromConcat(row['player_data'] as String?);
+    final transactions =
+        _parseTransactionsFromConcat(row['transaction_data'] as String?);
 
     return Game(
       id: row['id'] as String,
@@ -100,7 +78,7 @@ class GameRepository {
       date: DateTime.parse(row['date'] as String),
       players: players,
       transactions: transactions,
-      isActive: (row['isActive'] as int) == 1, // Convert int to bool
+      isActive: (row['isActive'] as int) == 1,
       createdBy: row['createdBy'] as String,
       buyInAmount: (row['buyInAmount'] as num).toDouble(),
       cutPercentage: (row['cutPercentage'] as num).toDouble(),
@@ -111,13 +89,74 @@ class GameRepository {
     );
   }
 
-  // ... rest of the existing methods ...
+  List<Player> _parsePlayersFromConcat(String? playerData) {
+    if (playerData == null || playerData.isEmpty) return [];
+
+    try {
+      // Split into individual player records first
+      final playerRecords = playerData.split(') ('); // Split player records
+
+      return playerRecords.map((record) {
+        // Clean up the record string
+        record = record.replaceAll('(', '').replaceAll(')', '');
+        final parts = record.split(',');
+
+        // Add debug logging
+
+        if (parts.length < 6) {
+          // Return a default player if data is incomplete
+          return Player(
+            id: parts.isNotEmpty ? parts[0] : const Uuid().v4(),
+            name: parts.length > 1 ? parts[1] : 'Unknown',
+            buyIns: parts.length > 2 ? int.tryParse(parts[2]) ?? 1 : 1,
+            loans: parts.length > 3 ? double.tryParse(parts[3]) ?? 0.0 : 0.0,
+            cashOut: parts.length > 4 && parts[4].isNotEmpty
+                ? double.tryParse(parts[4])
+                : null,
+            isSettled: parts.length > 5 ? parts[5] == '1' : false,
+          );
+        }
+
+        return Player(
+          id: parts[0],
+          name: parts[1],
+          buyIns: int.parse(parts[2]),
+          loans: double.parse(parts[3]),
+          cashOut: parts[4].isNotEmpty ? double.parse(parts[4]) : null,
+          isSettled: parts[5] == '1',
+        );
+      }).toList();
+    } catch (e) {
+      return []; // Return empty list on error instead of crashing
+    }
+  }
+
+  List<PokerTransaction> _parseTransactionsFromConcat(String? transactionData) {
+    if (transactionData == null || transactionData.isEmpty) return [];
+
+    return transactionData.split(',').map((transStr) {
+      final parts = transStr.split(',');
+      return PokerTransaction(
+        id: parts[0],
+        playerId: parts[1],
+        type:
+            TransactionType.values.firstWhere((e) => e.toString() == parts[2]),
+        amount: double.parse(parts[3]),
+        timestamp: DateTime.parse(parts[4]),
+        note: parts[5].isNotEmpty ? parts[5] : null,
+        relatedPlayerId: parts[6].isNotEmpty ? parts[6] : null,
+        isReverted: parts[7] == '1',
+        revertedBy: parts[8].isNotEmpty ? parts[8] : null,
+        revertedAt: parts[9].isNotEmpty ? DateTime.parse(parts[9]) : null,
+      );
+    }).toList();
+  }
 
   Future<String> createGame(Game game) async {
     final db = await _db.database;
 
     await db.transaction((txn) async {
-      // First, insert the game
+      // Insert game
       await txn.insert(DatabaseHelper.tableGames, {
         'id': game.id,
         'name': game.name,
@@ -130,79 +169,35 @@ class GameRepository {
         'userId': userId,
       });
 
-      // For each player, try to insert or update
+      // Insert players with game-specific data
       for (final player in game.players) {
-        try {
-          await txn.insert(DatabaseHelper.tablePlayers, {
-            'id': player.id,
-            'gameId': game.id,
-            'name': player.name,
-            'buyIns': player.buyIns,
-            'loans': player.loans,
-            'cashOut': player.cashOut,
-            'isSettled': player.isSettled ? 1 : 0,
-          });
-        } on DatabaseException catch (e) {
-          if (e.isUniqueConstraintError()) {
-            // If player already exists, update instead
-            await txn.update(
-              DatabaseHelper.tablePlayers,
-              {
-                'gameId': game.id,
-                'name': player.name,
-                'buyIns': player.buyIns,
-                'loans': player.loans,
-                'cashOut': player.cashOut,
-                'isSettled': player.isSettled ? 1 : 0,
-              },
-              where: 'id = ?',
-              whereArgs: [player.id],
-            );
-          } else {
-            rethrow;
-          }
-        }
-      }
-    });
-
-    _refreshStreams();
-    return game.id;
-  }
-
-// Also modify the addPlayer method:
-  Future<void> addPlayer(String gameId, Player player) async {
-    final db = await _db.database;
-
-    await db.transaction((txn) async {
-      try {
         await txn.insert(DatabaseHelper.tablePlayers, {
           'id': player.id,
-          'gameId': gameId,
+          'gameId': game.id,
           'name': player.name,
           'buyIns': player.buyIns,
           'loans': player.loans,
           'cashOut': player.cashOut,
           'isSettled': player.isSettled ? 1 : 0,
         });
-      } on DatabaseException catch (e) {
-        if (e.isUniqueConstraintError()) {
-          await txn.update(
-            DatabaseHelper.tablePlayers,
-            {
-              'gameId': gameId,
-              'name': player.name,
-              'buyIns': player.buyIns,
-              'loans': player.loans,
-              'cashOut': player.cashOut,
-              'isSettled': player.isSettled ? 1 : 0,
-            },
-            where: 'id = ?',
-            whereArgs: [player.id],
-          );
-        } else {
-          rethrow;
-        }
       }
+    });
+
+    _refreshStreams();
+    return game.id; // Return the game ID
+  }
+
+  Future<void> addPlayer(String gameId, Player player) async {
+    final db = await _db.database;
+
+    await db.insert(DatabaseHelper.tablePlayers, {
+      'id': player.id,
+      'gameId': gameId,
+      'name': player.name,
+      'buyIns': player.buyIns,
+      'loans': player.loans,
+      'cashOut': player.cashOut,
+      'isSettled': player.isSettled ? 1 : 0,
     });
 
     _refreshStreams();
@@ -214,33 +209,94 @@ class GameRepository {
     void queryGame() async {
       try {
         final db = await _db.database;
-        final rows = await db.query(
+
+        // Get the game
+        final gameRows = await db.query(
           DatabaseHelper.tableGames,
           where: 'id = ? AND userId = ?',
           whereArgs: [gameId, userId],
         );
 
-        if (rows.isEmpty) {
+        if (gameRows.isEmpty) {
           controller.add(null);
-        } else {
-          final game = await _createGameFromRow(db, rows.first);
-          controller.add(game);
+          return;
         }
+
+        final gameRow = gameRows.first;
+
+        // Get players for this game
+        final playerRows = await db.query(
+          DatabaseHelper.tablePlayers,
+          where: 'gameId = ?',
+          whereArgs: [gameId],
+        );
+
+        // Get transactions for this game
+        final transactionRows = await db.query(
+          DatabaseHelper.tableTransactions,
+          where: 'gameId = ?',
+          whereArgs: [gameId],
+        );
+
+        final players = playerRows
+            .map((row) => Player(
+                  id: row['id'] as String,
+                  name: row['name'] as String,
+                  buyIns: row['buyIns'] as int,
+                  loans: (row['loans'] as num).toDouble(),
+                  cashOut: row['cashOut'] != null
+                      ? (row['cashOut'] as num).toDouble()
+                      : null,
+                  isSettled: (row['isSettled'] as int) == 1,
+                ))
+            .toList();
+
+        final transactions = transactionRows
+            .map((row) => PokerTransaction(
+                  id: row['id'] as String,
+                  playerId: row['playerId'] as String,
+                  type: TransactionType.values.firstWhere(
+                    (e) => e.toString() == row['type'] as String,
+                  ),
+                  amount: (row['amount'] as num).toDouble(),
+                  timestamp: DateTime.parse(row['timestamp'] as String),
+                  note: row['note'] as String?,
+                  relatedPlayerId: row['relatedPlayerId'] as String?,
+                  isReverted: (row['isReverted'] as int) == 1,
+                  revertedBy: row['revertedBy'] as String?,
+                  revertedAt: row['revertedAt'] != null
+                      ? DateTime.parse(row['revertedAt'] as String)
+                      : null,
+                ))
+            .toList();
+
+        final game = Game(
+          id: gameRow['id'] as String,
+          name: gameRow['name'] as String,
+          date: DateTime.parse(gameRow['date'] as String),
+          players: players,
+          transactions: transactions,
+          isActive: (gameRow['isActive'] as int) == 1,
+          createdBy: gameRow['createdBy'] as String,
+          buyInAmount: (gameRow['buyInAmount'] as num).toDouble(),
+          cutPercentage: (gameRow['cutPercentage'] as num).toDouble(),
+          createdAt: DateTime.parse(gameRow['createdAt'] as String),
+          endedAt: gameRow['endedAt'] != null
+              ? DateTime.parse(gameRow['endedAt'] as String)
+              : null,
+        );
+
+        controller.add(game);
       } catch (e) {
+        print('Error in getGame: $e');
         controller.addError(e);
       }
     }
 
-    // Initial query
     queryGame();
+    final timer =
+        Timer.periodic(const Duration(seconds: 1), (_) => queryGame());
 
-    // Setup periodic refresh
-    final timer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => queryGame(),
-    );
-
-    // Clean up
     controller.onCancel = () {
       timer.cancel();
     };
@@ -248,10 +304,69 @@ class GameRepository {
     return controller.stream;
   }
 
+  // Analytics Methods
+  Future<Map<String, dynamic>> getPlayerStats(String playerId) async {
+    final db = await _db.database;
+    final stats = await db.rawQuery('''
+      WITH PlayerGames AS (
+        SELECT 
+          p.*,
+          g.buyInAmount,
+          g.cutPercentage,
+          COALESCE(p.cashOut, 0) - (p.buyIns * g.buyInAmount + p.loans) as net_amount
+        FROM ${DatabaseHelper.tablePlayers} p
+        JOIN ${DatabaseHelper.tableGames} g ON p.gameId = g.id
+        WHERE p.id = ?
+      )
+      SELECT 
+        COUNT(*) as total_games,
+        SUM(buyIns) as total_buyins,
+        SUM(loans) as total_loans,
+        SUM(CASE WHEN net_amount > 0 THEN 1 ELSE 0 END) as winning_games,
+        AVG(net_amount) as avg_profit,
+        MAX(net_amount) as biggest_win,
+        MIN(net_amount) as biggest_loss,
+        SUM(net_amount) as total_profit
+      FROM PlayerGames
+    ''', [playerId]);
+
+    return stats.first;
+  }
+
+  Future<List<Map<String, dynamic>>> getGameAnalytics() async {
+    final db = await _db.database;
+    return await db.rawQuery('''
+      WITH GameStats AS (
+        SELECT 
+          g.id,
+          g.date,
+          COUNT(DISTINCT p.id) as player_count,
+          SUM(p.buyIns * g.buyInAmount + p.loans) as total_pot,
+          g.buyInAmount,
+          g.cutPercentage
+        FROM ${DatabaseHelper.tableGames} g
+        JOIN ${DatabaseHelper.tablePlayers} p ON g.id = p.gameId
+        WHERE g.userId = ?
+        GROUP BY g.id
+      )
+      SELECT 
+        strftime('%Y-%m', date) as month,
+        COUNT(*) as games_count,
+        AVG(player_count) as avg_players,
+        AVG(total_pot) as avg_pot,
+        MAX(total_pot) as max_pot,
+        AVG(buyInAmount) as avg_buyin,
+        SUM(total_pot) as total_volume
+      FROM GameStats
+      GROUP BY strftime('%Y-%m', date)
+      ORDER BY month DESC
+    ''', [userId]);
+  }
+
+  // Keep existing methods unchanged...
   Future<void> addTransaction(
       String gameId, PokerTransaction transaction) async {
     final db = await _db.database;
-
     await db.transaction((txn) async {
       await txn.insert(DatabaseHelper.tableTransactions, {
         'id': transaction.id,
@@ -271,70 +386,6 @@ class GameRepository {
     });
 
     _refreshStreams();
-  }
-
-  Future<void> endGame(String gameId) async {
-    final db = await _db.database;
-
-    await db.update(
-      DatabaseHelper.tableGames,
-      {
-        'isActive': 0,
-        'endedAt': DateTime.now().toIso8601String(),
-      },
-      where: 'id = ? AND userId = ?',
-      whereArgs: [gameId, userId],
-    );
-
-    _refreshStreams();
-  }
-
-  Future<void> deleteGame(String gameId) async {
-    final db = await _db.database;
-
-    await db.delete(
-      DatabaseHelper.tableGames,
-      where: 'id = ? AND userId = ?',
-      whereArgs: [gameId, userId],
-    );
-
-    _refreshStreams();
-  }
-
-  Future<void> _refreshStreams() async {
-    await _refreshActiveGames();
-    await _refreshGameHistory();
-  }
-
-  Future<void> _refreshActiveGames() async {
-    try {
-      final db = await _db.database;
-      final games = await _queryGames(db, isActive: true);
-      _activeGamesController.add(games);
-    } catch (e) {
-      _activeGamesController.addError(e);
-    }
-  }
-
-  Future<void> _refreshGameHistory() async {
-    try {
-      final db = await _db.database;
-      final games = await _queryGames(db, isActive: false);
-      _gameHistoryController.add(games);
-    } catch (e) {
-      _gameHistoryController.addError(e);
-    }
-  }
-
-  Future<List<Game>> _queryGames(Database db, {required bool isActive}) async {
-    final rows = await db.query(
-      DatabaseHelper.tableGames,
-      where: 'isActive = ? AND userId = ?',
-      whereArgs: [isActive ? 1 : 0, userId],
-      orderBy: isActive ? 'createdAt DESC' : 'endedAt DESC',
-    );
-
-    return Future.wait(rows.map((row) => _createGameFromRow(db, row)));
   }
 
   Future<void> _updatePlayerForTransaction(
@@ -365,6 +416,225 @@ class GameRepository {
     }
   }
 
+  Future<void> endGame(String gameId) async {
+    final db = await _db.database;
+    await db.update(
+      DatabaseHelper.tableGames,
+      {
+        'isActive': 0,
+        'endedAt': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ? AND userId = ?',
+      whereArgs: [gameId, userId],
+    );
+    _refreshStreams();
+  }
+
+  Future<void> deleteGame(String gameId) async {
+    final db = await _db.database;
+    await db.delete(
+      DatabaseHelper.tableGames,
+      where: 'id = ? AND userId = ?',
+      whereArgs: [gameId, userId],
+    );
+    _refreshStreams();
+  }
+
+  Future<void> _refreshStreams() async {
+    await _refreshActiveGames();
+    await _refreshGameHistory();
+  }
+
+  Future<void> _refreshActiveGames() async {
+    try {
+      final db = await _db.database;
+      final games = await _queryGames(db, isActive: true);
+      _activeGamesController.add(games);
+    } catch (e) {
+      _activeGamesController.addError(e);
+    }
+  }
+
+  Future<void> _refreshGameHistory() async {
+    try {
+      final db = await _db.database;
+      final games = await _queryGames(db, isActive: false);
+      _gameHistoryController.add(games);
+    } catch (e) {
+      _gameHistoryController.addError(e);
+    }
+  }
+
+  Future<List<Game>> _queryGames(Database db, {required bool isActive}) async {
+    try {
+      // First, get all games
+      final gameRows = await db.query(
+        DatabaseHelper.tableGames,
+        where: 'isActive = ? AND userId = ?',
+        whereArgs: [isActive ? 1 : 0, userId],
+        orderBy: isActive ? 'createdAt DESC' : 'endedAt DESC',
+      );
+
+      // Then get players for each game
+      return Future.wait(gameRows.map((gameRow) async {
+        // Get players for this game
+        final playerRows = await db.query(
+          DatabaseHelper.tablePlayers,
+          where: 'gameId = ?',
+          whereArgs: [gameRow['id']],
+        );
+
+        // Get transactions for this game
+        final transactionRows = await db.query(
+          DatabaseHelper.tableTransactions,
+          where: 'gameId = ?',
+          whereArgs: [gameRow['id']],
+        );
+
+        // Convert players and transactions
+        final players = playerRows
+            .map((row) => Player(
+                  id: row['id'] as String,
+                  name: row['name'] as String,
+                  buyIns: row['buyIns'] as int,
+                  loans: (row['loans'] as num).toDouble(),
+                  cashOut: row['cashOut'] != null
+                      ? (row['cashOut'] as num).toDouble()
+                      : null,
+                  isSettled: (row['isSettled'] as int) == 1,
+                ))
+            .toList();
+
+        final transactions = transactionRows
+            .map((row) => PokerTransaction(
+                  id: row['id'] as String,
+                  playerId: row['playerId'] as String,
+                  type: TransactionType.values.firstWhere(
+                    (e) => e.toString() == row['type'] as String,
+                  ),
+                  amount: (row['amount'] as num).toDouble(),
+                  timestamp: DateTime.parse(row['timestamp'] as String),
+                  note: row['note'] as String?,
+                  relatedPlayerId: row['relatedPlayerId'] as String?,
+                  isReverted: (row['isReverted'] as int) == 1,
+                  revertedBy: row['revertedBy'] as String?,
+                  revertedAt: row['revertedAt'] != null
+                      ? DateTime.parse(row['revertedAt'] as String)
+                      : null,
+                ))
+            .toList();
+
+        // Create game with all its players and transactions
+        return Game(
+          id: gameRow['id'] as String,
+          name: gameRow['name'] as String,
+          date: DateTime.parse(gameRow['date'] as String),
+          players: players,
+          transactions: transactions,
+          isActive: (gameRow['isActive'] as int) == 1,
+          createdBy: gameRow['createdBy'] as String,
+          buyInAmount: (gameRow['buyInAmount'] as num).toDouble(),
+          cutPercentage: (gameRow['cutPercentage'] as num).toDouble(),
+          createdAt: DateTime.parse(gameRow['createdAt'] as String),
+          endedAt: gameRow['endedAt'] != null
+              ? DateTime.parse(gameRow['endedAt'] as String)
+              : null,
+        );
+      }));
+    } catch (e) {
+      print('Error in _queryGames: $e');
+      rethrow;
+    }
+  }
+
+  // Additional Analytics Methods
+
+  Future<Map<String, dynamic>> getPlayerTrends(String playerId) async {
+    final db = await _db.database;
+    return db.rawQuery('''
+      WITH PlayerResults AS (
+        SELECT 
+          g.id as game_id,
+          g.date,
+          p.buyIns,
+          p.loans,
+          p.cashOut,
+          g.buyInAmount,
+          g.cutPercentage,
+          COALESCE(p.cashOut, 0) - (p.buyIns * g.buyInAmount + p.loans) as net_amount,
+          ROW_NUMBER() OVER (ORDER BY g.date) as game_number
+        FROM ${DatabaseHelper.tablePlayers} p
+        JOIN ${DatabaseHelper.tableGames} g ON p.gameId = g.id
+        WHERE p.id = ? AND p.isSettled = 1
+      )
+      SELECT 
+        game_number,
+        date,
+        net_amount,
+        SUM(net_amount) OVER (ORDER BY date) as running_total,
+        AVG(net_amount) OVER (ORDER BY date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) as moving_average
+      FROM PlayerResults
+      ORDER BY date
+    ''', [playerId]).then((results) => results.isNotEmpty ? results.first : {});
+  }
+
+  Future<List<Map<String, dynamic>>> getHeadToHeadStats(
+      String player1Id, String player2Id) async {
+    final db = await _db.database;
+    return db.rawQuery('''
+      WITH CommonGames AS (
+        SELECT 
+          g.id,
+          g.date,
+          p1.id as p1_id,
+          p1.cashOut as p1_cashout,
+          p1.buyIns as p1_buyins,
+          p1.loans as p1_loans,
+          p2.id as p2_id,
+          p2.cashOut as p2_cashout,
+          p2.buyIns as p2_buyins,
+          p2.loans as p2_loans,
+          g.buyInAmount
+        FROM ${DatabaseHelper.tableGames} g
+        JOIN ${DatabaseHelper.tablePlayers} p1 ON g.id = p1.gameId AND p1.id = ?
+        JOIN ${DatabaseHelper.tablePlayers} p2 ON g.id = p2.gameId AND p2.id = ?
+        WHERE p1.isSettled = 1 AND p2.isSettled = 1
+      )
+      SELECT 
+        COUNT(*) as games_played,
+        SUM(CASE WHEN (p1_cashout - (p1_buyins * buyInAmount + p1_loans)) > 
+                  (p2_cashout - (p2_buyins * buyInAmount + p2_loans))
+            THEN 1 ELSE 0 END) as p1_wins,
+        SUM(CASE WHEN (p2_cashout - (p2_buyins * buyInAmount + p2_loans)) > 
+                  (p1_cashout - (p1_buyins * buyInAmount + p1_loans))
+            THEN 1 ELSE 0 END) as p2_wins,
+        AVG(p1_cashout - (p1_buyins * buyInAmount + p1_loans)) as p1_avg_profit,
+        AVG(p2_cashout - (p2_buyins * buyInAmount + p2_loans)) as p2_avg_profit
+      FROM CommonGames
+    ''', [player1Id, player2Id]);
+  }
+
+  // Helper method for player performance over time
+  Future<List<Map<String, dynamic>>> getPlayerPerformanceTimeline(
+      String playerId) async {
+    final db = await _db.database;
+    return db.rawQuery('''
+      SELECT 
+        strftime('%Y-%m', g.date) as month,
+        COUNT(*) as games_played,
+        SUM(p.buyIns) as total_buyins,
+        SUM(p.loans) as total_loans,
+        SUM(COALESCE(p.cashOut, 0)) as total_cashout,
+        SUM(COALESCE(p.cashOut, 0) - (p.buyIns * g.buyInAmount + p.loans)) as net_profit,
+        AVG(COALESCE(p.cashOut, 0) - (p.buyIns * g.buyInAmount + p.loans)) as avg_profit_per_game
+      FROM ${DatabaseHelper.tablePlayers} p
+      JOIN ${DatabaseHelper.tableGames} g ON p.gameId = g.id
+      WHERE p.id = ? AND p.isSettled = 1
+      GROUP BY strftime('%Y-%m', g.date)
+      ORDER BY month DESC
+    ''', [playerId]);
+  }
+
   void dispose() {
     _refreshTimer?.cancel();
     _activeGamesController.close();
@@ -374,6 +644,6 @@ class GameRepository {
 
 extension DatabaseExceptionExt on DatabaseException {
   bool isUniqueConstraintError() {
-    return this.toString().contains('UNIQUE constraint failed');
+    return toString().contains('UNIQUE constraint failed');
   }
 }

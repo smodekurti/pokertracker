@@ -398,62 +398,54 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
       return;
     }
 
+    if (_players.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add at least one player to the team'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final teamProvider = context.read<TeamProvider>();
 
       if (_existingTeam != null) {
-        // Update existing team
-        final updatedTeam = Team(
-          id: _existingTeam!.id,
+        await teamProvider.updateTeam(_existingTeam!.copyWith(
           name: name,
-          createdBy: _existingTeam!.createdBy,
-          createdAt: _existingTeam!.createdAt,
           players: _players,
-        );
-
-        await teamProvider.updateTeam(updatedTeam);
-
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Team updated successfully'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        context.pop();
+        ));
       } else {
-        // Create new team
         await teamProvider.createTeam(name, _players);
-
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Team created successfully'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        context.pop();
       }
-    } catch (e) {
+
       if (!mounted) return;
-
-      String errorMessage = 'Failed to save team';
-      if (e.toString().contains('not found')) {
-        errorMessage = 'Team not found. It might have been deleted.';
-      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessage),
+          content: Text(_existingTeam != null
+              ? 'Team updated successfully'
+              : 'Team created successfully'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
           backgroundColor: AppColors.error,
         ),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

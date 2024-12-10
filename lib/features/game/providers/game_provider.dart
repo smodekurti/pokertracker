@@ -101,7 +101,7 @@ class GameProvider with ChangeNotifier {
         createdAt: DateTime.now(),
       );
 
-      final gameId = await _repository.createGame(game);
+      final gameId = await _repository.createGame(game); // Now returns String
       _currentGame = await _repository.getGame(gameId).first;
       notifyListeners();
 

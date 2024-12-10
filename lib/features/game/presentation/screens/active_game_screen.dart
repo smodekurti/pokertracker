@@ -91,8 +91,10 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
       return false;
     }
 
+    // Simply show exit confirmation without ending the game
     final result = await _showExitConfirmation();
     if (result == true && mounted) {
+      // Just navigate back without ending the game
       context.go('/');
     }
     return false;
@@ -179,7 +181,7 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
           ),
           SizedBox(width: AppSizes.spacingS.dp),
           Text(
-            'Total Pot: \$${game.totalPot.toStringAsFixed(2)}',
+            'Total Pot: \${game.totalPot.toStringAsFixed(2)}',
             style: TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.bold,
