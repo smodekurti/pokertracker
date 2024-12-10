@@ -167,7 +167,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                             Padding(
                               padding: const EdgeInsets.all(16),
                               child: Text(
-                                'Your game data, including scores, player stats, and team information, will be stored securely in the cloud. This allows you to access your data across devices and prevents data loss.',
+                                'Your game data, including scores, player stats, and team information, will be stored locally on your device. While this means data will only be accessible from your current device, you maintain complete control over your information. Authentication and consent management will remain cloud-based to ensure secure access to your account..',
                                 style: TextStyle(
                                   color: Colors.grey[300],
                                   fontSize: 16,

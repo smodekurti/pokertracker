@@ -4,16 +4,15 @@ import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/features/team/providers/team_provider.dart';
 import 'package:provider/provider.dart';
 
-class TeamListScreen extends StatelessWidget {
+class TeamListScreen extends StatefulWidget {
   const TeamListScreen({super.key});
 
-  void _createNewTeam(BuildContext context) {
-    context.push('/teams/new');
-  }
+  @override
+  State<TeamListScreen> createState() => _TeamListScreenState();
+}
 
-  void _editTeam(BuildContext context, String teamId) {
-    context.push('/teams/$teamId');
-  }
+class _TeamListScreenState extends State<TeamListScreen> {
+  int _currentIndex = 1; // Set to Teams tab index
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +28,7 @@ class TeamListScreen extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // Header
+              // Header remains unchanged
               Container(
                 padding: const EdgeInsets.all(16),
                 color: AppColors.backgroundDark.withOpacity(0.3),
@@ -40,12 +39,17 @@ class TeamListScreen extends StatelessWidget {
                       color: AppColors.textPrimary,
                       onPressed: () => Navigator.pop(context),
                     ),
-                    const Text(
-                      'Team Management',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: AppColors.primaryGradient,
+                      ).createShader(bounds),
+                      child: const Text(
+                        'Team Management',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const Spacer(),
@@ -67,7 +71,7 @@ class TeamListScreen extends StatelessWidget {
                 ),
               ),
 
-              // Teams List
+              // Teams List - Existing implementation remains unchanged
               Expanded(
                 child: Consumer<TeamProvider?>(
                   builder: (context, teamProvider, child) {
@@ -132,6 +136,7 @@ class TeamListScreen extends StatelessWidget {
                       );
                     }
 
+                    // Existing team list implementation
                     return ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: teams.length,
@@ -256,6 +261,62 @@ class TeamListScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: _buildBottomNavigation(),
+    );
+  }
+
+  Widget _buildBottomNavigation() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundMedium,
+        border: Border(
+          top: BorderSide(color: AppColors.backgroundMedium, width: 1),
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.home, 'Home', 0, () => context.go('/')),
+              _buildNavItem(Icons.group, 'Teams', 1, () {}),
+              _buildNavItem(Icons.bar_chart, 'Game Stats', 2,
+                  () => context.go('/analytics')),
+              _buildNavItem(Icons.history, 'Game History', 3,
+                  () => context.go('/history')),
+              _buildNavItem(Icons.tips_and_updates, 'Tips', 4,
+                  () => context.go('/poker-reference')),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+      IconData icon, String label, int index, VoidCallback onTap) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }

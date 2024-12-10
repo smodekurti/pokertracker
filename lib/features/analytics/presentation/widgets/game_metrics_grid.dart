@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 
 class GameMetricsGrid extends StatelessWidget {
   final GameProvider gameProvider;
-
   const GameMetricsGrid({super.key, required this.gameProvider});
 
   @override
   Widget build(BuildContext context) {
     final metrics = _calculateMetrics();
-
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -24,14 +23,7 @@ class GameMetricsGrid extends StatelessWidget {
   Widget _buildMetricCard(Map<String, dynamic> metric) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.grey[900]!,
-            Colors.grey[850]!,
-          ],
-        ),
+        color: AppColors.backgroundMedium,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
@@ -43,14 +35,14 @@ class GameMetricsGrid extends StatelessWidget {
             Text(
               metric['label'],
               style: TextStyle(
-                color: Colors.grey[400],
+                color: AppColors.textSecondary,
                 fontSize: 14,
               ),
             ),
             Text(
               metric['value'],
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textPrimary,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -68,15 +60,12 @@ class GameMetricsGrid extends StatelessWidget {
         .map((player) => player.name)
         .toSet()
         .length;
-
     double totalPot = 0;
     double maxPot = 0;
-
     for (final game in gameProvider.gameHistory) {
       totalPot += game.totalPot;
       if (game.totalPot > maxPot) maxPot = game.totalPot;
     }
-
     return [
       {'label': 'Total Games', 'value': totalGames.toString()},
       {'label': 'Unique Players', 'value': totalPlayers.toString()},

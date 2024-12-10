@@ -46,9 +46,17 @@ class TeamProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
+      if (name.trim().isEmpty) {
+        throw Exception('Team name cannot be empty');
+      }
+
+      if (players.isEmpty) {
+        throw Exception('Team must have at least one player');
+      }
+
       final team = Team(
         id: const Uuid().v4(),
-        name: name,
+        name: name.trim(),
         createdAt: DateTime.now(),
         createdBy: _repository.userId,
         players: players,

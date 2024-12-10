@@ -1,6 +1,5 @@
-// lib/features/analytics/presentation/widgets/player_performance_section.dart
-
 import 'package:flutter/material.dart';
+import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/features/game/data/models/game.dart';
 
 enum SortOption { profit, winRate, gamesPlayed, recentActivity }
@@ -24,13 +23,13 @@ class FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.green[400] : Colors.grey[800],
+          color: isSelected ? AppColors.primary : AppColors.backgroundMedium,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.black : Colors.grey[400],
+            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -69,7 +68,7 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -81,13 +80,13 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
               _searchQuery = value;
             });
           },
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: 'Search players...',
-            hintStyle: TextStyle(color: Colors.grey[400]),
-            prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+            hintStyle: TextStyle(color: AppColors.textSecondary),
+            prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
             filled: true,
-            fillColor: Colors.grey[900],
+            fillColor: AppColors.backgroundMedium,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -141,7 +140,7 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
         Text(
           '${playerStats.length} players',
           style: TextStyle(
-            color: Colors.grey[400],
+            color: AppColors.textSecondary,
             fontSize: 14,
           ),
         ),
@@ -153,11 +152,12 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
-                  Icon(Icons.search_off, size: 48, color: Colors.grey[600]),
+                  Icon(Icons.search_off,
+                      size: 48, color: AppColors.textSecondary),
                   const SizedBox(height: 16),
                   Text(
                     'No players found',
-                    style: TextStyle(color: Colors.grey[400]),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -179,14 +179,7 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
   Widget _buildPlayerCard(Map<String, dynamic> player) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.grey[900]!,
-            Colors.grey[850]!,
-          ],
-        ),
+        color: AppColors.backgroundMedium,
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(16),
@@ -201,7 +194,7 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                 ),
               ),
               Text(
@@ -210,8 +203,8 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: player['totalProfit'] >= 0
-                      ? Colors.green[400]
-                      : Colors.red[400],
+                      ? AppColors.success
+                      : AppColors.error,
                 ),
               ),
             ],
@@ -224,25 +217,25 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
                 Icons.casino,
                 'Games',
                 player['gamesPlayed'].toString(),
-                Colors.blue[400]!,
+                AppColors.secondary,
               ),
               _buildStatItem(
                 Icons.emoji_events,
                 'Wins',
                 player['wins'].toString(),
-                Colors.amber[400]!,
+                AppColors.rankGold,
               ),
               _buildStatItem(
                 Icons.trending_up,
                 'Win Rate',
                 '${(player['winRate']).toStringAsFixed(0)}%',
-                Colors.green[400]!,
+                AppColors.primary,
               ),
               _buildStatItem(
                 Icons.star,
                 'Best Win',
                 '\$${player['biggestWin'].toStringAsFixed(0)}',
-                Colors.purple[400]!,
+                AppColors.rankSilver,
               ),
             ],
           ),
@@ -257,14 +250,14 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
                   Text(
                     'Performance',
                     style: TextStyle(
-                      color: Colors.grey[400],
+                      color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
                   Text(
                     '${player['winRate'].toStringAsFixed(0)}%',
                     style: TextStyle(
-                      color: Colors.grey[400],
+                      color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -275,9 +268,9 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: (player['winRate'] as num) / 100,
-                  backgroundColor: Colors.grey[800],
+                  backgroundColor: AppColors.backgroundDark,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.green[400]!,
+                    AppColors.primary,
                   ),
                   minHeight: 4,
                 ),
@@ -299,7 +292,7 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
           Text(
             value,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -307,7 +300,7 @@ class _PlayerPerformanceSectionState extends State<PlayerPerformanceSection> {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey[400],
+              color: AppColors.textSecondary,
               fontSize: 12,
             ),
           ),
