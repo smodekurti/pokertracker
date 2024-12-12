@@ -90,3 +90,11 @@ class Player {
     return 'Player(id: $id, name: $name, buyIns: $buyIns, loans: $loans, cashOut: $cashOut, isSettled: $isSettled)';
   }
 }
+
+extension PlayerExtensions on Player {
+  bool get hasUnsettledLoans {
+    // Implement your loan checking logic here
+    // For now, returning false as default
+    return false;
+  }
+}

@@ -533,7 +533,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                         border: isSelected
                                             ? Border.all(
                                                 color: AppColors.primary,
-                                                width: 2,
+                                                width: 1,
                                               )
                                             : null,
                                         borderRadius: BorderRadius.circular(16),
@@ -568,12 +568,13 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                                     color:
                                                         AppColors.textPrimary,
                                                     fontWeight: FontWeight.bold,
+                                                    fontSize: 18,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
                                                   '${team.players.length} players',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     color:
                                                         AppColors.textSecondary,
                                                     fontSize: 14,
@@ -608,9 +609,9 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                     const EdgeInsets.symmetric(vertical: 16),
                                 child: Text(
                                   'Players in ${selectedTeam!.name}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: AppColors.textSecondary,
-                                    fontSize: 14,
+                                    fontSize: 18,
                                   ),
                                 ),
                               ),
@@ -631,7 +632,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                     return Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: AppColors.backgroundMedium,
+                                        color: AppColors.backgroundLight,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Row(
@@ -651,19 +652,20 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                               child: Text(
                                                 player.name[0].toUpperCase(),
                                                 style: const TextStyle(
-                                                  color: AppColors.textPrimary,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                                    color:
+                                                        AppColors.textPrimary,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 18),
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(width: 16),
+                                          const SizedBox(width: 10),
                                           Expanded(
                                             child: Text(
                                               player.name,
                                               style: const TextStyle(
-                                                color: AppColors.textPrimary,
-                                              ),
+                                                  color: AppColors.textPrimary,
+                                                  fontSize: 18),
                                             ),
                                           ),
                                           if (isAlreadyAdded)
