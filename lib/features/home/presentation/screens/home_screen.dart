@@ -207,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final game in gameProvider.gameHistory) {
       double gameTotal = game.totalPot;
       if (game.cutPercentage > 0) {
-        gameTotal = game.totalPot * (game.cutPercentage / 100);
+        gameTotal = game.totalPot * (1 - game.cutPercentage / 100);
       }
       totalPot += gameTotal;
     }
