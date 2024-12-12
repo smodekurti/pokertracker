@@ -556,7 +556,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                               size: 20,
                                             ),
                                           ),
-                                          const SizedBox(width: 16),
+                                          const SizedBox(width: 10),
                                           Expanded(
                                             child: Column(
                                               crossAxisAlignment:
@@ -568,7 +568,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                                     color:
                                                         AppColors.textPrimary,
                                                     fontWeight: FontWeight.bold,
-                                                    fontSize: 18,
+                                                    fontSize: 16,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 4),
@@ -665,7 +665,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                               player.name,
                                               style: const TextStyle(
                                                   color: AppColors.textPrimary,
-                                                  fontSize: 18),
+                                                  fontSize: 16),
                                             ),
                                           ),
                                           if (isAlreadyAdded)

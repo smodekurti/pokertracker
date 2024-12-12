@@ -150,11 +150,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     for (final game in games) {
       double gameTotal = game.totalPot;
-      if (game.cutPercentage! > 0) {
-        gameTotal = game.totalPot * (game.cutPercentage / 100);
+      double adjustedMaxPot = game.totalPot;
+
+      // If there's a cut percentage, adjust the total pot and max pot
+      if (game.cutPercentage > 0) {
+        gameTotal = game.totalPot * (1 - (game.cutPercentage / 100));
+        adjustedMaxPot = gameTotal; // Use the cut amount as the max pot
       }
+
       totalPot += gameTotal;
-      maxPot = maxPot < game.totalPot ? game.totalPot : maxPot;
+      maxPot = maxPot < adjustedMaxPot ? adjustedMaxPot : maxPot;
       totalBuyIn += game.buyInAmount;
       uniquePlayers.addAll(game.players.map((p) => p.name));
     }

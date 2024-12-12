@@ -15,7 +15,7 @@ class GameHistoryCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.backgroundMedium,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         //border: Border.all(color: AppColors.rankSilver, width: .5),
       ),
       child: ExpansionTile(
