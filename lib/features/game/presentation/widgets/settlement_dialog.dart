@@ -51,6 +51,12 @@ class _SettlementDialogState extends State<SettlementDialog> {
     super.dispose();
   }
 
+  double get _remainingBalance {
+    double cashOut = double.tryParse(_controller.text) ?? 0;
+    return widget.state.totalPot -
+        (widget.state.totalSettled + cashOut - widget.initialAmount);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -78,7 +84,6 @@ class _SettlementDialogState extends State<SettlementDialog> {
                   const SizedBox(height: 16),
                   _buildCashOutInput(),
                   const SizedBox(height: 16),
-                  _buildRemainingPot(),
                 ],
               ),
             ),
@@ -96,34 +101,103 @@ class _SettlementDialogState extends State<SettlementDialog> {
         color: AppColors.backgroundMedium,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          CircleAvatar(
-            backgroundColor: AppColors.primary,
-            child: Text(
-              widget.playerName[0].toUpperCase(),
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Center(
+                  child: Text(
+                    '${widget.currentIndex + 1}',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Settle Player ',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '(${widget.currentIndex + 1}/${widget.totalPlayers})',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      widget.playerName,
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.grey),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Settle Player',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
-                Text(widget.playerName,
-                    style: const TextStyle(color: Colors.grey, fontSize: 14)),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.grey),
-            onPressed: () => Navigator.of(context).pop(),
+          const SizedBox(height: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Pot Balance',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                  Text(
+                    '\$${_remainingBalance.abs().toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              LinearProgressIndicator(
+                value: 1 - (_remainingBalance / widget.state.totalPot),
+                backgroundColor: AppColors.backgroundLight,
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+              if (_remainingBalance == 0)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Amount will balance the pot',
+                    style: TextStyle(color: AppColors.success, fontSize: 12),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -250,48 +324,6 @@ class _SettlementDialogState extends State<SettlementDialog> {
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildRemainingPot() {
-    double cashOut = double.tryParse(_controller.text) ?? 0;
-    double remainingBalance = widget.state.totalPot -
-        (widget.state.totalSettled + cashOut - widget.initialAmount);
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundMedium,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Remaining Pot',
-                  style: TextStyle(color: Colors.grey, fontSize: 14)),
-              Text('\$${remainingBalance.abs().toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: 1 - (remainingBalance / widget.state.totalPot),
-            backgroundColor: AppColors.backgroundLight,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            remainingBalance == 0 ? 'Amount will balance the pot' : '',
-            style: const TextStyle(color: AppColors.success, fontSize: 14),
-          ),
-        ],
-      ),
     );
   }
 
