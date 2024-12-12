@@ -5,7 +5,6 @@ key.properties
 .env
 .env.staging
 # Dependencies
-**/build/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
