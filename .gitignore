@@ -4,4 +4,12 @@ key.properties
 .env.development
 .env
 .env.staging
-build/
+# Dependencies
+**/build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
