@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
-import 'package:poker_tracker/core/utils/ui_helpers.dart';
+import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
 import 'package:poker_tracker/features/game/data/models/settlement_state.dart';
-
-import '../../../../core/presentation/styles/app_sizes.dart';
 
 class SettlementDialog extends StatefulWidget {
   final Player player;
@@ -39,14 +37,12 @@ class SettlementDialog extends StatefulWidget {
 
 class _SettlementDialogState extends State<SettlementDialog> {
   late TextEditingController _controller;
-  late double remainingBalance;
 
   @override
   void initState() {
     super.initState();
     _controller =
-        TextEditingController(text: widget.initialAmount.toStringAsFixed(2));
-    _updateRemainingBalance();
+        TextEditingController(text: widget.initialAmount.toStringAsFixed(0));
   }
 
   @override
@@ -55,35 +51,38 @@ class _SettlementDialogState extends State<SettlementDialog> {
     super.dispose();
   }
 
-  void _updateRemainingBalance() {
-    double cashOut = double.tryParse(_controller.text) ?? 0;
-    remainingBalance =
-        widget.state.totalPot - (widget.state.totalSettled + cashOut);
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppColors.backgroundDark,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      backgroundColor: Colors.transparent,
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundDark,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
-            const SizedBox(height: 16),
-            _buildBuyInsAndLoans(),
-            const SizedBox(height: 16),
-            if (widget.isLastPlayer) _buildRecommendedAmount(),
-            if (widget.isLastPlayer) const SizedBox(height: 16),
-            _buildCashOutInput(),
-            const SizedBox(height: 16),
-            _buildRemainingPot(),
-            const SizedBox(height: 16),
-            _buildActions(context),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildBuyInsAndLoans(),
+                  const SizedBox(height: 16),
+                  if (widget.isLastPlayer) _buildRecommendedAmount(),
+                  const SizedBox(height: 16),
+                  _buildCashOutInput(),
+                  const SizedBox(height: 16),
+                  _buildRemainingPot(),
+                ],
+              ),
+            ),
+            _buildActions(),
           ],
         ),
       ),
@@ -91,36 +90,43 @@ class _SettlementDialogState extends State<SettlementDialog> {
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        CircleAvatar(
-          backgroundColor: AppColors.primary,
-          child: Text(
-            widget.playerName[0].toUpperCase(),
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundMedium,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: AppColors.primary,
+            child: Text(
+              widget.playerName[0].toUpperCase(),
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Settle Player',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
-              Text(widget.playerName,
-                  style: const TextStyle(color: Colors.grey, fontSize: 14)),
-            ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Settle Player',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+                Text(widget.playerName,
+                    style: const TextStyle(color: Colors.grey, fontSize: 14)),
+              ],
+            ),
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.close, color: Colors.grey),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ],
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.grey),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -164,8 +170,8 @@ class _SettlementDialogState extends State<SettlementDialog> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.backgroundMedium,
-        border: Border.all(color: AppColors.success, width: 1),
+        color: AppColors.success.withOpacity(0.1),
+        border: Border.all(color: AppColors.success.withOpacity(0.2)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -176,7 +182,7 @@ class _SettlementDialogState extends State<SettlementDialog> {
               Icon(Icons.check_circle, color: AppColors.success, size: 20),
               SizedBox(width: 8),
               Text('Recommended Amount',
-                  style: TextStyle(color: AppColors.success, fontSize: 16)),
+                  style: TextStyle(color: AppColors.success, fontSize: 14)),
             ],
           ),
           Text('\$${widget.recommendedAmount.toStringAsFixed(2)}',
@@ -190,7 +196,8 @@ class _SettlementDialogState extends State<SettlementDialog> {
   }
 
   Widget _buildCashOutInput() {
-    bool isReadOnly = widget.state.isBalanced() && widget.isLastPlayer;
+    final bool isPlayerSettled = widget.state.isPlayerSettled(widget.playerId);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -201,36 +208,55 @@ class _SettlementDialogState extends State<SettlementDialog> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: AppColors.backgroundMedium,
-            border: Border.all(color: AppColors.success, width: 1),
+            border: Border.all(
+                color: isPlayerSettled ? Colors.grey : AppColors.success),
             borderRadius: BorderRadius.circular(8),
           ),
           child: TextField(
             controller: _controller,
-            style: const TextStyle(
-                color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: isPlayerSettled ? Colors.grey : Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
             keyboardType: TextInputType.number,
-            readOnly: isReadOnly,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
               prefixText: '\$ ',
               prefixStyle: TextStyle(
-                  color: AppColors.success,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold),
+                color: isPlayerSettled ? Colors.grey : AppColors.success,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
               suffixText: '.00',
-              suffixStyle: TextStyle(color: Colors.grey, fontSize: 24),
+              suffixStyle: const TextStyle(color: Colors.grey, fontSize: 24),
             ),
-            onChanged: (value) {
-              _updateRemainingBalance();
-            },
+            readOnly: isPlayerSettled,
+            enabled: !isPlayerSettled,
+            onChanged: isPlayerSettled
+                ? null
+                : (value) {
+                    // Update state or perform calculations as needed
+                    setState(() {});
+                  },
           ),
         ),
+        if (isPlayerSettled)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text(
+              'This player has already been settled.',
+              style: TextStyle(color: AppColors.warning, fontSize: 12),
+            ),
+          ),
       ],
     );
   }
 
   Widget _buildRemainingPot() {
-    Color balanceColor = remainingBalance > 0 ? Colors.white : AppColors.error;
+    double cashOut = double.tryParse(_controller.text) ?? 0;
+    double remainingBalance = widget.state.totalPot -
+        (widget.state.totalSettled + cashOut - widget.initialAmount);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -247,8 +273,8 @@ class _SettlementDialogState extends State<SettlementDialog> {
               const Text('Remaining Pot',
                   style: TextStyle(color: Colors.grey, fontSize: 14)),
               Text('\$${remainingBalance.abs().toStringAsFixed(2)}',
-                  style: TextStyle(
-                      color: balanceColor,
+                  style: const TextStyle(
+                      color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.bold)),
             ],
@@ -269,78 +295,43 @@ class _SettlementDialogState extends State<SettlementDialog> {
     );
   }
 
-  Widget _buildActions(BuildContext context) {
-    final bool allPlayersSettled =
-        widget.state.isBalanced() && widget.isLastPlayer;
-
-    if (allPlayersSettled) {
-      return Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: AppColors.primaryGradient,
-          ),
-          borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
-        ),
-        child: TextButton(
-          onPressed: () {
-            final amount = double.tryParse(_controller.text) ?? 0;
-            Navigator.pop(context, {
-              'action': 'finalize',
-              'amount': amount,
-            });
-          },
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            padding: EdgeInsets.symmetric(
-              vertical: AppSizes.paddingM.dp,
-              horizontal: AppSizes.paddingL.dp,
-            ),
-          ),
-          child: Text(
-            'Settle Game',
-            style: TextStyle(
-              fontSize: ResponsiveSize(AppSizes.fontL).sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        widget.currentIndex > 0
-            ? TextButton(
+  Widget _buildActions() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          if (widget.currentIndex > 0)
+            Expanded(
+              child: ElevatedButton(
                 onPressed: () => Navigator.pop(context, {'action': 'prev'}),
-                child: Text(
-                  'Previous',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: ResponsiveSize(AppSizes.fontM).sp,
-                  ),
-                ),
-              )
-            : const Spacer(),
-        TextButton(
-          onPressed: () {
-            final amount = double.tryParse(_controller.text) ?? 0;
-            Navigator.pop(context, {
-              'action': 'save',
-              'amount': amount,
-            });
-          },
-          child: Text(
-            'Next',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontSize: ResponsiveSize(AppSizes.fontM).sp,
-              fontWeight: FontWeight.bold,
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.backgroundMedium),
+                child: const Text('Previous'),
+              ),
+            ),
+          if (widget.currentIndex > 0) const SizedBox(width: 16),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () {
+                final amount = double.tryParse(_controller.text) ?? 0;
+                Navigator.pop(context, {
+                  'action': widget.isLastPlayer && widget.state.isBalanced()
+                      ? 'finalize'
+                      : 'save',
+                  'amount': amount
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.black,
+              ),
+              child: Text(widget.isLastPlayer && widget.state.isBalanced()
+                  ? 'Settle'
+                  : 'Next'),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

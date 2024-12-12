@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/core/utils/ui_helpers.dart';
@@ -13,6 +14,7 @@ class PokerReferenceScreen extends StatefulWidget {
 class _PokerReferenceScreenState extends State<PokerReferenceScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _currentIndex = 4; // Poker Reference index
 
   @override
   void initState() {
@@ -56,6 +58,66 @@ class _PokerReferenceScreenState extends State<PokerReferenceScreen>
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: _buildBottomNavigation(),
+    );
+  }
+
+  Widget _buildBottomNavigation() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundMedium,
+        border: Border(
+          top: BorderSide(
+            color: AppColors.backgroundMedium,
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.home, 'Home', 0, () => context.go('/')),
+              _buildNavItem(
+                  Icons.group, 'Teams', 1, () => context.go('/teams')),
+              _buildNavItem(Icons.bar_chart, 'Game Stats', 2,
+                  () => context.go('/analytics')),
+              _buildNavItem(Icons.history, 'Game History', 3,
+                  () => context.go('/history')),
+              _buildNavItem(Icons.tips_and_updates, 'Tips', 4,
+                  () => context.go('/poker-reference')),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+      IconData icon, String label, int index, VoidCallback onTap) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }

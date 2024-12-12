@@ -4,3 +4,4 @@ key.properties
 .env.development
 .env
 .env.staging
+build/

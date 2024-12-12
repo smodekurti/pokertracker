@@ -1,287 +1,204 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
-import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
-import 'package:poker_tracker/core/utils/ui_helpers.dart';
 import 'package:poker_tracker/features/game/data/models/game.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
 import 'package:share_plus/share_plus.dart';
 
-class GameHistoryCard extends StatefulWidget {
+class GameHistoryCard extends StatelessWidget {
   final Game game;
 
-  const GameHistoryCard({
-    super.key,
-    required this.game,
-  });
-
-  @override
-  State<GameHistoryCard> createState() => _GameHistoryCardState();
-}
-
-class _GameHistoryCardState extends State<GameHistoryCard> {
-  bool isExpanded = false;
-  bool showAfterCut = false;
+  const GameHistoryCard({Key? key, required this.game}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8.dp, horizontal: 16.dp),
-      color: AppColors.backgroundMedium,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundMedium,
+        borderRadius: BorderRadius.circular(12),
+        //border: Border.all(color: AppColors.rankSilver, width: .5),
       ),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            isExpanded = !isExpanded;
-          });
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            if (!isExpanded) _buildCollapsedHighlights(),
-            if (isExpanded) ...[
-              _buildGameDetails(),
-              _buildToggleButtons(),
-              _buildPlayersList(),
-              _buildPaymentInstructions(),
-            ],
-          ],
-        ),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.all(16),
+        childrenPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        title: _buildHeader(context),
+        children: [
+          _buildGameInfo(),
+          _buildPlayerList('Winners', Icons.emoji_events, AppColors.success),
+          _buildPlayerList('Break Even', Icons.balance, Colors.grey),
+          _buildPlayerList('Losers', Icons.trending_down, AppColors.error),
+          if (game.isPotBalanced) _buildPaymentInstructions(),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: EdgeInsets.all(16.dp),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.game.name,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: AppSizes.fontXL.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
+  Widget _buildHeader(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                game.name,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.share, color: AppColors.primary),
+              onPressed: () => _shareGameSummary(context),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+            const SizedBox(width: 4),
+            Text(
+              DateFormat('MMM dd, yyyy').format(game.date),
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(Icons.account_balance_wallet,
+                size: 16, color: AppColors.primary),
+            const SizedBox(width: 4),
+            Text(
+              'Final Pot: \$${game.totalPot.toStringAsFixed(2)}',
+              style: const TextStyle(color: AppColors.primary, fontSize: 16),
+            ),
+          ],
+        ),
+        if (game.cutPercentage > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                const Icon(Icons.cut, size: 14, color: AppColors.warning),
+                const SizedBox(width: 4),
                 Text(
-                  DateFormat('EEEE, MMM d, yyyy').format(widget.game.date),
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: AppSizes.fontM.sp,
-                  ),
+                  'After Cut: \$${game.actualPot.toStringAsFixed(2)} (${game.cutPercentage}% cut)',
+                  style:
+                      const TextStyle(color: AppColors.warning, fontSize: 14),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.share, color: AppColors.textSecondary),
-            onPressed: _shareGameSummary,
-          ),
-        ],
-      ),
+      ],
     );
   }
 
-  Widget _buildCollapsedHighlights() {
-    _getWinner();
-    _getWinnerProfit();
-    final totalPot = showAfterCut
-        ? widget.game.totalPot * (1 - widget.game.cutPercentage / 100)
-        : widget.game.totalPot;
-
-    return Padding(
-      padding: EdgeInsets.all(16.dp),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHighlightRow('Total Pot', '\$${totalPot.toStringAsFixed(2)}'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHighlightRow(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.dp),
+  Widget _buildGameInfo() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: AppSizes.fontM.sp,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: AppSizes.fontM.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          _buildInfoItem(
+              Icons.group, 'Players', game.players.length.toString()),
+          _buildInfoItem(Icons.attach_money, 'Buy-in',
+              '\$${game.buyInAmount.toStringAsFixed(2)}'),
+          _buildInfoItem(Icons.account_balance_wallet, 'Final Pot',
+              '\$${game.actualPot.toStringAsFixed(2)}'),
         ],
       ),
     );
   }
 
-  Widget _buildGameDetails() {
-    final totalPot = showAfterCut
-        ? widget.game.totalPot * (1 - widget.game.cutPercentage / 100)
-        : widget.game.totalPot;
+  Widget _buildInfoItem(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Icon(icon, color: AppColors.primary, size: 24),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(value,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
 
-    return Padding(
-      padding: EdgeInsets.all(16.dp),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildPlayerList(String category, IconData icon, Color color) {
+    List<Player> players = [];
+
+    switch (category) {
+      case 'Winners':
+        players = game.players
+            .where((p) => game.getPlayerNetAmount(p.id) > 0)
+            .toList();
+        players.sort((a, b) => game
+            .getPlayerNetAmount(b.id)
+            .compareTo(game.getPlayerNetAmount(a.id)));
+        break;
+      case 'Break Even':
+        players = game.players
+            .where((p) => game.getPlayerNetAmount(p.id) == 0)
+            .toList();
+        break;
+      case 'Losers':
+        players = game.players
+            .where((p) => game.getPlayerNetAmount(p.id) < 0)
+            .toList();
+        players.sort((a, b) => game
+            .getPlayerNetAmount(a.id)
+            .compareTo(game.getPlayerNetAmount(b.id)));
+        break;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            border: Border.all(color: color.withOpacity(0.5)),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDetailItem(
-                  Icons.group, 'Players', '${widget.game.players.length}'),
-              _buildDetailItem(Icons.attach_money, 'Buy-in',
-                  '\$${widget.game.buyInAmount.toStringAsFixed(2)}'),
-              _buildDetailItem(Icons.account_balance_wallet, 'Final Pot',
-                  '\$${totalPot.toStringAsFixed(2)}'),
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                category,
+                style: TextStyle(
+                    color: color, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
-          if (widget.game.cutPercentage > 0) ...[
-            SizedBox(height: 8.dp),
-            Text(
-              'Cut: ${widget.game.cutPercentage}%',
-              style: TextStyle(
-                color: AppColors.warning,
-                fontSize: AppSizes.fontS.sp,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailItem(IconData icon, String label, String value) {
-    return Column(
-      children: [
-        Icon(icon, color: AppColors.textSecondary),
-        SizedBox(height: 4.dp),
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: AppSizes.fontS.sp,
-          ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: AppSizes.fontM.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        ...players.map((player) => _buildPlayerItem(player, color)),
       ],
     );
   }
 
-  Widget _buildToggleButtons() {
-    return Padding(
-      padding: EdgeInsets.all(16.dp),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => setState(() => showAfterCut = false),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: !showAfterCut
-                    ? AppColors.primary
-                    : AppColors.backgroundMedium,
-              ),
-              child: const Text('Original'),
-            ),
-          ),
-          SizedBox(width: 8.dp),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => setState(() => showAfterCut = true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: showAfterCut
-                    ? AppColors.primary
-                    : AppColors.backgroundMedium,
-              ),
-              child: const Text('After Cut'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlayersList() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildPlayerCategory(
-            'Winners', (p) => _getPlayerAmount(p.id) > 0, AppColors.success),
-        _buildPlayerCategory('Break Even', (p) => _getPlayerAmount(p.id) == 0,
-            AppColors.textSecondary),
-        _buildPlayerCategory(
-            'Losers', (p) => _getPlayerAmount(p.id) < 0, AppColors.error),
-      ],
-    );
-  }
-
-  Widget _buildPlayerCategory(
-      String title, bool Function(Player) filter, Color color) {
-    final categoryPlayers = widget.game.players.where(filter).toList()
-      ..sort(
-          (a, b) => _getPlayerAmount(b.id).compareTo(_getPlayerAmount(a.id)));
-
-    if (categoryPlayers.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.dp, vertical: 8.dp),
-          child: Text(
-            title,
-            style: TextStyle(
-              color: color,
-              fontSize: AppSizes.fontL.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        ...categoryPlayers.map(_buildPlayerResultRow),
-      ],
-    );
-  }
-
-  Widget _buildPlayerResultRow(Player player) {
-    final netAmount = _getPlayerAmount(player.id);
-    final buyIn = widget.game.buyInAmount;
-    final cashOut = buyIn + netAmount;
+  Widget _buildPlayerItem(Player player, Color color) {
+    final netAmount = game.getPlayerNetAmount(player.id);
+    final originalAmount = game.getPlayerOriginalAmount(player.id);
+    final buyIn = player.calculateTotalIn(game.buyInAmount);
+    final cashOut = player.cashOut ?? 0;
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 4.dp, horizontal: 16.dp),
-      padding: EdgeInsets.all(12.dp),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: _getPlayerResultColor(netAmount),
-        borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -290,269 +207,169 @@ class _GameHistoryCardState extends State<GameHistoryCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(player.name,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
                 Text(
-                  player.name,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: AppSizes.fontM.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  'Buy-in: \$${buyIn.toStringAsFixed(2)} • Cash-out: \$${cashOut.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: AppSizes.fontS.sp,
-                  ),
-                ),
+                    'Buy-in: \$${buyIn.toStringAsFixed(2)} • Cash-out: \$${cashOut.toStringAsFixed(2)}',
+                    style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                if (game.cutPercentage > 0 && originalAmount != netAmount)
+                  Text('Original: ${_formatAmount(originalAmount)}',
+                      style: const TextStyle(
+                          color: AppColors.warning, fontSize: 12)),
               ],
             ),
           ),
           Text(
             _formatAmount(netAmount),
             style: TextStyle(
-              color: _getAmountColor(netAmount),
-              fontSize: AppSizes.fontM.sp,
-              fontWeight: FontWeight.bold,
-            ),
+                color: color, fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildPaymentInstructions() {
-    List<Map<String, dynamic>> debts = _calculateDebts();
-
-    return Padding(
-      padding: EdgeInsets.all(16.dp),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.payment, color: AppColors.textSecondary),
-              SizedBox(width: 8.dp),
-              Text(
-                'Payment Instructions',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: AppSizes.fontL.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.dp),
-          if (debts.isEmpty)
-            Card(
-              color: AppColors.success.withOpacity(0.1),
-              child: Padding(
-                padding: EdgeInsets.all(16.dp),
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: AppColors.success),
-                    SizedBox(width: 8.dp),
-                    Text(
-                      'No payments necessary. Everyone is square!',
-                      style: TextStyle(
-                        color: AppColors.success,
-                        fontSize: AppSizes.fontM.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            Column(
-              children: debts.map((debt) {
-                return Card(
-                  margin: EdgeInsets.only(bottom: 8.dp),
-                  color: AppColors.backgroundMedium,
-                  child: Padding(
-                    padding: EdgeInsets.all(16.dp),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                debt['from'],
-                                style: TextStyle(
-                                  color: AppColors.error,
-                                  fontSize: AppSizes.fontM.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'pays',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: AppSizes.fontS.sp,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                debt['to'],
-                                style: TextStyle(
-                                  color: AppColors.success,
-                                  fontSize: AppSizes.fontM.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                _formatAmount(debt['amount']),
-                                style: TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: AppSizes.fontL.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-        ],
-      ),
-    );
-  }
-
-  List<Map<String, dynamic>> _calculateDebts() {
-    List<Map<String, dynamic>> debts = [];
-    List<Map<String, dynamic>> balances = widget.game.players.map((player) {
-      return {
-        'name': player.name,
-        'balance': _getPlayerAmount(player.id),
-      };
-    }).toList();
-
-    balances.sort((a, b) => a['balance'].compareTo(b['balance']));
-
-    int i = 0;
-    int j = balances.length - 1;
-
-    while (i < j) {
-      double debt = min(-balances[i]['balance'], balances[j]['balance']);
-      if (debt > 0) {
-        debts.add({
-          'from': balances[i]['name'],
-          'to': balances[j]['name'],
-          'amount': debt,
-        });
-
-        balances[i]['balance'] += debt;
-        balances[j]['balance'] -= debt;
-
-        if (balances[i]['balance'] == 0) i++;
-        if (balances[j]['balance'] == 0) j--;
-      }
-    }
-
-    return debts;
-  }
-
-  Color _getPlayerResultColor(double amount) {
-    if (amount > 0) return AppColors.success.withOpacity(0.1);
-    if (amount < 0) return AppColors.error.withOpacity(0.1);
-    return AppColors.backgroundMedium;
-  }
-
-  Color _getAmountColor(double amount) {
-    if (amount > 0) return AppColors.success;
-    if (amount < 0) return AppColors.error;
-    return AppColors.textPrimary;
   }
 
   String _formatAmount(double amount) {
-    final prefix = amount > 0 ? '+' : '';
-    return '$prefix\$${amount.toStringAsFixed(2)}';
+    return amount >= 0
+        ? '+\$${amount.toStringAsFixed(2)}'
+        : '-\$${amount.abs().toStringAsFixed(2)}';
   }
 
-  double _getPlayerAmount(String playerId) {
-    return showAfterCut
-        ? widget.game.getPlayerAmountAfterCut(playerId)
-        : widget.game.getPlayerNetAmount(playerId);
+  Widget _buildPaymentInstructions() {
+    final winners =
+        game.players.where((p) => game.getPlayerNetAmount(p.id) > 0).toList();
+    final losers =
+        game.players.where((p) => game.getPlayerNetAmount(p.id) < 0).toList();
+    final payments = _calculatePayments(winners, losers);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.primary.withOpacity(0.5)),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.payment, color: AppColors.primary, size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Payment Instructions',
+                style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...payments.map((payment) => _buildPaymentItem(payment)),
+      ],
+    );
   }
 
-  Player _getWinner() {
-    return widget.game.players.reduce(
-        (a, b) => _getPlayerAmount(a.id) > _getPlayerAmount(b.id) ? a : b);
-  }
-
-  double _getWinnerProfit() {
-    Player winner = _getWinner();
-    return _getPlayerAmount(winner.id);
-  }
-
-  Future<void> _shareGameSummary() async {
-    final StringBuffer summary = StringBuffer();
-
-    summary.writeln('🎲 ${widget.game.name}');
-    summary
-        .writeln('📅 ${DateFormat('EEEE, M/d/yyyy').format(widget.game.date)}');
-    summary.writeln('');
-    summary.writeln('👥 Players: ${widget.game.players.length}');
-    summary
-        .writeln('💰 Buy-in: \$${widget.game.buyInAmount.toStringAsFixed(2)}');
-    summary
-        .writeln('🏆 Final Pot: \$${widget.game.totalPot.toStringAsFixed(2)}');
-    summary.writeln('');
-
-    final players = List<Player>.from(widget.game.players)
-      ..sort((a, b) => widget.game
-          .getPlayerNetAmount(b.id)
-          .compareTo(widget.game.getPlayerNetAmount(a.id)));
-
-    for (final player in players) {
-      final netAmount = widget.game.getPlayerNetAmount(player.id);
-      final buyIn = widget.game.buyInAmount;
-      final cashOut = player.cashOut;
-
-      summary.writeln('${player.name}:');
-      summary.writeln('  Buy-in: \$${buyIn.toStringAsFixed(2)}');
-      summary.writeln('  Cash-out: \$${cashOut!.toStringAsFixed(2)}');
-      summary.writeln('  Net: ${_formatAmount(netAmount)}');
-      summary.writeln('');
-    }
-
-    summary.writeln('Generated by Poker Tracker 🎲');
-
-    try {
-      await Share.share(
-        summary.toString(),
-        subject: '${widget.game.name} - Game Summary',
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Failed to share game summary: ${e.toString()}',
-              style: TextStyle(fontSize: AppSizes.fontM.sp),
-            ),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.all(AppSizes.paddingL.dp),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+  Widget _buildPaymentItem(Map<String, dynamic> payment) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundMedium,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Text(
+                  _formatName(payment['from'].name),
+                  style: const TextStyle(
+                      color: AppColors.error, fontWeight: FontWeight.bold),
+                ),
+                const Icon(Icons.arrow_forward, color: Colors.grey, size: 16),
+                Text(
+                  _formatName(payment['to'].name),
+                  style: const TextStyle(
+                      color: AppColors.success, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
           ),
-        );
+          Text(
+            '\$${payment['amount'].toStringAsFixed(2)}',
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatName(String name) {
+    final parts = name.split(' ');
+    if (parts.length > 1) {
+      return '${parts.first} ${parts.last[0]}.';
+    }
+    return name;
+  }
+
+  List<Map<String, dynamic>> _calculatePayments(
+      List<Player> winners, List<Player> losers) {
+    final payments = <Map<String, dynamic>>[];
+    for (final loser in losers) {
+      var amountToPayBack = game.getPlayerNetAmount(loser.id).abs();
+      for (final winner in winners) {
+        if (amountToPayBack <= 0) break;
+        final winnerAmount = game.getPlayerNetAmount(winner.id);
+        if (winnerAmount <= 0) continue;
+        final paymentAmount =
+            amountToPayBack < winnerAmount ? amountToPayBack : winnerAmount;
+        payments.add({
+          'from': loser,
+          'to': winner,
+          'amount': paymentAmount,
+        });
+        amountToPayBack -= paymentAmount;
       }
+    }
+    return payments;
+  }
+
+  Future<void> _shareGameSummary(BuildContext context) async {
+    final summary = StringBuffer();
+    summary.writeln('Game: ${game.name}');
+    summary.writeln('Date: ${DateFormat('MMM dd, yyyy').format(game.date)}');
+    summary.writeln('Total Pot: \$${game.totalPot.toStringAsFixed(2)}');
+    if (game.cutPercentage > 0) {
+      summary.writeln('Cut: ${game.cutPercentage}%');
+      summary.writeln('After Cut: \$${game.actualPot.toStringAsFixed(2)}');
+    }
+    summary.writeln('Players: ${game.players.length}');
+    summary.writeln('Buy-in: \$${game.buyInAmount.toStringAsFixed(2)}');
+    summary.writeln('\nResults:');
+    for (final player in game.players) {
+      final netAmount = game.getPlayerNetAmount(player.id);
+      final originalAmount = game.getPlayerOriginalAmount(player.id);
+      summary.writeln('${player.name}: ${_formatAmount(netAmount)}');
+      if (game.cutPercentage > 0 && originalAmount != netAmount) {
+        summary.writeln('  Original: ${_formatAmount(originalAmount)}');
+      }
+    }
+
+    try {
+      await Share.share(summary.toString());
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to share game summary')),
+      );
     }
   }
 }
