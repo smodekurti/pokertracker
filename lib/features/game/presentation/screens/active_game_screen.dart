@@ -410,7 +410,7 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
                           if (!_isProcessing)
                             Padding(
                               padding:
-                                  EdgeInsets.only(right: AppSizes.paddingM.dp),
+                                  EdgeInsets.only(right: AppSizes.paddingM.wp),
                               child: ElevatedButton.icon(
                                 onPressed: _showAddPlayerDialog,
                                 icon: Icon(
@@ -419,7 +419,7 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
                                   color: Colors.black,
                                 ),
                                 label: Text(
-                                  'Add Player',
+                                  '',
                                   style: TextStyle(fontSize: AppSizes.fontM.sp),
                                 ),
                                 style: ElevatedButton.styleFrom(
@@ -427,7 +427,7 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
                                   foregroundColor: Colors.black,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(
-                                        AppSizes.radiusM.dp),
+                                        AppSizes.radiusM.sp),
                                   ),
                                 ),
                               ),

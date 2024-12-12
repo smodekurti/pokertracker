@@ -70,21 +70,25 @@ class _SettlementDialogState extends State<SettlementDialog> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildBuyInsAndLoans(),
-                  const SizedBox(height: 16),
-                  if (widget.isLastPlayer) _buildRecommendedAmount(),
-                  const SizedBox(height: 16),
-                  _buildCashOutInput(),
-                  const SizedBox(height: 16),
-                ],
+            Flexible(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildBuyInsAndLoans(),
+                      const SizedBox(height: 16),
+                      if (widget.isLastPlayer) _buildRecommendedAmount(),
+                      const SizedBox(height: 16),
+                      _buildCashOutInput(),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
               ),
             ),
             _buildActions(),
@@ -105,20 +109,28 @@ class _SettlementDialogState extends State<SettlementDialog> {
         children: [
           Row(
             children: [
-              Container(
+              SizedBox(
                 width: 48,
                 height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Center(
-                  child: Text(
-                    '${widget.currentIndex + 1}',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          '${widget.currentIndex + 1}',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -130,12 +142,15 @@ class _SettlementDialogState extends State<SettlementDialog> {
                   children: [
                     Row(
                       children: [
-                        const Text(
-                          'Settle Player ',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        const Flexible(
+                          child: Text(
+                            'Settle Player ',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Text(
@@ -151,6 +166,8 @@ class _SettlementDialogState extends State<SettlementDialog> {
                     Text(
                       widget.playerName,
                       style: const TextStyle(color: Colors.grey, fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ],
                 ),
@@ -158,6 +175,11 @@ class _SettlementDialogState extends State<SettlementDialog> {
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.grey),
                 onPressed: () => Navigator.of(context).pop(),
+                constraints: const BoxConstraints(
+                  minWidth: 40,
+                  minHeight: 40,
+                ),
+                padding: EdgeInsets.zero,
               ),
             ],
           ),
@@ -168,9 +190,12 @@ class _SettlementDialogState extends State<SettlementDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Pot Balance',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  const Flexible(
+                    child: Text(
+                      'Pot Balance',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   Text(
                     '\$${_remainingBalance.abs().toStringAsFixed(2)}',
@@ -195,6 +220,7 @@ class _SettlementDialogState extends State<SettlementDialog> {
                   child: Text(
                     'Amount will balance the pot',
                     style: TextStyle(color: AppColors.success, fontSize: 12),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
             ],
@@ -203,6 +229,9 @@ class _SettlementDialogState extends State<SettlementDialog> {
       ),
     );
   }
+
+  // Rest of the widgets remain unchanged...
+  // (Keeping all other methods exactly the same)
 
   Widget _buildBuyInsAndLoans() {
     return Row(
@@ -228,13 +257,18 @@ class _SettlementDialogState extends State<SettlementDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+          Text(
+            title,
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 4),
-          Text(content,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            content,
+            style: const TextStyle(
+                color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
@@ -251,19 +285,29 @@ class _SettlementDialogState extends State<SettlementDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Row(
-            children: [
-              Icon(Icons.check_circle, color: AppColors.success, size: 20),
-              SizedBox(width: 8),
-              Text('Recommended Amount',
-                  style: TextStyle(color: AppColors.success, fontSize: 14)),
-            ],
+          const Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'Recommended Amount',
+                    style: TextStyle(color: AppColors.success, fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
-          Text('\$${widget.recommendedAmount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                  color: AppColors.success,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            '\$${widget.recommendedAmount.toStringAsFixed(2)}',
+            style: const TextStyle(
+                color: AppColors.success,
+                fontSize: 16,
+                fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
@@ -275,8 +319,11 @@ class _SettlementDialogState extends State<SettlementDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Cash-out Amount',
-            style: TextStyle(color: Colors.grey, fontSize: 14)),
+        const Text(
+          'Cash-out Amount',
+          style: TextStyle(color: Colors.grey, fontSize: 14),
+          overflow: TextOverflow.ellipsis,
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -310,7 +357,6 @@ class _SettlementDialogState extends State<SettlementDialog> {
             onChanged: isPlayerSettled
                 ? null
                 : (value) {
-                    // Update state or perform calculations as needed
                     setState(() {});
                   },
           ),
@@ -321,6 +367,7 @@ class _SettlementDialogState extends State<SettlementDialog> {
             child: Text(
               'This player has already been settled.',
               style: TextStyle(color: AppColors.warning, fontSize: 12),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
       ],
@@ -328,41 +375,58 @@ class _SettlementDialogState extends State<SettlementDialog> {
   }
 
   Widget _buildActions() {
-    return Padding(
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundDark,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+      ),
       padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          if (widget.currentIndex > 0)
+      child: SafeArea(
+        child: Row(
+          children: [
+            if (widget.currentIndex > 0)
+              Expanded(
+                child: SizedBox(
+                  height: 40,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, {'action': 'prev'}),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.backgroundMedium,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    child: const Text('Previous'),
+                  ),
+                ),
+              ),
+            if (widget.currentIndex > 0) const SizedBox(width: 16),
             Expanded(
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context, {'action': 'prev'}),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.backgroundMedium),
-                child: const Text('Previous'),
+              child: SizedBox(
+                height: 40,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final amount = double.tryParse(_controller.text) ?? 0;
+                    Navigator.pop(context, {
+                      'action': widget.isLastPlayer && widget.state.isBalanced()
+                          ? 'finalize'
+                          : 'save',
+                      'amount': amount
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: Text(
+                    widget.isLastPlayer && widget.state.isBalanced()
+                        ? 'Settle'
+                        : 'Next',
+                  ),
+                ),
               ),
             ),
-          if (widget.currentIndex > 0) const SizedBox(width: 16),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () {
-                final amount = double.tryParse(_controller.text) ?? 0;
-                Navigator.pop(context, {
-                  'action': widget.isLastPlayer && widget.state.isBalanced()
-                      ? 'finalize'
-                      : 'save',
-                  'amount': amount
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.black,
-              ),
-              child: Text(widget.isLastPlayer && widget.state.isBalanced()
-                  ? 'Settle'
-                  : 'Next'),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

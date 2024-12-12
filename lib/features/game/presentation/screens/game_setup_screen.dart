@@ -22,7 +22,8 @@ class GameSetupScreen extends StatefulWidget {
 class _GameSetupScreenState extends State<GameSetupScreen> {
   final _gameNameController = TextEditingController();
   final _buyInController = TextEditingController(text: '20');
-  final _cutPercentageController = TextEditingController(text: '0');
+  double _selectedCutPercentage =
+      0; // Replace TextEditingController with double
   final Set<Team> _selectedTeams = {};
   final Set<Player> _selectedPlayers = {};
   final Set<Player> _players = {};
@@ -32,9 +33,130 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   void dispose() {
     _gameNameController.dispose();
     _buyInController.dispose();
-    _cutPercentageController.dispose();
     _playerNameController.dispose();
     super.dispose();
+  }
+
+  Widget _buildCutPercentageSelector() {
+    final cutOptions = [
+      (0.0, 'No Cut', Icons.block),
+      (25.0, '25%', Icons.percent),
+      (50.0, '50%', Icons.percent),
+      (75.0, '75%', Icons.warning_rounded),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Cut Percentage',
+          style: TextStyle(
+            color: Colors.grey[400],
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: cutOptions.map((option) {
+            final isSelected = _selectedCutPercentage == option.$1;
+
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedCutPercentage = option.$1),
+                child: Column(
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 200),
+                      tween: Tween(begin: 1.0, end: isSelected ? 1.1 : 1.0),
+                      builder: (context, scale, child) => Transform.scale(
+                        scale: scale,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: isSelected
+                                ? const LinearGradient(
+                                    colors: AppColors.primaryGradient,
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                            color: isSelected ? null : const Color(0xFF0B1120),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primary.withOpacity(0.3),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
+                                    )
+                                  ]
+                                : null,
+                          ),
+                          child: Icon(
+                            option.$3,
+                            color: isSelected ? Colors.white : Colors.grey[600],
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      option.$2,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.grey[400],
+                        fontSize: 14,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 14,
+              ),
+              children: [
+                TextSpan(
+                  text: _selectedCutPercentage > 0
+                      ? 'House cut will be '
+                      : 'No house cut will be applied to this game',
+                ),
+                if (_selectedCutPercentage > 0) ...[
+                  TextSpan(
+                    text: '${_selectedCutPercentage.toStringAsFixed(0)}%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const TextSpan(text: ' of the total pot'),
+                  if (_selectedCutPercentage == 75)
+                    TextSpan(
+                      text: ' (High percentage!)',
+                      style: TextStyle(
+                        color: Colors.amber[500],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -131,17 +253,11 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                 label: 'Buy-in Amount',
                 controller: _buyInController,
                 icon: Icons.attach_money,
-                prefix: '\$',
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              _buildInputField(
-                label: 'Cut Percentage',
-                controller: _cutPercentageController,
-                icon: Icons.percent,
                 prefix: '',
                 keyboardType: TextInputType.number,
               ),
+              const SizedBox(height: 16),
+              _buildCutPercentageSelector(), // Replace the old input field with new selector
             ],
           ),
         ),
@@ -810,10 +926,28 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       return;
     }
 
-    // Validate cut percentage
-    double? cutPercentage;
+    // Cut percentage is already validated through the UI
+    final cutPercentage = _selectedCutPercentage;
+
+    // Validate buy-in amount
     try {
-      cutPercentage = double.parse(_cutPercentageController.text);
+      buyInAmount = double.parse(_buyInController.text);
+      if (buyInAmount <= 0) {
+        throw const FormatException('Buy-in must be greater than 0');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid buy-in amount'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Validate cut percentage
+    try {
+      // cutPercentage = double.parse(_cutPercentageController.text);
       if (cutPercentage < 0 || cutPercentage > 100) {
         throw const FormatException('Cut percentage must be between 0 and 100');
       }
