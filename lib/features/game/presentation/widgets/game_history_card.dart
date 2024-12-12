@@ -343,24 +343,96 @@ class GameHistoryCard extends StatelessWidget {
     return payments;
   }
 
+  // Only showing the modified _shareGameSummary method as other code remains unchanged
   Future<void> _shareGameSummary(BuildContext context) async {
     final summary = StringBuffer();
-    summary.writeln('Game: ${game.name}');
-    summary.writeln('Date: ${DateFormat('MMM dd, yyyy').format(game.date)}');
-    summary.writeln('Total Pot: \$${game.totalPot.toStringAsFixed(2)}');
+
+    // Header
+    summary.writeln('🎲 ${game.name.toUpperCase()}');
+    summary.writeln('📅 ${DateFormat('MMM dd, yyyy').format(game.date)}');
+    summary.writeln('');
+
+    // Game Info
+    summary.writeln('Game Details:');
+    summary.writeln('👥 Players: ${game.players.length}');
+    summary.writeln('💰 Buy-in: \$${game.buyInAmount.toStringAsFixed(2)}');
+    summary.writeln('💵 Final Pot: \$${game.totalPot.toStringAsFixed(2)}');
     if (game.cutPercentage > 0) {
-      summary.writeln('Cut: ${game.cutPercentage}%');
-      summary.writeln('After Cut: \$${game.actualPot.toStringAsFixed(2)}');
+      summary.writeln('✂️ House Cut: ${game.cutPercentage}%');
+      summary.writeln('🏦 After Cut: \$${game.actualPot.toStringAsFixed(2)}');
     }
-    summary.writeln('Players: ${game.players.length}');
-    summary.writeln('Buy-in: \$${game.buyInAmount.toStringAsFixed(2)}');
-    summary.writeln('\nResults:');
-    for (final player in game.players) {
-      final netAmount = game.getPlayerNetAmount(player.id);
-      final originalAmount = game.getPlayerOriginalAmount(player.id);
-      summary.writeln('${player.name}: ${_formatAmount(netAmount)}');
-      if (game.cutPercentage > 0 && originalAmount != netAmount) {
-        summary.writeln('  Original: ${_formatAmount(originalAmount)}');
+    summary.writeln('');
+
+    // Winners
+    final winners =
+        game.players.where((p) => game.getPlayerNetAmount(p.id) > 0).toList();
+    if (winners.isNotEmpty) {
+      summary.writeln('🏆 Winners:');
+      for (final player in winners) {
+        final netAmount = game.getPlayerNetAmount(player.id);
+        final originalAmount = game.getPlayerOriginalAmount(player.id);
+        final buyIn = player.calculateTotalIn(game.buyInAmount);
+        final cashOut = player.cashOut ?? 0;
+
+        summary.writeln('${player.name}');
+        summary.writeln(
+            '   Buy-in: \$${buyIn.toStringAsFixed(2)} • Cash-out: \$${cashOut.toStringAsFixed(2)}');
+        summary.writeln('   Net: ${_formatAmount(netAmount)}');
+        if (game.cutPercentage > 0 && originalAmount != netAmount) {
+          summary.writeln('   Original: ${_formatAmount(originalAmount)}');
+        }
+      }
+      summary.writeln('');
+    }
+
+    // Break Even
+    final breakEven =
+        game.players.where((p) => game.getPlayerNetAmount(p.id) == 0).toList();
+    if (breakEven.isNotEmpty) {
+      summary.writeln('⚖️ Break Even:');
+      for (final player in breakEven) {
+        final buyIn = player.calculateTotalIn(game.buyInAmount);
+        final cashOut = player.cashOut ?? 0;
+
+        summary.writeln('${player.name}');
+        summary.writeln(
+            '   Buy-in: \$${buyIn.toStringAsFixed(2)} • Cash-out: \$${cashOut.toStringAsFixed(2)}');
+        summary.writeln('   Net: \$0.00');
+      }
+      summary.writeln('');
+    }
+
+    // Losers
+    final losers =
+        game.players.where((p) => game.getPlayerNetAmount(p.id) < 0).toList();
+    if (losers.isNotEmpty) {
+      summary.writeln('📉 Losers:');
+      for (final player in losers) {
+        final netAmount = game.getPlayerNetAmount(player.id);
+        final originalAmount = game.getPlayerOriginalAmount(player.id);
+        final buyIn = player.calculateTotalIn(game.buyInAmount);
+        final cashOut = player.cashOut ?? 0;
+
+        summary.writeln('${player.name}');
+        summary.writeln(
+            '   Buy-in: \$${buyIn.toStringAsFixed(2)} • Cash-out: \$${cashOut.toStringAsFixed(2)}');
+        summary.writeln('   Net: ${_formatAmount(netAmount)}');
+        if (game.cutPercentage > 0 && originalAmount != netAmount) {
+          summary.writeln('   Original: ${_formatAmount(originalAmount)}');
+        }
+      }
+      summary.writeln('');
+    }
+
+    // Payment Instructions
+    if (game.isPotBalanced) {
+      final payments = _calculatePayments(winners, losers);
+      if (payments.isNotEmpty) {
+        summary.writeln('💸 Payment Instructions:');
+        for (final payment in payments) {
+          summary.writeln(
+              '${_formatName(payment['from'].name)} ➡️ ${_formatName(payment['to'].name)}: \$${payment['amount'].toStringAsFixed(2)}');
+        }
       }
     }
 
