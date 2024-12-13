@@ -97,7 +97,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                           child: Icon(
                             option.$3,
                             color: isSelected ? Colors.white : Colors.grey[600],
-                            size: 28,
+                            size: 20,
                           ),
                         ),
                       ),

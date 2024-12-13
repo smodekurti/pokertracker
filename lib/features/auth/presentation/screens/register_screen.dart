@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:poker_tracker/core/presentation/widgets/poker_logo.dart';
@@ -13,13 +15,15 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
+  late AnimationController _dropletController;
 
   @override
   void dispose() {
@@ -27,6 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _dropletController.dispose();
     super.dispose();
   }
 
@@ -67,255 +72,258 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _dropletController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  Widget _buildGlassContainer({required Widget child}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1.5,
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool isPassword = false,
+    bool isConfirmPassword = false,
+    bool enabled = true,
+  }) {
+    return _buildGlassContainer(
+      child: TextField(
+        controller: controller,
+        enabled: enabled,
+        obscureText:
+            isPassword || isConfirmPassword ? !_isPasswordVisible : false,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.white.withOpacity(0.6),
+            fontSize: AppSizes.fontL,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFF87CEEB).withOpacity(0.8),
+          ),
+          suffixIcon: (isPassword || isConfirmPassword)
+              ? IconButton(
+                  icon: Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: const Color(0xFF87CEEB).withOpacity(0.8),
+                  ),
+                  onPressed: () =>
+                      setState(() => _isPasswordVisible = !_isPasswordVisible),
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingL,
+            vertical: AppSizes.paddingXL,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<AppAuthProvider>().isLoading;
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            height: size.height - MediaQuery.of(context).padding.top,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.padding2XL,
+      backgroundColor: const Color(0xFF1A1A2E),
+      body: Stack(
+        children: [
+          // Animated background droplets
+          Positioned(
+            top: -100,
+            right: -100,
+            child: AnimatedBuilder(
+              animation: _dropletController,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(
+                    20 * _dropletController.value,
+                    10 * _dropletController.value,
+                  ),
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFF87CEEB).withOpacity(0.3),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Logo with glow
-                  const SizedBox(
-                    height: 160,
-                    child: PokerLogo(),
+          ),
+          Positioned(
+            bottom: -150,
+            left: -150,
+            child: AnimatedBuilder(
+              animation: _dropletController,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(
+                    -15 * _dropletController.value,
+                    -10 * _dropletController.value,
                   ),
-                  const SizedBox(height: AppSizes.spacing3XL),
-
-                  // Title with gradient
-                  ShaderMask(
-                    shaderCallback: (Rect bounds) {
-                      return const LinearGradient(
-                        colors: [Color(0xFF4ade80), Color(0xFF3b82f6)],
-                      ).createShader(bounds);
-                    },
-                    child: const Text(
-                      'Create Account',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.spacing3XL),
-
-                  // Name Field
-                  TextField(
-                    controller: _nameController,
-                    enabled: !isLoading,
-                    keyboardType: TextInputType.name,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Name',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: AppSizes.fontL,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.person_outline,
-                        color: Colors.grey[600],
-                      ),
-                      filled: true,
-                      fillColor: AppColors.backgroundMedium,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.paddingL,
-                        vertical: AppSizes.paddingXL,
+                  child: Container(
+                    width: 400,
+                    height: 400,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFF00BFFF).withOpacity(0.3),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSizes.spacingL),
+                );
+              },
+            ),
+          ),
 
-                  // Email Field
-                  TextField(
-                    controller: _emailController,
-                    enabled: !isLoading,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Email',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: AppSizes.fontL,
+          // Main content
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSizes.padding2XL),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: AppSizes.spacingXL),
+                      const SizedBox(
+                        height: 160,
+                        child: PokerLogo(),
                       ),
-                      prefixIcon: Icon(
-                        Icons.mail_outline,
-                        color: Colors.grey[600],
-                      ),
-                      filled: true,
-                      fillColor: AppColors.backgroundMedium,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.paddingL,
-                        vertical: AppSizes.paddingXL,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.spacingL),
+                      const SizedBox(height: AppSizes.spacing2XL),
 
-                  // Password Field
-                  TextField(
-                    controller: _passwordController,
-                    enabled: !isLoading,
-                    obscureText: !_isPasswordVisible,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Password',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: AppSizes.fontL,
+                      // Input fields with glass effect
+                      _buildInputField(
+                        controller: _nameController,
+                        hint: 'Name',
+                        icon: Icons.person_outline,
+                        enabled: !isLoading,
                       ),
-                      prefixIcon: Icon(
-                        Icons.lock_outline,
-                        color: Colors.grey[600],
+                      const SizedBox(height: AppSizes.spacingL),
+                      _buildInputField(
+                        controller: _emailController,
+                        hint: 'Email',
+                        icon: Icons.mail_outline,
+                        enabled: !isLoading,
                       ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: Colors.grey[600],
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
+                      const SizedBox(height: AppSizes.spacingL),
+                      _buildInputField(
+                        controller: _passwordController,
+                        hint: 'Password',
+                        icon: Icons.lock_outline,
+                        isPassword: true,
+                        enabled: !isLoading,
                       ),
-                      filled: true,
-                      fillColor: AppColors.backgroundMedium,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                      const SizedBox(height: AppSizes.spacingL),
+                      _buildInputField(
+                        controller: _confirmPasswordController,
+                        hint: 'Confirm Password',
+                        icon: Icons.lock_outline,
+                        isConfirmPassword: true,
+                        enabled: !isLoading,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.paddingL,
-                        vertical: AppSizes.paddingXL,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.spacingL),
+                      const SizedBox(height: AppSizes.spacing2XL),
 
-                  // Confirm Password Field
-                  TextField(
-                    controller: _confirmPasswordController,
-                    enabled: !isLoading,
-                    obscureText: !_isPasswordVisible,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Confirm Password',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: AppSizes.fontL,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.lock_outline,
-                        color: Colors.grey[600],
-                      ),
-                      filled: true,
-                      fillColor: AppColors.backgroundMedium,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.paddingL,
-                        vertical: AppSizes.paddingXL,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.spacing2XL),
-
-                  // Register Button
-                  SizedBox(
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _handleRegister,
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            if (states.contains(MaterialState.disabled)) {
-                              return Colors.grey;
-                            }
-                            return const Color(0xFF4ade80);
-                          },
-                        ),
-                        shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        elevation: MaterialStateProperty.all(0),
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : const Text(
-                              'Register',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                      // Register Button with glass effect
+                      _buildGlassContainer(
+                        child: SizedBox(
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: isLoading ? null : _handleRegister,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color(0xFF87CEEB).withOpacity(0.2),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.spacing2XL),
-
-                  // Login Link with gradient text
-                  Center(
-                    child: TextButton(
-                      onPressed: isLoading ? null : () => context.go('/login'),
-                      child: ShaderMask(
-                        shaderCallback: (Rect bounds) {
-                          return const LinearGradient(
-                            colors: [Color(0xFF4ade80), Color(0xFF3b82f6)],
-                          ).createShader(bounds);
-                        },
-                        child: const Text(
-                          'Already have an account? Login',
-                          style: TextStyle(
-                            fontSize: AppSizes.fontM,
-                            color: Colors.white,
+                            child: isLoading
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white)
+                                : const Text(
+                                    'Register',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: AppSizes.spacing2XL),
+
+                      // Login link with glass effect
+                      Center(
+                        child: TextButton(
+                          onPressed:
+                              isLoading ? null : () => context.go('/login'),
+                          child: ShaderMask(
+                            shaderCallback: (Rect bounds) {
+                              return const LinearGradient(
+                                colors: [Color(0xFF87CEEB), Color(0xFF00BFFF)],
+                              ).createShader(bounds);
+                            },
+                            child: Text(
+                              'Already have an account? Login',
+                              style: TextStyle(
+                                fontSize: AppSizes.fontM,
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.spacingXL),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
