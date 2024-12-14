@@ -123,6 +123,21 @@ class GameProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updatePlayer(Player player) async {
+    try {
+      if (_currentGame == null) throw Exception('No active game');
+      _setLoading(true);
+      _clearError();
+
+      await _repository.updatePlayer(_currentGame!.id, player);
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> loadGame(String gameId) async {
     try {
       _setLoading(true);

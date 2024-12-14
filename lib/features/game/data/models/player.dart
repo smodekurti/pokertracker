@@ -1,6 +1,7 @@
 class Player {
   final String id;
   final String name;
+  final String baseName; // New field
   final int buyIns;
   final double loans;
   final double? cashOut;
@@ -9,11 +10,12 @@ class Player {
   const Player({
     required this.id,
     required this.name,
+    String? baseName, // Optional parameter that defaults to name
     this.buyIns = 1,
     this.loans = 0,
     this.cashOut,
     this.isSettled = false,
-  });
+  }) : baseName = baseName ?? name; // Use name as baseName if not provided
 
   double calculateTotalIn(double buyInAmount) {
     return (buyIns * buyInAmount) + loans;
@@ -22,6 +24,7 @@ class Player {
   Player copyWith({
     String? id,
     String? name,
+    String? baseName,
     int? buyIns,
     double? loans,
     double? cashOut,
@@ -30,6 +33,7 @@ class Player {
     return Player(
       id: id ?? this.id,
       name: name ?? this.name,
+      baseName: baseName ?? this.baseName,
       buyIns: buyIns ?? this.buyIns,
       loans: loans ?? this.loans,
       cashOut: cashOut ?? this.cashOut,
@@ -41,6 +45,7 @@ class Player {
     return {
       'id': id,
       'name': name,
+      'baseName': baseName,
       'buyIns': buyIns,
       'loans': loans,
       'cashOut': cashOut,
@@ -54,6 +59,8 @@ class Player {
     return Player(
       id: map['id'] as String,
       name: map['name'] as String,
+      // Handle backward compatibility for baseName
+      baseName: (map['baseName'] as String?) ?? map['name'] as String,
       buyIns: map['buyIns'] as int? ?? 1,
       loans: (map['loans'] as num?)?.toDouble() ?? 0.0,
       cashOut: (map['cashOut'] as num?)?.toDouble(),
@@ -69,6 +76,7 @@ class Player {
     return other is Player &&
         other.id == id &&
         other.name == name &&
+        other.baseName == baseName &&
         other.buyIns == buyIns &&
         other.loans == loans &&
         other.cashOut == cashOut &&
@@ -79,6 +87,7 @@ class Player {
   int get hashCode {
     return id.hashCode ^
         name.hashCode ^
+        baseName.hashCode ^
         buyIns.hashCode ^
         loans.hashCode ^
         cashOut.hashCode ^
@@ -87,7 +96,7 @@ class Player {
 
   @override
   String toString() {
-    return 'Player(id: $id, name: $name, buyIns: $buyIns, loans: $loans, cashOut: $cashOut, isSettled: $isSettled)';
+    return 'Player(id: $id, name: $name, baseName: $baseName, buyIns: $buyIns, loans: $loans, cashOut: $cashOut, isSettled: $isSettled)';
   }
 }
 

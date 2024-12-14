@@ -10,18 +10,11 @@ class SettlementState extends ChangeNotifier {
     required Map<String, double> settlements,
     required this.totalPot,
     this.finalSettlement = false,
-  }) : settlements = Map.from(settlements) {
-    // Initialize settled players from existing settlements
-    for (var entry in settlements.entries) {
-      if (entry.value != 0) {
-        _settledPlayers.add(entry.key);
-      }
-    }
-  }
+  }) : settlements = Map.from(settlements);
 
   // New methods for tracking settled state
   void updateSettlement(String playerId, double amount,
-      {bool isSettled = true}) {
+      {required bool isSettled}) {
     settlements[playerId] = amount;
     if (isSettled) {
       _settledPlayers.add(playerId);

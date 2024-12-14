@@ -187,6 +187,80 @@ class GameRepository {
     return game.id; // Return the game ID
   }
 
+  Future<void> updatePlayer(String gameId, Player player) async {
+    final db = await _db.database;
+
+    await db.transaction((txn) async {
+      // First check if the player exists
+      final playerExists = await txn.query(
+        DatabaseHelper.tablePlayers,
+        where: 'id = ? AND gameId = ?',
+        whereArgs: [player.id, gameId],
+      );
+
+      if (playerExists.isEmpty) {
+        throw Exception('Player not found in this game');
+      }
+
+      // Update the player record
+      await txn.update(
+        DatabaseHelper.tablePlayers,
+        {
+          'name': player.name,
+          'buyIns': player.buyIns,
+          'loans': player.loans,
+          'cashOut': player.cashOut,
+          'isSettled': player.isSettled ? 1 : 0,
+        },
+        where: 'id = ? AND gameId = ?',
+        whereArgs: [player.id, gameId],
+      );
+
+      // If this is a reentry (buyIns increased), create a transaction record
+      final existingPlayer = Player(
+        id: playerExists.first['id'] as String,
+        name: playerExists.first['name'] as String,
+        buyIns: playerExists.first['buyIns'] as int,
+        loans: (playerExists.first['loans'] as num).toDouble(),
+        cashOut: playerExists.first['cashOut'] != null
+            ? (playerExists.first['cashOut'] as num).toDouble()
+            : null,
+        isSettled: (playerExists.first['isSettled'] as int) == 1,
+      );
+
+      if (player.buyIns > existingPlayer.buyIns) {
+        // Get game details for buy-in amount
+        final gameDetails = await txn.query(
+          DatabaseHelper.tableGames,
+          where: 'id = ?',
+          whereArgs: [gameId],
+        );
+
+        if (gameDetails.isNotEmpty) {
+          final buyInAmount =
+              (gameDetails.first['buyInAmount'] as num).toDouble();
+
+          // Create reentry transaction
+          await txn.insert(
+            DatabaseHelper.tableTransactions,
+            {
+              'id': const Uuid().v4(),
+              'gameId': gameId,
+              'playerId': player.id,
+              'type': TransactionType.reEntry.toString(),
+              'amount': buyInAmount,
+              'timestamp': DateTime.now().toIso8601String(),
+              'note': 'Reentry',
+              'isReverted': 0,
+            },
+          );
+        }
+      }
+    });
+
+    _refreshStreams();
+  }
+
   Future<void> addPlayer(String gameId, Player player) async {
     final db = await _db.database;
 
