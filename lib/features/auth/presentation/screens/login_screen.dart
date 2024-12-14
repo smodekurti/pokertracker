@@ -462,7 +462,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 if (!isLoading) ...[
                                   Image.asset('assets/google_logo.png',
-                                      height: 24),
+                                      height: 94),
                                   const SizedBox(width: AppSizes.spacingM),
                                 ],
                                 if (isLoading)
@@ -470,7 +470,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       color: Colors.white)
                                 else
                                   const Text(
-                                    'Continue with Google',
+                                    'Login with Google',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
