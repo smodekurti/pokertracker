@@ -3,6 +3,7 @@ import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/core/utils/ui_helpers.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
+import 'package:poker_tracker/features/game/presentation/screens/active_game_screen.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/shared/widgets/custom_text_field.dart';
 import 'package:provider/provider.dart';
@@ -11,8 +12,10 @@ class PlayerCard extends StatelessWidget {
   final Player player;
   final double buyInAmount;
   final VoidCallback? onReEntry;
-  final Function(String recipientId, double amount)? onLoan; // Updated type
+  final Function(String recipientId, double amount)? onLoan;
   final Function(double)? onSettle;
+  final VoidCallback? onRejoin;
+  final bool isSettled;
 
   const PlayerCard({
     super.key,
@@ -21,10 +24,10 @@ class PlayerCard extends StatelessWidget {
     this.onReEntry,
     this.onLoan,
     this.onSettle,
-    required bool isSettled,
+    this.onRejoin,
+    required this.isSettled,
   });
 
-  @override
   @override
   Widget build(BuildContext context) {
     final isPlayerSettled = player.isSettled;
@@ -198,6 +201,21 @@ class PlayerCard extends StatelessWidget {
             padding: EdgeInsets.all(16.dp),
             child: LayoutBuilder(
               builder: (context, constraints) {
+                if (isPlayerSettled) {
+                  return Center(
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      child: _buildActionButton(
+                        label: 'Rejoin Game',
+                        icon: Icons.refresh,
+                        color: AppColors.success,
+                        onPressed: onRejoin,
+                        isDisabled: false,
+                      ),
+                    ),
+                  );
+                }
+
                 final buttonWidth = (constraints.maxWidth - 16.dp) / 3;
                 return Row(
                   children: [
@@ -233,10 +251,8 @@ class PlayerCard extends StatelessWidget {
                         color: AppColors.success,
                         onPressed: isPlayerSettled
                             ? null
-                            : () => _showSettleDialog(
-                                context), // Disable button if player is settled
-                        isDisabled:
-                            isPlayerSettled, // Pass isPlayerSettled to _buildActionButton
+                            : () => _showSettleDialog(context),
+                        isDisabled: isPlayerSettled,
                       ),
                     ),
                   ],
@@ -249,21 +265,17 @@ class PlayerCard extends StatelessWidget {
     );
   }
 
-// Update _buildActionButton to handle constrained space
   Widget _buildActionButton({
     required String label,
     required IconData icon,
     required Color color,
     VoidCallback? onPressed,
-    bool isDisabled = false, // Add this parameter
+    bool isDisabled = false,
   }) {
     return ElevatedButton(
-      onPressed:
-          isDisabled ? null : onPressed, // Disable button if isDisabled is true
+      onPressed: isDisabled ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: isDisabled
-            ? Colors.grey[800]
-            : color, // Change background color based on isDisabled
+        backgroundColor: isDisabled ? Colors.grey[800] : color,
         foregroundColor: AppColors.textPrimary,
         disabledBackgroundColor: Colors.grey[800],
         padding: EdgeInsets.symmetric(
@@ -326,7 +338,6 @@ class PlayerCard extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        // Use StatefulBuilder for dropdown
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppColors.backgroundMedium,
           shape: RoundedRectangleBorder(
@@ -344,7 +355,6 @@ class PlayerCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Recipient Dropdown
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8.dp),
@@ -386,7 +396,6 @@ class PlayerCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 16.dp),
-              // Amount Input
               CustomTextField(
                 controller: amountController,
                 label: 'Amount',
@@ -396,7 +405,6 @@ class PlayerCard extends StatelessWidget {
                 fontSize: AppSizes.fontL.sp,
                 prefixIconSize: AppSizes.iconM.dp,
                 style: const TextStyle(
-                  // Add this
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -443,7 +451,6 @@ class PlayerCard extends StatelessWidget {
     );
 
     if (result != null && onLoan != null) {
-      // We need to modify PlayerCard's onLoan type to handle both recipientId and amount
       onLoan!(result['recipientId'] as String, result['amount']);
     }
   }
@@ -499,7 +506,6 @@ class PlayerCard extends StatelessWidget {
               prefixIconSize: AppSizes.iconM.dp,
               autofocus: true,
               style: const TextStyle(
-                // Add this
                 color: AppColors.textPrimary,
               ),
             ),

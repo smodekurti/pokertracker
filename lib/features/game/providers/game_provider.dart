@@ -303,6 +303,77 @@ class GameProvider with ChangeNotifier {
     }
   }
 
+  Future<void> rejoinPlayer(String playerId) async {
+    try {
+      if (_currentGame == null) throw Exception('No active game');
+      _setLoading(true);
+      _clearError();
+
+      // Find the original player
+      final originalPlayer = _currentGame!.players.firstWhere(
+        (p) => p.id == playerId,
+        orElse: () => throw Exception('Player not found'),
+      );
+
+      if (!originalPlayer.isSettled) {
+        throw Exception('Player must be settled before rejoining');
+      }
+
+      // Get base name (remove any existing entry numbers)
+      final baseNameMatch = RegExp(r'^(.*?)(?:\s*\(Entry\s*\d+\))?$')
+          .firstMatch(originalPlayer.name);
+      final baseName = baseNameMatch?.group(1) ?? originalPlayer.name;
+
+      // Check if player already has an active (unsettled) entry
+      final hasActiveEntry = _currentGame!.players.any(
+        (p) => p.name.startsWith(baseName) && !p.isSettled,
+      );
+
+      if (hasActiveEntry) {
+        throw Exception('Player already has an active entry in the game');
+      }
+
+      // Count existing entries for this player
+      final existingEntries = _currentGame!.players
+          .where((p) => p.name.startsWith(baseName))
+          .length;
+
+      // Create new player entry with incremented count
+      final newPlayerName = existingEntries > 1
+          ? '$baseName (Entry ${existingEntries + 1})'
+          : baseName;
+
+      final newPlayer = Player(
+        id: const Uuid().v4(),
+        name: newPlayerName,
+        buyIns: 1,
+        loans: 0,
+        cashOut: null,
+        isSettled: false,
+      );
+
+      // Add new player
+      await addPlayer(newPlayer);
+
+      // Add initial buy-in transaction
+      final transaction = PokerTransaction(
+        id: const Uuid().v4(),
+        playerId: newPlayer.id,
+        type: TransactionType.buyIn,
+        amount: _currentGame!.buyInAmount,
+        timestamp: DateTime.now(),
+        note: 'Initial buy-in (rejoin)',
+      );
+
+      await addTransaction(transaction);
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<Game> settleAllAndEnd() async {
     try {
       if (_currentGame == null) throw Exception('No active game');

@@ -16,6 +16,8 @@ import 'package:poker_tracker/features/game/presentation/widgets/settlement_dial
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/shared/widgets/loading_overlay.dart';
 
+import '../../../../shared/widgets/custom_text_field.dart';
+
 class ActiveGameScreen extends StatefulWidget {
   final String gameId;
 
@@ -509,76 +511,336 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
             itemCount: game.players.length,
             itemBuilder: (context, index) {
               final player = game.players[index];
-              return PlayerCard(
-                player: player,
-                buyInAmount: game.buyInAmount,
-                onReEntry: _isProcessing
-                    ? null
-                    : () {
-                        setState(() => _isProcessing = true);
-                        gameProvider.handleReEntry(player.id).then((_) {
-                          if (mounted) {
-                            setState(() => _isProcessing = false);
-                          }
-                        }).catchError((e) {
-                          if (mounted) {
-                            _showErrorSnackbar(context, e.toString());
-                            setState(() => _isProcessing = false);
-                          }
-                        });
-                      },
-                onLoan: _isProcessing
-                    ? null
-                    : (recipientId, amount) async {
-                        try {
-                          setState(() => _isProcessing = true);
-                          await gameProvider.handleLoan(
-                            lenderId: player.id,
-                            recipientId: recipientId,
-                            amount: amount,
-                          );
-                        } catch (e) {
-                          if (mounted) {
-                            _showErrorSnackbar(context, e.toString());
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() => _isProcessing = false);
-                          }
-                        }
-                      },
-                onSettle: _isProcessing
-                    ? null
-                    : (amount) async {
-                        try {
-                          setState(() => _isProcessing = true);
-                          await gameProvider.settlePlayer(player.id, amount);
 
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Player settled successfully'),
-                                backgroundColor: AppColors.success,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            _showErrorSnackbar(context, e.toString());
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() => _isProcessing = false);
-                          }
-                        }
-                      },
-                isSettled: settlementState.isPlayerSettled(player.id),
+              return Padding(
+                padding: EdgeInsets.only(bottom: AppSizes.paddingM.dp),
+                child: PlayerCard(
+                  player: player,
+                  buyInAmount: game.buyInAmount,
+                  onReEntry: _isProcessing
+                      ? null
+                      : () => _handleRebuy(player, gameProvider),
+                  onLoan: _isProcessing
+                      ? null
+                      : (recipientId, amount) => _handleLoan(player),
+                  onSettle: _isProcessing
+                      ? null
+                      : (amount) => _handleSettle(player, amount, gameProvider),
+                  onRejoin: player.isSettled && !_isProcessing
+                      ? () => _handleRejoin(player, gameProvider)
+                      : null,
+                  isSettled: settlementState.isPlayerSettled(player.id),
+                ),
               );
             },
           );
         },
       ),
     );
+  }
+
+  Future<void> _handleSettle(
+    Player player,
+    double amount,
+    GameProvider gameProvider,
+  ) async {
+    try {
+      setState(() => _isProcessing = true);
+      await gameProvider.settlePlayer(player.id, amount);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.white,
+                ),
+                SizedBox(width: AppSizes.spacingS.dp),
+                Text('${player.name} settled successfully'),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(AppSizes.paddingL.dp),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<void> _handleRebuy(Player player, GameProvider gameProvider) async {
+    setState(() => _isProcessing = true);
+    try {
+      await gameProvider.handleReEntry(player.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.white,
+                ),
+                SizedBox(width: AppSizes.spacingS.dp),
+                Text('${player.name} bought in again'),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(AppSizes.paddingL.dp),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<void> _handleRejoin(Player player, GameProvider gameProvider) async {
+    try {
+      setState(() => _isProcessing = true);
+      await gameProvider.rejoinPlayer(player.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.refresh,
+                  color: Colors.white,
+                ),
+                SizedBox(width: AppSizes.spacingS.dp),
+                Text('${player.name} rejoined the game'),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(AppSizes.paddingL.dp),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<void> _handleLoan(Player player) async {
+    if (_isProcessing) return;
+
+    try {
+      setState(() => _isProcessing = true);
+      final gameProvider = context.read<GameProvider>();
+      final game = gameProvider.currentGame;
+      if (game == null) return;
+
+      // Get available recipients (all active players except the lender)
+      final recipients =
+          game.players.where((p) => !p.isSettled && p.id != player.id).toList();
+
+      if (recipients.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('No available players to loan to'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(AppSizes.paddingL.dp),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      String? selectedPlayerId;
+      double loanAmount = 0;
+
+      final result = await showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusXL.dp),
+            ),
+            title: Text(
+              'Loan from ${player.name}',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: AppSizes.fontXL.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8.dp),
+                    color: AppColors.backgroundDark,
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 12.dp),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedPlayerId,
+                      hint: Text(
+                        'Select Player',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: AppSizes.fontM.sp,
+                        ),
+                      ),
+                      dropdownColor: AppColors.backgroundDark,
+                      isExpanded: true,
+                      items: recipients.map((recipient) {
+                        return DropdownMenuItem(
+                          value: recipient.id,
+                          child: Text(
+                            recipient.name,
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: AppSizes.fontM.sp,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? value) {
+                        setState(() {
+                          selectedPlayerId = value;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16.dp),
+                CustomTextField(
+                  label: 'Amount',
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (value) {
+                    setState(() {
+                      loanAmount = double.tryParse(value) ?? 0;
+                    });
+                  },
+                  prefixIcon: Icons.attach_money,
+                  fontSize: AppSizes.fontL.sp,
+                  prefixIconSize: AppSizes.iconM.dp,
+                  autofocus: true,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: AppSizes.fontM.sp,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: selectedPlayerId != null && loanAmount > 0
+                    ? () => Navigator.pop(context, {
+                          'recipientId': selectedPlayerId,
+                          'amount': loanAmount,
+                        })
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.textPrimary,
+                ),
+                child: Text(
+                  'Confirm',
+                  style: TextStyle(
+                    fontSize: AppSizes.fontM.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (result != null && mounted) {
+        await gameProvider.handleLoan(
+          lenderId: player.id,
+          recipientId: result['recipientId'] as String,
+          amount: result['amount'] as double,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: AppSizes.spacingS.dp),
+                  const Text('Loan processed successfully'),
+                ],
+              ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(AppSizes.paddingL.dp),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
   }
 
   void _showErrorSnackbar(BuildContext context, String message) {
@@ -1199,4 +1461,36 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
         state.totalSettled - (state.settlements[playerId] ?? 0.0);
     return state.totalPot - currentTotal;
   }
+}
+
+class PlayerCardStatistics {
+  final double totalInvestment;
+  final double currentPosition;
+  final double profitLossPercentage;
+  final int buyInCount;
+  final double totalLoans;
+  final double? cashOut;
+
+  const PlayerCardStatistics({
+    required this.totalInvestment,
+    required this.currentPosition,
+    required this.profitLossPercentage,
+    required this.buyInCount,
+    required this.totalLoans,
+    this.cashOut,
+  });
+}
+
+class PlayerCardAction {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final Color color;
+
+  const PlayerCardAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.color,
+  });
 }
