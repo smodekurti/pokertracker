@@ -12,14 +12,23 @@ class GameRepository {
   final String userId;
   final _activeGamesController = StreamController<List<Game>>.broadcast();
   final _gameHistoryController = StreamController<List<Game>>.broadcast();
+  bool _isDisposed = false;
+
   Timer? _refreshTimer;
 
   GameRepository({required this.userId}) {
     if (userId.isEmpty) {
       throw ArgumentError('userId cannot be empty');
     }
+    _startRefreshTimer();
+  }
+
+  void _startRefreshTimer() {
+    _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _refreshStreams();
+      if (!_isDisposed) {
+        _refreshStreams();
+      }
     });
   }
 
@@ -57,12 +66,16 @@ class GameRepository {
   }
 
   Stream<List<Game>> getActiveGames() {
-    _refreshActiveGames();
+    if (!_isDisposed) {
+      _refreshActiveGames();
+    }
     return _activeGamesController.stream;
   }
 
   Stream<List<Game>> getGameHistory() {
-    _refreshGameHistory();
+    if (!_isDisposed) {
+      _refreshGameHistory();
+    }
     return _gameHistoryController.stream;
   }
 
@@ -515,27 +528,41 @@ class GameRepository {
   }
 
   Future<void> _refreshStreams() async {
-    await _refreshActiveGames();
-    await _refreshGameHistory();
+    if (!_isDisposed) {
+      await _refreshActiveGames();
+      await _refreshGameHistory();
+    }
   }
 
   Future<void> _refreshActiveGames() async {
+    if (_isDisposed || _activeGamesController.isClosed) return;
+
     try {
       final db = await _db.database;
       final games = await _queryGames(db, isActive: true);
-      _activeGamesController.add(games);
+      if (!_isDisposed && !_activeGamesController.isClosed) {
+        _activeGamesController.add(games);
+      }
     } catch (e) {
-      _activeGamesController.addError(e);
+      if (!_isDisposed && !_activeGamesController.isClosed) {
+        _activeGamesController.addError(e);
+      }
     }
   }
 
   Future<void> _refreshGameHistory() async {
+    if (_isDisposed || _gameHistoryController.isClosed) return;
+
     try {
       final db = await _db.database;
       final games = await _queryGames(db, isActive: false);
-      _gameHistoryController.add(games);
+      if (!_isDisposed && !_gameHistoryController.isClosed) {
+        _gameHistoryController.add(games);
+      }
     } catch (e) {
-      _gameHistoryController.addError(e);
+      if (!_isDisposed && !_gameHistoryController.isClosed) {
+        _gameHistoryController.addError(e);
+      }
     }
   }
 
@@ -710,9 +737,19 @@ class GameRepository {
   }
 
   void dispose() {
+    _isDisposed = true;
     _refreshTimer?.cancel();
-    _activeGamesController.close();
-    _gameHistoryController.close();
+    // Add try-catch blocks to handle cases where controllers might already be closed
+    try {
+      _activeGamesController.close();
+    } catch (e) {
+      print('Error closing active games controller: $e');
+    }
+    try {
+      _gameHistoryController.close();
+    } catch (e) {
+      print('Error closing game history controller: $e');
+    }
   }
 }
 
