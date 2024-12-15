@@ -835,13 +835,6 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
                           ],
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.all(AppSizes.paddingM.dp),
-                        child: ElevatedButton(
-                          onPressed: _showAddPlayerDialog,
-                          child: const Text('Add Player'),
-                        ),
-                      ),
                     ],
                   ),
                 ),
