@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -22,12 +20,21 @@ class GameSetupScreen extends StatefulWidget {
 class _GameSetupScreenState extends State<GameSetupScreen> {
   final _gameNameController = TextEditingController();
   final _buyInController = TextEditingController(text: '20');
-  double _selectedCutPercentage =
-      0; // Replace TextEditingController with double
+  double _selectedCutPercentage = 0;
   final Set<Team> _selectedTeams = {};
-  final Set<Player> _selectedPlayers = {};
   final Set<Player> _players = {};
   final _playerNameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Refresh teams when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<TeamProvider>().refreshTeams();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -196,10 +203,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
@@ -257,7 +261,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16),
-              _buildCutPercentageSelector(), // Replace the old input field with new selector
+              _buildCutPercentageSelector(),
             ],
           ),
         ),
@@ -295,31 +299,21 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
               color: Colors.white,
               fontSize: 16,
             ),
-            // Add input formatters for numeric fields
             inputFormatters: keyboardType == TextInputType.number
-                ? [
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                  ]
+                ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))]
                 : null,
-            // Add validation on change
             onChanged: (value) {
-              if (keyboardType == TextInputType.number) {
-                if (value.isNotEmpty) {
-                  try {
-                    final number = double.parse(value);
-                    if (label.contains('Cut')) {
-                      // Validate cut percentage
-                      if (number > 100) {
-                        controller.text = '100';
-                        controller.selection = TextSelection.fromPosition(
-                          TextPosition(offset: controller.text.length),
-                        );
-                      }
-                    }
-                  } catch (_) {
-                    // Reset to default if invalid
-                    controller.text = label.contains('Cut') ? '0' : '20';
+              if (keyboardType == TextInputType.number && value.isNotEmpty) {
+                try {
+                  final number = double.parse(value);
+                  if (label.contains('Buy-in') && number <= 0) {
+                    controller.text = '20';
+                    controller.selection = TextSelection.fromPosition(
+                      TextPosition(offset: controller.text.length),
+                    );
                   }
+                } catch (_) {
+                  controller.text = '20';
                 }
               }
             },
@@ -479,28 +473,32 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   }
 
   Widget _buildStartGameButton() {
+    final bool canStartGame = _players.length >= 2 &&
+        _gameNameController.text.trim().isNotEmpty &&
+        (double.tryParse(_buyInController.text) ?? 0) > 0;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       child: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: AppColors.primaryGradient,
-          ),
+          gradient: canStartGame
+              ? const LinearGradient(colors: AppColors.primaryGradient)
+              : LinearGradient(colors: [Colors.grey[800]!, Colors.grey[700]!]),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: _players.length >= 2 ? _startGame : null,
+            onTap: canStartGame ? _startGame : null,
             borderRadius: BorderRadius.circular(12),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
                 'Start Game',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: canStartGame ? Colors.white : Colors.grey[400],
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -601,19 +599,45 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
               Flexible(
                 child: Builder(
                   builder: (builderContext) {
-                    final teamProvider = currentContext.watch<TeamProvider?>();
-
-                    if (teamProvider == null) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-
+                    final teamProvider = currentContext.watch<TeamProvider>();
+                    final isLoading = teamProvider.isLoading;
                     final teams = teamProvider.teams;
 
-                    if (teams.isEmpty) {
+                    if (isLoading) {
                       return const Center(
-                        child: Text(
-                          'No teams available',
-                          style: TextStyle(color: AppColors.textSecondary),
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      );
+                    }
+
+                    if (teams.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.group_off,
+                              color: AppColors.textSecondary.withOpacity(0.5),
+                              size: 48,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'No teams available',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Create a team first to import players',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }
@@ -768,10 +792,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                               child: Text(
                                                 player.name[0].toUpperCase(),
                                                 style: const TextStyle(
-                                                    color:
-                                                        AppColors.textPrimary,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 18),
+                                                  color: AppColors.textPrimary,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18,
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -780,8 +804,9 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                             child: Text(
                                               player.name,
                                               style: const TextStyle(
-                                                  color: AppColors.textPrimary,
-                                                  fontSize: 16),
+                                                color: AppColors.textPrimary,
+                                                fontSize: 16,
+                                              ),
                                             ),
                                           ),
                                           if (isAlreadyAdded)
@@ -804,7 +829,8 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                     backgroundColor: AppColors.primary,
                                     foregroundColor: AppColors.textPrimary,
                                     padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
+                                      vertical: 12,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -828,7 +854,8 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                     Navigator.of(dialogContext).pop();
                                   },
                                   child: Text(
-                                      'Add ${selectedTeam!.players.length} Players'),
+                                    'Add ${selectedTeam!.players.length} Players',
+                                  ),
                                 ),
                               ),
                             ],
@@ -866,36 +893,6 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     });
   }
 
-  void _addAllPlayersFromTeam(Team team) {
-    setState(() {
-      for (final player in team.players) {
-        if (!_players
-            .any((p) => p.name.toLowerCase() == player.name.toLowerCase())) {
-          _players.add(Player(
-            id: player.id,
-            name: player.name,
-          ));
-        }
-      }
-    });
-
-    TopNotification.show(
-      context,
-      message: 'Added all players from ${team.name}',
-      type: NotificationType.success,
-      icon: Icons.group_add,
-    );
-  }
-
-  void _removeTeam(Team team) {
-    setState(() {
-      _selectedTeams.remove(team);
-      _players.removeWhere(
-        (player) => team.players.any((p) => p.id == player.id),
-      );
-    });
-  }
-
   Future<void> _startGame() async {
     // Validate game name
     final gameName = _gameNameController.text.trim();
@@ -903,6 +900,21 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Game name is required'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Check for duplicate game names
+    final gameProvider = context.read<GameProvider>();
+    final activeGames = gameProvider.activeGames;
+
+    if (activeGames
+        .any((game) => game.name.toLowerCase() == gameName.toLowerCase())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('A game with this name already exists'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -926,41 +938,6 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       return;
     }
 
-    // Cut percentage is already validated through the UI
-    final cutPercentage = _selectedCutPercentage;
-
-    // Validate buy-in amount
-    try {
-      buyInAmount = double.parse(_buyInController.text);
-      if (buyInAmount <= 0) {
-        throw const FormatException('Buy-in must be greater than 0');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid buy-in amount'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    // Validate cut percentage
-    try {
-      // cutPercentage = double.parse(_cutPercentageController.text);
-      if (cutPercentage < 0 || cutPercentage > 100) {
-        throw const FormatException('Cut percentage must be between 0 and 100');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid cut percentage (0-100)'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
     // Double check player count
     if (_players.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -973,12 +950,11 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     }
 
     try {
-      final gameProvider = context.read<GameProvider>();
       await gameProvider.createGame(
         gameName,
         buyInAmount,
         _players.toList(),
-        cutPercentage,
+        _selectedCutPercentage,
       );
 
       if (!mounted) return;

@@ -572,6 +572,20 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
                           }
                         }
                       },
+                onRemoveEntry: () async {
+                  try {
+                    setState(() => _isProcessing = true);
+                    await context.read<GameProvider>().removeEntry(player.id);
+                  } catch (e) {
+                    if (mounted) {
+                      _showErrorSnackbar(context, e.toString());
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() => _isProcessing = false);
+                    }
+                  }
+                },
                 isSettled: settlementState.isPlayerSettled(player.id),
               );
             },

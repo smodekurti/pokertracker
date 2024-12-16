@@ -466,26 +466,37 @@ class GameRepository {
       Transaction txn, String gameId, PokerTransaction transaction) async {
     switch (transaction.type) {
       case TransactionType.buyIn:
-      case TransactionType.reEntry:
         await txn.rawUpdate('''
-          UPDATE ${DatabaseHelper.tablePlayers}
-          SET buyIns = buyIns + 1
-          WHERE id = ? AND gameId = ?
-        ''', [transaction.playerId, gameId]);
+        UPDATE ${DatabaseHelper.tablePlayers}
+        SET buyIns = buyIns + 1
+        WHERE id = ? AND gameId = ?
+      ''', [transaction.playerId, gameId]);
         break;
+
+      case TransactionType.reEntry:
+        // Handle both positive (add) and negative (remove) re-entries
+        final buyInChange = transaction.amount > 0 ? 1 : -1;
+        await txn.rawUpdate('''
+        UPDATE ${DatabaseHelper.tablePlayers}
+        SET buyIns = buyIns + ?
+        WHERE id = ? AND gameId = ?
+      ''', [buyInChange, transaction.playerId, gameId]);
+        break;
+
       case TransactionType.loan:
         await txn.rawUpdate('''
-          UPDATE ${DatabaseHelper.tablePlayers}
-          SET loans = loans + ?
-          WHERE id = ? AND gameId = ?
-        ''', [transaction.amount, transaction.playerId, gameId]);
+        UPDATE ${DatabaseHelper.tablePlayers}
+        SET loans = loans + ?
+        WHERE id = ? AND gameId = ?
+      ''', [transaction.amount, transaction.playerId, gameId]);
         break;
+
       case TransactionType.settlement:
         await txn.rawUpdate('''
-          UPDATE ${DatabaseHelper.tablePlayers}
-          SET cashOut = ?, isSettled = 1
-          WHERE id = ? AND gameId = ?
-        ''', [transaction.amount, transaction.playerId, gameId]);
+        UPDATE ${DatabaseHelper.tablePlayers}
+        SET cashOut = ?, isSettled = 1
+        WHERE id = ? AND gameId = ?
+      ''', [transaction.amount, transaction.playerId, gameId]);
         break;
     }
   }
