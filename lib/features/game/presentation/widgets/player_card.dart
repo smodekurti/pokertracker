@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/core/utils/ui_helpers.dart';
@@ -13,6 +14,7 @@ class PlayerCard extends StatelessWidget {
   final VoidCallback? onReEntry;
   final Function(String recipientId, double amount)? onLoan; // Updated type
   final Function(double)? onSettle;
+  final VoidCallback? onRemoveEntry;
 
   const PlayerCard({
     super.key,
@@ -21,6 +23,7 @@ class PlayerCard extends StatelessWidget {
     this.onReEntry,
     this.onLoan,
     this.onSettle,
+    this.onRemoveEntry,
     required bool isSettled,
   });
 
@@ -88,6 +91,7 @@ class PlayerCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                _buildOptionsMenu(context, player.isSettled),
               ],
             ),
           ),
@@ -208,7 +212,9 @@ class PlayerCard extends StatelessWidget {
                         icon: Icons.refresh,
                         color: AppColors.secondary,
                         isDisabled: isPlayerSettled,
-                        onPressed: onReEntry,
+                        onPressed: onReEntry != null
+                            ? () => _showReEntryConfirmation(context)
+                            : null,
                       ),
                     ),
                     SizedBox(width: 8.dp),
@@ -249,49 +255,333 @@ class PlayerCard extends StatelessWidget {
     );
   }
 
+  Future<void> _showRemoveEntryConfirmation(BuildContext context) async {
+    HapticFeedback.heavyImpact();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundMedium,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusXL.dp),
+        ),
+        title: Text(
+          'Remove Entry?',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: AppSizes.fontXL.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: AppSizes.fontM.sp,
+                ),
+                children: [
+                  TextSpan(text: 'Remove entry for '),
+                  TextSpan(
+                    text: player.name,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  TextSpan(text: ' with buy-in amount '),
+                  TextSpan(
+                    text: '\$${buyInAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  TextSpan(text: '?'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.error,
+                    size: AppSizes.iconM.dp,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'This action cannot be undone. The entry will be permanently removed.',
+                      style: TextStyle(
+                        color: AppColors.error,
+                        fontSize: AppSizes.fontS.sp,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.pop(context, false);
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: AppSizes.fontM.sp,
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.error,
+              borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+            ),
+            child: TextButton(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                Navigator.pop(context, true);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.paddingL.dp,
+                ),
+              ),
+              child: Text(
+                'Remove',
+                style: TextStyle(
+                  fontSize: AppSizes.fontM.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && onRemoveEntry != null) {
+      onRemoveEntry!();
+    }
+  }
+
+  // Add options menu to player info section
+  Widget _buildOptionsMenu(BuildContext context, bool isPlayerSettled) {
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.more_vert,
+        color: AppColors.textSecondary,
+        size: AppSizes.iconM.dp,
+      ),
+      onSelected: (String choice) {
+        if (choice == 'remove') {
+          _showRemoveEntryConfirmation(context);
+        }
+      },
+      itemBuilder: (BuildContext context) => [
+        PopupMenuItem<String>(
+          value: 'remove',
+          enabled: !isPlayerSettled && player.buyIns > 0,
+          child: Row(
+            children: [
+              Icon(
+                Icons.remove_circle_outline,
+                color: AppColors.error,
+                size: AppSizes.iconM.dp,
+              ),
+              SizedBox(width: 8.dp),
+              Text(
+                'Remove Entry',
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontSize: AppSizes.fontM.sp,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showReEntryConfirmation(BuildContext context) async {
+    HapticFeedback.heavyImpact(); // Add haptic feedback
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundMedium,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusXL.dp),
+        ),
+        title: Text(
+          'Confirm Re-Entry',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: AppSizes.fontXL.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: RichText(
+          text: TextSpan(
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: AppSizes.fontM.sp,
+            ),
+            children: [
+              const TextSpan(
+                text: 'Add another buy-in for ',
+              ),
+              TextSpan(
+                text: player.name,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const TextSpan(
+                text: ' with amount ',
+              ),
+              TextSpan(
+                text: '\$${buyInAmount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const TextSpan(
+                text: '?',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.pop(context, false);
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: AppSizes.fontM.sp,
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: AppColors.primaryGradient,
+              ),
+              borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+            ),
+            child: TextButton(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                Navigator.pop(context, true);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.paddingL.dp,
+                ),
+              ),
+              child: Text(
+                'Confirm',
+                style: TextStyle(
+                  fontSize: AppSizes.fontM.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && onReEntry != null) {
+      onReEntry!();
+    }
+  }
+
 // Update _buildActionButton to handle constrained space
   Widget _buildActionButton({
     required String label,
     required IconData icon,
     required Color color,
     VoidCallback? onPressed,
-    bool isDisabled = false, // Add this parameter
+    bool isDisabled = false,
   }) {
-    return ElevatedButton(
-      onPressed:
-          isDisabled ? null : onPressed, // Disable button if isDisabled is true
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isDisabled
-            ? Colors.grey[800]
-            : color, // Change background color based on isDisabled
-        foregroundColor: AppColors.textPrimary,
-        disabledBackgroundColor: Colors.grey[800],
-        padding: EdgeInsets.symmetric(
-          vertical: 12.dp,
-          horizontal: 4.dp,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.dp),
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8.dp),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 18.dp,
-            ),
-            SizedBox(width: 4.dp),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 14.dp,
+      child: ElevatedButton(
+        onPressed: isDisabled
+            ? null
+            : () {
+                HapticFeedback.lightImpact();
+                if (onPressed != null) {
+                  onPressed();
+                }
+              },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isDisabled ? Colors.grey[800] : color,
+          foregroundColor: AppColors.textPrimary,
+          disabledBackgroundColor: Colors.grey[800],
+          padding: EdgeInsets.symmetric(
+            vertical: 12.dp,
+            horizontal: 4.dp,
+          ),
+          elevation: isDisabled ? 0 : 4,
+          shadowColor: color.withOpacity(0.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.dp),
+          ),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18.dp,
               ),
-            ),
-          ],
+              SizedBox(width: 4.dp),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14.dp,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

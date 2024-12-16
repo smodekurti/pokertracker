@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
-import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
 import 'package:poker_tracker/features/game/data/models/settlement_state.dart';
 
@@ -18,7 +16,7 @@ class SettlementDialog extends StatefulWidget {
   final String playerId;
 
   const SettlementDialog({
-    Key? key,
+    super.key,
     required this.player,
     required this.buyInAmount,
     required this.playerName,
@@ -29,7 +27,7 @@ class SettlementDialog extends StatefulWidget {
     required this.recommendedAmount,
     required this.isLastPlayer,
     required this.playerId,
-  }) : super(key: key);
+  });
 
   @override
   State<SettlementDialog> createState() => _SettlementDialogState();
@@ -41,8 +39,10 @@ class _SettlementDialogState extends State<SettlementDialog> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        TextEditingController(text: widget.initialAmount.toStringAsFixed(0));
+    _controller = TextEditingController(
+        text: widget.initialAmount == 0
+            ? ''
+            : widget.initialAmount.toStringAsFixed(0));
   }
 
   @override
@@ -52,7 +52,8 @@ class _SettlementDialogState extends State<SettlementDialog> {
   }
 
   double get _remainingBalance {
-    double cashOut = double.tryParse(_controller.text) ?? 0;
+    double cashOut =
+        _controller.text.isEmpty ? 0 : (double.tryParse(_controller.text) ?? 0);
     return widget.state.totalPot -
         (widget.state.totalSettled + cashOut - widget.initialAmount);
   }
@@ -349,8 +350,14 @@ class _SettlementDialogState extends State<SettlementDialog> {
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
-              suffixText: '.00',
+              suffixText: _controller.text.isEmpty ? '' : '.00',
               suffixStyle: const TextStyle(color: Colors.grey, fontSize: 24),
+              hintText: '0',
+              hintStyle: TextStyle(
+                color: Colors.grey.withOpacity(0.5),
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             readOnly: isPlayerSettled,
             enabled: !isPlayerSettled,

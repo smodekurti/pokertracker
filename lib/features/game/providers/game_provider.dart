@@ -234,6 +234,51 @@ class GameProvider with ChangeNotifier {
     }
   }
 
+  Future<void> removeEntry(String playerId) async {
+    try {
+      if (_currentGame == null) throw Exception('No active game');
+      _setLoading(true);
+      _clearError();
+
+      // Find the player
+      final player = _currentGame!.players.firstWhere(
+        (p) => p.id == playerId,
+        orElse: () => throw Exception('Player not found in this game'),
+      );
+
+      // Validate player state
+      if (player.isSettled) {
+        throw Exception('Cannot remove entry from a settled player');
+      }
+
+      if (player.buyIns <= 1) {
+        throw Exception(
+            'Cannot remove the initial buy-in. Delete player instead.');
+      }
+
+      // Create a transaction to record the removal
+      final transaction = PokerTransaction(
+        id: const Uuid().v4(),
+        playerId: playerId,
+        type:
+            TransactionType.reEntry, // Using reEntry type with negative amount
+        amount: -_currentGame!.buyInAmount, // Negative amount to remove buy-in
+        timestamp: DateTime.now(),
+        note: 'Remove entry',
+      );
+
+      await addTransaction(transaction);
+
+      // The game state will be automatically updated through the stream
+      // since addTransaction triggers a database update
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> handleLoan({
     required String lenderId,
     required String recipientId,
