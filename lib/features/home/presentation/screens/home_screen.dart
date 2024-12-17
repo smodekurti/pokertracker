@@ -139,9 +139,21 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.textSecondary),
-            onPressed: _handleLogout,
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.thumb_up_sharp,
+                    color: AppColors.textSecondary),
+                onPressed: () => context.go('/credits'),
+                tooltip: 'Credits',
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.logout, color: AppColors.textSecondary),
+                onPressed: _handleLogout,
+                tooltip: 'Logout',
+              ),
+            ],
           ),
         ],
       ),
