@@ -17,6 +17,8 @@ import 'package:poker_tracker/features/home/presentation/screens/poker_reference
 import 'package:poker_tracker/features/team/presentation/screens/team_list_screen.dart';
 import 'package:poker_tracker/features/team/presentation/screens/team_management_screen.dart';
 import 'package:provider/provider.dart';
+
+import '../../features/home/presentation/screens/author_credit_screen.dart';
 // ... other imports remain the same
 
 class AppRouter {
@@ -184,6 +186,10 @@ class AppRouter {
               path: 'history',
               name: 'history',
               builder: (context, state) => const GameHistoryScreen(),
+            ),
+            GoRoute(
+              path: 'credits',
+              builder: (context, state) => const AuthorCreditsScreen(),
             ),
           ],
         ),

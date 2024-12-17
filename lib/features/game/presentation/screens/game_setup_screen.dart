@@ -878,8 +878,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     if (playerName.isEmpty) return;
 
     if (_players.any((p) => p.name.toLowerCase() == playerName.toLowerCase())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Player already exists')),
+      TopNotification.show(
+        context,
+        message: 'Player already exists',
+        type: NotificationType.error,
       );
       return;
     }
@@ -897,11 +899,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     // Validate game name
     final gameName = _gameNameController.text.trim();
     if (gameName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Game name is required'),
-          backgroundColor: AppColors.error,
-        ),
+      TopNotification.show(
+        context,
+        message: 'Game name is required',
+        type: NotificationType.error,
       );
       return;
     }
@@ -912,11 +913,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
 
     if (activeGames
         .any((game) => game.name.toLowerCase() == gameName.toLowerCase())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('A game with this name already exists'),
-          backgroundColor: AppColors.error,
-        ),
+      TopNotification.show(
+        context,
+        message: 'A game with this name already exists',
+        type: NotificationType.error,
       );
       return;
     }
@@ -929,22 +929,20 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
         throw const FormatException('Buy-in must be greater than 0');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid buy-in amount'),
-          backgroundColor: AppColors.error,
-        ),
+      TopNotification.show(
+        context,
+        message: 'Please enter a valid buy-in amount',
+        type: NotificationType.error,
       );
       return;
     }
 
     // Double check player count
     if (_players.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('At least 2 players are required'),
-          backgroundColor: AppColors.error,
-        ),
+      TopNotification.show(
+        context,
+        message: 'At least 2 players are required',
+        type: NotificationType.error,
       );
       return;
     }
@@ -961,11 +959,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
 
       final game = gameProvider.currentGame;
       if (game != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Game "${game.name}" created successfully'),
-            backgroundColor: AppColors.success,
-          ),
+        TopNotification.show(
+          context,
+          message: 'Game "${game.name}" created successfully',
+          type: NotificationType.success,
         );
 
         context.go('/game/${game.id}');
@@ -975,11 +972,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to create game: ${e.toString()}'),
-          backgroundColor: AppColors.error,
-        ),
+      TopNotification.show(
+        context,
+        message: 'Failed to create game: ${e.toString()}',
+        type: NotificationType.error,
       );
     }
   }
