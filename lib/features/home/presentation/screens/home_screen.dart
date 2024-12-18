@@ -142,8 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.thumb_up_sharp,
-                    color: AppColors.textSecondary),
+                icon: const Icon(Icons.code, color: AppColors.textSecondary),
                 onPressed: () => context.go('/credits'),
                 tooltip: 'Credits',
               ),
