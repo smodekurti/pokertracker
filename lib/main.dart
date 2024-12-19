@@ -15,14 +15,15 @@ import 'package:provider/provider.dart';
 
 void main() async {
   try {
+    // Ensure Flutter bindings are initialized
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize environment with error handling
+    // Initialize environment variables
     try {
       await EnvironmentConfig.init();
     } catch (e) {
       debugPrint('Error initializing environment: $e');
-      rethrow;
+      rethrow; // Re-throw the error to propagate it up
     }
 
     // Initialize SQLite database
@@ -30,25 +31,31 @@ void main() async {
       await DatabaseInitializer.initDatabase();
     } catch (e) {
       debugPrint('Error initializing SQLite database: $e');
-      rethrow;
+      rethrow; // Re-throw the error to propagate it up
     }
 
-    // Initialize Firebase with error handling
+    // Initialize Firebase
     try {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
     } catch (e) {
       debugPrint('Error initializing Firebase: $e');
-      rethrow;
+      rethrow; // Re-throw the error to propagate it up
     }
 
+    // Run the app with error boundary and providers
     runApp(
       ErrorBoundary(
+        // Wrap the app with an error boundary to catch runtime errors
         child: MultiProvider(
+          // Provide multiple providers for state management
           providers: [
+            // Auth provider
             ChangeNotifierProvider(create: (_) => AppAuthProvider()),
+            // Consent provider
             ChangeNotifierProvider(create: (_) => ConsentProvider()),
+            // Team provider (depends on auth)
             ChangeNotifierProxyProvider<AppAuthProvider, TeamProvider>(
               create: (context) {
                 final auth = context.read<AppAuthProvider>();
@@ -57,19 +64,21 @@ void main() async {
               },
               update: (context, authProvider, teamProvider) {
                 final userId = authProvider.currentUser?.uid ?? '';
-                teamProvider?.dispose();
-                return TeamProvider(userId);
+                teamProvider?.dispose(); // Dispose of the old provider
+                return TeamProvider(userId); // Create a new provider
               },
             ),
+            // Game provider (depends on auth)
             ChangeNotifierProxyProvider<AppAuthProvider, GameProvider?>(
               create: (_) => null,
               update: (context, authProvider, previousGameProvider) {
                 final userId = authProvider.currentUser?.uid;
                 if (userId != null) {
-                  previousGameProvider?.dispose();
-                  return GameProvider(userId);
+                  previousGameProvider
+                      ?.dispose(); // Dispose of the old provider
+                  return GameProvider(userId); // Create a new provider
                 }
-                return null;
+                return null; // Return null if not authenticated
               },
             ),
           ],
@@ -78,11 +87,14 @@ void main() async {
       ),
     );
   } catch (e, stackTrace) {
+    // Catch and display fatal errors during initialization
     debugPrint('Fatal error during initialization: $e');
     debugPrint('Stack trace: $stackTrace');
 
+    // Show an error screen if initialization fails
     runApp(
       MaterialApp(
+        debugShowCheckedModeBanner: false,
         home: Builder(
           builder: (context) {
             Responsive.init(context);
@@ -93,33 +105,37 @@ void main() async {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Error icon
                       Icon(
                         Icons.error_outline,
                         color: AppColors.error,
                         size: AppSizes.iconXL.dp,
                       ),
                       SizedBox(height: AppSizes.spacingL.dp),
-                      Text(
+                      // Error title
+                      const Text(
                         'Application Error',
                         style: TextStyle(
-                          fontSize: AppSizes.font2XL.sp,
+                          fontSize: 28, // Adjust font size as needed
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: AppSizes.spacingS.dp),
+                      // Error message
                       Text(
                         e.toString(),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.error,
-                          fontSize: AppSizes.fontM.sp,
+                          fontSize: 16, // Adjust font size as needed
                         ),
                       ),
                       SizedBox(height: AppSizes.spacingL.dp),
+                      // Retry button
                       SizedBox(
                         width: 200.dp,
                         child: ElevatedButton(
-                          onPressed: () => main(),
+                          onPressed: () => main(), // Retry initialization
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(
                               horizontal: AppSizes.paddingXL.dp,
@@ -130,10 +146,7 @@ void main() async {
                                   BorderRadius.circular(AppSizes.radiusM.dp),
                             ),
                           ),
-                          child: Text(
-                            'Retry',
-                            style: TextStyle(fontSize: AppSizes.fontL.sp),
-                          ),
+                          child: const Text('Retry'), // Button text
                         ),
                       ),
                     ],
@@ -148,6 +161,7 @@ void main() async {
   }
 }
 
+// Widget for handling runtime errors
 class ErrorBoundary extends StatelessWidget {
   final Widget child;
 
@@ -159,9 +173,11 @@ class ErrorBoundary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       builder: (context, widget) {
         Responsive.init(context);
 
+        // Custom error widget builder
         ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
           return Scaffold(
             body: Center(
@@ -170,33 +186,38 @@ class ErrorBoundary extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    // Warning icon
                     Icon(
                       Icons.warning_amber_rounded,
                       color: Colors.orange,
                       size: AppSizes.iconXL.dp,
                     ),
                     SizedBox(height: AppSizes.spacingL.dp),
-                    Text(
+                    // Error title
+                    const Text(
                       'Something went wrong',
                       style: TextStyle(
-                        fontSize: AppSizes.font2XL.sp,
+                        fontSize: 28, // Adjust font size as needed
+
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: AppSizes.spacingS.dp),
+                    // Error message
                     Text(
                       errorDetails.exceptionAsString(),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.error,
-                        fontSize: AppSizes.fontM.sp,
+                        fontSize: 16, // Adjust font size as needed
                       ),
                     ),
                     SizedBox(height: AppSizes.spacingL.dp),
+                    // Restart button
                     SizedBox(
                       width: 200.dp,
                       child: ElevatedButton(
-                        onPressed: () => main(),
+                        onPressed: () => main(), // Restart the app
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
                             horizontal: AppSizes.paddingXL.dp,
@@ -207,10 +228,7 @@ class ErrorBoundary extends StatelessWidget {
                                 BorderRadius.circular(AppSizes.radiusM.dp),
                           ),
                         ),
-                        child: Text(
-                          'Restart App',
-                          style: TextStyle(fontSize: AppSizes.fontL.sp),
-                        ),
+                        child: const Text('Restart App'), // Button text
                       ),
                     ),
                   ],

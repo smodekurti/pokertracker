@@ -1,9 +1,6 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 import 'package:poker_tracker/core/utils/ui_helpers.dart';
@@ -17,45 +14,58 @@ import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/shared/widgets/loading_overlay.dart';
 
 class ActiveGameScreen extends StatefulWidget {
-  final String gameId;
-
   const ActiveGameScreen({
     super.key,
     required this.gameId,
   });
+
+  final String gameId;
 
   @override
   State<ActiveGameScreen> createState() => _ActiveGameScreenState();
 }
 
 class PlayerSettlementDisplay {
-  final String name;
-  final double totalBuyIn;
-  final double cashOut;
-  final double netPosition;
-
   PlayerSettlementDisplay({
     required this.name,
     required this.totalBuyIn,
     required this.cashOut,
     required this.netPosition,
   });
+
+  final double cashOut;
+  final String name;
+  final double netPosition;
+  final double totalBuyIn;
 }
 
-class _ActiveGameScreenState extends State<ActiveGameScreen> {
-  bool _isProcessing = false;
-  bool _isInitialized = false;
-  String? selectedPlayerId;
+class _ActiveGameScreenState extends State<ActiveGameScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
   double loanAmount = 0;
+  String? selectedPlayerId;
+
+  bool _isInitialized = false;
+  bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _initializeGame();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _initializeGame() async {
@@ -252,7 +262,7 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
     return Container(
       padding: EdgeInsets.all(AppSizes.paddingM.dp),
       decoration: BoxDecoration(
-        color: AppColors.info.withOpacity(0.1),
+        color: AppColors.info.withAlpha(26), // 0.1 * 255 = 26
         borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
       ),
       child: Row(
@@ -329,10 +339,8 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
   Widget _buildNetPositionBadge(double netPosition) {
     final isPositive = netPosition > 0;
     final backgroundColor = isPositive
-        ? AppColors.success.withOpacity(0.2)
-        : (netPosition < 0
-            ? AppColors.error.withOpacity(0.2)
-            : Colors.grey[800]);
+        ? AppColors.success.withAlpha(51) // 0.2 * 255 = 51
+        : (netPosition < 0 ? AppColors.error.withAlpha(51) : Colors.grey[800]!);
     final textColor = isPositive
         ? AppColors.success
         : (netPosition < 0 ? AppColors.error : AppColors.textPrimary);
@@ -357,6 +365,59 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
     );
   }
 
+  Widget _buildSearchBar() {
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingM.dp,
+        vertical: AppSizes.paddingS.dp,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.grey[850],
+        borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
+      ),
+      child: TextField(
+        controller: _searchController,
+        style: TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: AppSizes.fontM.sp,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Search players...',
+          hintStyle: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: AppSizes.fontM.sp,
+          ),
+          prefixIcon: Icon(
+            Icons.search,
+            color: AppColors.textSecondary,
+            size: AppSizes.iconM.dp,
+          ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: AppColors.textSecondary,
+                    size: AppSizes.iconM.dp,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingM.dp,
+            vertical: AppSizes.paddingS.dp,
+          ),
+        ),
+        onChanged: (value) {
+          setState(() => _searchQuery = value.toLowerCase());
+        },
+      ),
+    );
+  }
+
   Widget _buildPlayerList(Game game, GameProvider gameProvider) {
     // Create initial settlements map
     final initialSettlements = {
@@ -370,7 +431,6 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
           totalPot: game.totalPot,
         );
 
-        // Initialize each player's settlement state
         for (var player in game.players) {
           settlementState.updateSettlement(
             player.id,
@@ -383,95 +443,212 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
       },
       child: Consumer<SettlementState>(
         builder: (context, settlementState, child) {
-          return ListView.builder(
-            padding: EdgeInsets.all(AppSizes.paddingL.dp),
-            itemCount: game.players.length,
-            itemBuilder: (context, index) {
-              final player = game.players[index];
-              return PlayerCard(
-                player: player,
-                buyInAmount: game.buyInAmount,
-                onReEntry: _isProcessing
-                    ? null
-                    : () {
-                        setState(() => _isProcessing = true);
-                        gameProvider.handleReEntry(player.id).then((_) {
-                          if (mounted) {
-                            setState(() => _isProcessing = false);
-                          }
-                        }).catchError((e) {
-                          if (mounted) {
-                            _showErrorSnackbar(context, e.toString());
-                            setState(() => _isProcessing = false);
-                          }
-                        });
-                      },
-                onLoan: _isProcessing
-                    ? null
-                    : (recipientId, amount) async {
-                        try {
-                          setState(() => _isProcessing = true);
-                          await gameProvider.handleLoan(
-                            lenderId: player.id,
-                            recipientId: recipientId,
-                            amount: amount,
-                          );
-                        } catch (e) {
-                          if (mounted) {
-                            _showErrorSnackbar(context, e.toString());
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() => _isProcessing = false);
-                          }
-                        }
-                      },
-                onSettle: _isProcessing
-                    ? null
-                    : (amount) async {
-                        try {
-                          setState(() => _isProcessing = true);
-                          await gameProvider.settlePlayer(player.id, amount);
+          // Filter players based on search query first
+          final filteredPlayers = game.players.where((player) {
+            return _searchQuery.isEmpty ||
+                player.name.toLowerCase().contains(_searchQuery);
+          }).toList();
 
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Player settled successfully'),
-                                backgroundColor: AppColors.success,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            _showErrorSnackbar(context, e.toString());
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() => _isProcessing = false);
-                          }
-                        }
-                      },
-                onRemoveEntry: () async {
-                  try {
-                    setState(() => _isProcessing = true);
-                    await context.read<GameProvider>().removeEntry(player.id);
-                  } catch (e) {
-                    if (mounted) {
-                      _showErrorSnackbar(context, e.toString());
-                    }
-                  } finally {
-                    if (mounted) {
-                      setState(() => _isProcessing = false);
-                    }
-                  }
-                },
-                isSettled: settlementState.isPlayerSettled(player.id),
-              );
-            },
+          // Then separate into categories
+          final activePlayers =
+              filteredPlayers.where((p) => !p.isSettled).toList();
+          final settledPlayers =
+              filteredPlayers.where((p) => p.isSettled).toList();
+
+          return Column(
+            children: [
+              _buildSearchBar(),
+              TabBar(
+                controller: _tabController,
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.person),
+                        SizedBox(width: AppSizes.spacingXS.dp),
+                        Text('Active (${activePlayers.length})'),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.check_circle),
+                        SizedBox(width: AppSizes.spacingXS.dp),
+                        Text('Settled (${settledPlayers.length})'),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.groups),
+                        SizedBox(width: AppSizes.spacingXS.dp),
+                        Text('All (${filteredPlayers.length})'),
+                      ],
+                    ),
+                  ),
+                ],
+                labelColor: AppColors.textPrimary,
+                unselectedLabelColor: AppColors.textSecondary,
+                indicatorColor: AppColors.primary,
+              ),
+              if (filteredPlayers.isEmpty) ...[
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: AppSizes.iconXL.dp,
+                          color: AppColors.textSecondary,
+                        ),
+                        SizedBox(height: AppSizes.spacingM.dp),
+                        Text(
+                          'No players found',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: AppSizes.fontL.sp,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ] else
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildPlayerListView(
+                          activePlayers, game, gameProvider, settlementState),
+                      _buildPlayerListView(
+                          settledPlayers, game, gameProvider, settlementState),
+                      _buildPlayerListView(
+                          filteredPlayers, game, gameProvider, settlementState),
+                    ],
+                  ),
+                ),
+            ],
           );
         },
       ),
     );
+  }
+
+  Widget _buildPlayerListView(
+    List<Player> players,
+    Game game,
+    GameProvider gameProvider,
+    SettlementState settlementState,
+  ) {
+    return ListView.builder(
+      padding: EdgeInsets.all(AppSizes.paddingL.dp),
+      itemCount: players.length,
+      itemBuilder: (context, index) {
+        final player = players[index];
+        return PlayerCard(
+          player: player,
+          buyInAmount: game.buyInAmount,
+          onReEntry: _isProcessing
+              ? null
+              : (_) {
+                  _handleReEntry(gameProvider, player);
+                  return game.buyInAmount; // Return the buy-in amount
+                },
+          onLoan: _isProcessing
+              ? null
+              : (recipientId, amount) =>
+                  _handleLoan(gameProvider, player, recipientId, amount),
+          onSettle: _isProcessing
+              ? null
+              : (amount) {
+                  _handleSettle(gameProvider, player, amount);
+                  return amount;
+                },
+          onRemoveEntry: () => _handleRemoveEntry(player),
+          isSettled: settlementState.isPlayerSettled(player.id),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleReEntry(GameProvider gameProvider, Player player) async {
+    setState(() => _isProcessing = true);
+    try {
+      await gameProvider.handleReEntry(player.id);
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<void> _handleLoan(GameProvider gameProvider, Player player,
+      String recipientId, double amount) async {
+    setState(() => _isProcessing = true);
+    try {
+      await gameProvider.handleLoan(
+        lenderId: player.id,
+        recipientId: recipientId,
+        amount: amount,
+      );
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<void> _handleSettle(
+      GameProvider gameProvider, Player player, double amount) async {
+    setState(() => _isProcessing = true);
+    try {
+      await gameProvider.settlePlayer(player.id, amount);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Player settled successfully'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<void> _handleRemoveEntry(Player player) async {
+    setState(() => _isProcessing = true);
+    try {
+      await context.read<GameProvider>().removeEntry(player.id);
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
   }
 
   void _showErrorSnackbar(BuildContext context, String message) {
@@ -544,8 +721,8 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
               borderRadius: BorderRadius.circular(AppSizes.radiusL.dp),
               gradient: LinearGradient(
                 colors: [
-                  AppColors.info.withOpacity(0.1),
-                  AppColors.info.withOpacity(0.05),
+                  AppColors.info.withAlpha(26), // 0.1 * 255 = 26
+                  AppColors.info.withAlpha(13), // 0.05 * 255 = 13
                 ],
               ),
             ),
@@ -617,126 +794,6 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
         setState(() => _isProcessing = false);
       }
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    Responsive.init(context);
-
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Consumer<GameProvider>(
-        builder: (context, gameProvider, child) {
-          final game = gameProvider.currentGame;
-          final isLoading = gameProvider.isLoading;
-          final error = gameProvider.error;
-
-          if (!_isInitialized || game == null) {
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
-
-          if (error != null) {
-            return Scaffold(
-              body: Center(
-                child: Text('Error: $error'),
-              ),
-            );
-          }
-
-          final isPotBalanced = game.isPotBalanced;
-
-          return Scaffold(
-            body: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: AppColors.backgroundGradient,
-                ),
-              ),
-              child: SafeArea(
-                child: LoadingOverlay(
-                  isLoading: isLoading || _isProcessing,
-                  child: Column(
-                    children: [
-                      _buildHeader(game.name),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            GameInfoCard(game: game),
-                            Expanded(
-                              child: game.players.isEmpty
-                                  ? const Center(
-                                      child: Text('No players yet'),
-                                    )
-                                  : _buildPlayerList(game, gameProvider),
-                            ),
-                            if (game.players.isNotEmpty) ...[
-                              Padding(
-                                padding: EdgeInsets.all(AppSizes.paddingM.dp),
-                                child: ElevatedButton(
-                                  onPressed: _handleUniversalSettle,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: AppSizes.paddingM.dp,
-                                    ),
-                                    minimumSize: Size(double.infinity, 48.dp),
-                                  ),
-                                  child: Text(
-                                    isPotBalanced
-                                        ? 'Modify Settlements'
-                                        : 'Settle All Players',
-                                    style: TextStyle(
-                                      fontSize: AppSizes.fontL.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              if (isPotBalanced)
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: AppSizes.paddingM.dp,
-                                    vertical: AppSizes.paddingS.dp,
-                                  ),
-                                  child: ElevatedButton(
-                                    onPressed:
-                                        _isProcessing ? null : _handleEndGame,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.success,
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: AppSizes.paddingM.dp,
-                                      ),
-                                      minimumSize: Size(double.infinity, 48.dp),
-                                    ),
-                                    child: Text(
-                                      'End Game',
-                                      style: TextStyle(
-                                        fontSize: AppSizes.fontL.sp,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   Widget _buildHeader(String title) {
@@ -1084,5 +1141,125 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
     final currentTotal =
         state.totalSettled - (state.settlements[playerId] ?? 0.0);
     return state.totalPot - currentTotal;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Responsive.init(context);
+
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Consumer<GameProvider>(
+        builder: (context, gameProvider, child) {
+          final game = gameProvider.currentGame;
+          final isLoading = gameProvider.isLoading;
+          final error = gameProvider.error;
+
+          if (!_isInitialized || game == null) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+
+          if (error != null) {
+            return Scaffold(
+              body: Center(
+                child: Text('Error: $error'),
+              ),
+            );
+          }
+
+          final isPotBalanced = game.isPotBalanced;
+
+          return Scaffold(
+            body: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: AppColors.backgroundGradient,
+                ),
+              ),
+              child: SafeArea(
+                child: LoadingOverlay(
+                  isLoading: isLoading || _isProcessing,
+                  child: Column(
+                    children: [
+                      _buildHeader(game.name),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            GameInfoCard(game: game),
+                            Expanded(
+                              child: game.players.isEmpty
+                                  ? const Center(
+                                      child: Text('No players yet'),
+                                    )
+                                  : _buildPlayerList(game, gameProvider),
+                            ),
+                            if (game.players.isNotEmpty) ...[
+                              Padding(
+                                padding: EdgeInsets.all(AppSizes.paddingM.dp),
+                                child: ElevatedButton(
+                                  onPressed: _handleUniversalSettle,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: AppSizes.paddingM.dp,
+                                    ),
+                                    minimumSize: Size(double.infinity, 48.dp),
+                                  ),
+                                  child: Text(
+                                    isPotBalanced
+                                        ? 'Modify Settlements'
+                                        : 'Settle All Players',
+                                    style: TextStyle(
+                                      fontSize: AppSizes.fontL.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (isPotBalanced)
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: AppSizes.paddingM.dp,
+                                    vertical: AppSizes.paddingS.dp,
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed:
+                                        _isProcessing ? null : _handleEndGame,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.success,
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: AppSizes.paddingM.dp,
+                                      ),
+                                      minimumSize: Size(double.infinity, 48.dp),
+                                    ),
+                                    child: Text(
+                                      'End Game',
+                                      style: TextStyle(
+                                        fontSize: AppSizes.fontL.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }

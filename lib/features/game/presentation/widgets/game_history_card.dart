@@ -1,35 +1,45 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/features/game/data/models/game.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
 import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
+// ignore: must_be_immutable
 class GameHistoryCard extends StatelessWidget {
   final Game game;
+  final GlobalKey repaintBoundaryKey = GlobalKey();
+  final GlobalKey<ExpansionTileCustomState> expansionTileKey = GlobalKey();
 
-  const GameHistoryCard({Key? key, required this.game}) : super(key: key);
+  GameHistoryCard({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.backgroundMedium,
-        borderRadius: BorderRadius.circular(8),
-        //border: Border.all(color: AppColors.rankSilver, width: .5),
-      ),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.all(16),
-        childrenPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        title: _buildHeader(context),
-        children: [
-          _buildGameInfo(),
-          _buildPlayerList('Winners', Icons.emoji_events, AppColors.success),
-          _buildPlayerList('Break Even', Icons.balance, Colors.grey),
-          _buildPlayerList('Losers', Icons.trending_down, AppColors.error),
-          if (game.isPotBalanced) _buildPaymentInstructions(),
-        ],
+    return RepaintBoundary(
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.backgroundMedium,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.all(16),
+          childrenPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          title: _buildHeader(context),
+          children: [
+            _buildGameInfo(),
+            _buildPlayerList('Winners', Icons.emoji_events, AppColors.success),
+            _buildPlayerList('Break Even', Icons.balance, Colors.grey),
+            _buildPlayerList('Losers', Icons.trending_down, AppColors.error),
+            if (game.isPotBalanced) _buildPaymentInstructions(),
+          ],
+        ),
       ),
     );
   }
@@ -238,7 +248,8 @@ class GameHistoryCard extends StatelessWidget {
         : '-\$${amount.abs().toStringAsFixed(2)}';
   }
 
-  Widget _buildPaymentInstructions() {
+  /* 
+ Widget _buildPaymentInstructions() {
     final winners =
         game.players.where((p) => game.getPlayerNetAmount(p.id) > 0).toList();
     final losers =
@@ -275,7 +286,7 @@ class GameHistoryCard extends StatelessWidget {
       ],
     );
   }
-
+*/
   Widget _buildPaymentItem(Map<String, dynamic> payment) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -344,104 +355,359 @@ class GameHistoryCard extends StatelessWidget {
   }
 
   // Only showing the modified _shareGameSummary method as other code remains unchanged
+  bool _isSharing = false;
+
   Future<void> _shareGameSummary(BuildContext context) async {
-    final summary = StringBuffer();
+    if (_isSharing) return; // Prevent multiple shares
 
-    // Header
-    summary.writeln('🎲 ${game.name.toUpperCase()}');
-    summary.writeln('📅 ${DateFormat('MMM dd, yyyy').format(game.date)}');
-    summary.writeln('');
-
-    // Game Info
-    summary.writeln('Game Details:');
-    summary.writeln('👥 Players: ${game.players.length}');
-    summary.writeln('💰 Buy-in: \$${game.buyInAmount.toStringAsFixed(2)}');
-    summary.writeln('💵 Final Pot: \$${game.totalPot.toStringAsFixed(2)}');
-    if (game.cutPercentage > 0) {
-      summary.writeln('✂️ House Cut: ${game.cutPercentage}%');
-      summary.writeln('🏦 After Cut: \$${game.actualPot.toStringAsFixed(2)}');
-    }
-    summary.writeln('');
-
-    // Winners
-    final winners =
-        game.players.where((p) => game.getPlayerNetAmount(p.id) > 0).toList();
-    if (winners.isNotEmpty) {
-      summary.writeln('🏆 Winners:');
-      for (final player in winners) {
-        final netAmount = game.getPlayerNetAmount(player.id);
-        final originalAmount = game.getPlayerOriginalAmount(player.id);
-        final buyIn = player.calculateTotalIn(game.buyInAmount);
-        final cashOut = player.cashOut ?? 0;
-
-        summary.writeln('${player.name}');
-        summary.writeln(
-            '   Buy-in: \$${buyIn.toStringAsFixed(2)} • Cash-out: \$${cashOut.toStringAsFixed(2)}');
-        summary.writeln('   Net: ${_formatAmount(netAmount)}');
-        if (game.cutPercentage > 0 && originalAmount != netAmount) {
-          summary.writeln('   Original: ${_formatAmount(originalAmount)}');
-        }
-      }
-      summary.writeln('');
-    }
-
-    // Break Even
-    final breakEven =
-        game.players.where((p) => game.getPlayerNetAmount(p.id) == 0).toList();
-    if (breakEven.isNotEmpty) {
-      summary.writeln('⚖️ Break Even:');
-      for (final player in breakEven) {
-        final buyIn = player.calculateTotalIn(game.buyInAmount);
-        final cashOut = player.cashOut ?? 0;
-
-        summary.writeln('${player.name}');
-        summary.writeln(
-            '   Buy-in: \$${buyIn.toStringAsFixed(2)} • Cash-out: \$${cashOut.toStringAsFixed(2)}');
-        summary.writeln('   Net: \$0.00');
-      }
-      summary.writeln('');
-    }
-
-    // Losers
-    final losers =
-        game.players.where((p) => game.getPlayerNetAmount(p.id) < 0).toList();
-    if (losers.isNotEmpty) {
-      summary.writeln('📉 Losers:');
-      for (final player in losers) {
-        final netAmount = game.getPlayerNetAmount(player.id);
-        final originalAmount = game.getPlayerOriginalAmount(player.id);
-        final buyIn = player.calculateTotalIn(game.buyInAmount);
-        final cashOut = player.cashOut ?? 0;
-
-        summary.writeln('${player.name}');
-        summary.writeln(
-            '   Buy-in: \$${buyIn.toStringAsFixed(2)} • Cash-out: \$${cashOut.toStringAsFixed(2)}');
-        summary.writeln('   Net: ${_formatAmount(netAmount)}');
-        if (game.cutPercentage > 0 && originalAmount != netAmount) {
-          summary.writeln('   Original: ${_formatAmount(originalAmount)}');
-        }
-      }
-      summary.writeln('');
-    }
-
-    // Payment Instructions
-    if (game.isPotBalanced) {
-      final payments = _calculatePayments(winners, losers);
-      if (payments.isNotEmpty) {
-        summary.writeln('💸 Payment Instructions:');
-        for (final payment in payments) {
-          summary.writeln(
-              '${_formatName(payment['from'].name)} ➡️ ${_formatName(payment['to'].name)}: \$${payment['amount'].toStringAsFixed(2)}');
-        }
-      }
-    }
+    late OverlayEntry overlayEntry;
 
     try {
-      await Share.share(summary.toString());
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to share game summary')),
+      _isSharing = true;
+
+      // Create and insert loading overlay
+      overlayEntry = OverlayEntry(
+        builder: (context) => const Material(
+          color: Colors.black26,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
       );
+
+      Overlay.of(context).insert(overlayEntry);
+
+      // Wait for the next frame
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      final RenderRepaintBoundary boundary =
+          context.findRenderObject() as RenderRepaintBoundary;
+      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      final ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData == null) {
+        throw Exception('Failed to generate image');
+      }
+
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+
+      // Save to temporary file
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/game_history.png');
+      await file.writeAsBytes(pngBytes);
+
+      // Remove overlay before sharing
+      overlayEntry.remove();
+      _isSharing = false;
+
+      // Share using share_plus
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Game History',
+        subject: 'Game History Summary',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share game summary: $e')),
+        );
+      }
+    } finally {
+      // Ensure overlay is always removed and flag is reset
+      if (_isSharing) {
+        overlayEntry.remove();
+        _isSharing = false;
+      }
     }
+  }
+
+  Future<RenderRepaintBoundary> _waitForBoundary(BuildContext context) async {
+    RenderRepaintBoundary? boundary;
+    bool waitedOnce = false;
+
+    while (boundary == null) {
+      try {
+        boundary = context.findRenderObject() as RenderRepaintBoundary?;
+
+        if (boundary == null) {
+          if (waitedOnce) {
+            throw Exception('Could not find RepaintBoundary');
+          }
+          await Future.delayed(const Duration(milliseconds: 100));
+          waitedOnce = true;
+        }
+      } catch (e) {
+        if (waitedOnce) {
+          rethrow;
+        }
+        await Future.delayed(const Duration(milliseconds: 100));
+        waitedOnce = true;
+      }
+    }
+
+    // Ensure the boundary is ready to paint
+    await WidgetsBinding.instance.endOfFrame;
+
+    return boundary;
+  }
+
+  Widget _buildStatItem(
+      {required IconData icon, required String label, required String value}) {
+    return Column(
+      children: [
+        Icon(icon, color: AppColors.primary, size: 20),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildPlayerSection({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required List<Player> players,
+  }) {
+    return [
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: color.withOpacity(0.5)),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 14),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 8),
+      ...players.map((player) => _buildPlayerCard(player, color)),
+      const SizedBox(height: 8),
+    ];
+  }
+
+  Widget _buildPlayerCard(Player player, Color color) {
+    final netAmount = game.getPlayerNetAmount(player.id);
+    final originalAmount = game.getPlayerOriginalAmount(player.id);
+    final buyIn = player.calculateTotalIn(game.buyInAmount);
+    final cashOut = player.cashOut ?? 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                player.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                _formatAmount(netAmount),
+                style: TextStyle(
+                  color: color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            'Buy-in: \$${buyIn.toStringAsFixed(2)} • Cash-out: \$${cashOut.toStringAsFixed(2)}',
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+          if (game.cutPercentage > 0 && originalAmount != netAmount)
+            Text(
+              'Original: ${_formatAmount(originalAmount)}',
+              style: const TextStyle(color: AppColors.warning, fontSize: 12),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentInstructions() {
+    final winners = game.players
+        .where((p) => game.getPlayerNetAmount(p.id) > 0)
+        .toList()
+      ..sort((a, b) => game
+          .getPlayerNetAmount(b.id)
+          .compareTo(game.getPlayerNetAmount(a.id)));
+    final losers = game.players
+        .where((p) => game.getPlayerNetAmount(p.id) < 0)
+        .toList()
+      ..sort((a, b) => game
+          .getPlayerNetAmount(a.id)
+          .compareTo(game.getPlayerNetAmount(b.id)));
+    final payments = _calculatePayments(winners, losers);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.primary.withOpacity(0.5)),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.payment, color: AppColors.primary, size: 14),
+              const SizedBox(width: 6),
+              const Text(
+                'Payment Instructions',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...payments.map((payment) => Container(
+              margin: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        payment['from'].name,
+                        style: const TextStyle(
+                            color: AppColors.error, fontSize: 12),
+                      ),
+                      const Text(
+                        ' → ',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                      Text(
+                        payment['to'].name,
+                        style: const TextStyle(
+                            color: AppColors.success, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    '\$${payment['amount'].toStringAsFixed(2)}',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ],
+              ),
+            )),
+      ],
+    );
+  }
+
+  double _calculateWidth() {
+    return 400.0;
+  }
+
+  double _calculateTotalHeight() {
+    double height = 100.0;
+
+    final winners =
+        game.players.where((p) => game.getPlayerNetAmount(p.id) > 0).length;
+    final breakEven =
+        game.players.where((p) => game.getPlayerNetAmount(p.id) == 0).length;
+    final losers =
+        game.players.where((p) => game.getPlayerNetAmount(p.id) < 0).length;
+
+    if (winners > 0) height += 30 + (winners * 70);
+    if (breakEven > 0) height += 30 + (breakEven * 70);
+    if (losers > 0) height += 30 + (losers * 70);
+
+    if (game.isPotBalanced) {
+      height += 60 + (losers * 25);
+    }
+
+    return height;
+  }
+}
+
+class ExpansionTileCustom extends StatefulWidget {
+  final Widget title;
+  final List<Widget> children;
+  final EdgeInsetsGeometry? tilePadding;
+  final EdgeInsetsGeometry? childrenPadding;
+
+  const ExpansionTileCustom({
+    Key? key,
+    required this.title,
+    required this.children,
+    this.tilePadding,
+    this.childrenPadding,
+  }) : super(key: key);
+
+  @override
+  ExpansionTileCustomState createState() => ExpansionTileCustomState();
+}
+
+class ExpansionTileCustomState extends State<ExpansionTileCustom> {
+  bool _isExpanded = false;
+
+  void expand() {
+    if (!_isExpanded) {
+      setState(() {
+        _isExpanded = true;
+      });
+    }
+  }
+
+  void collapse() {
+    if (_isExpanded) {
+      setState(() {
+        _isExpanded = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+      title: widget.title,
+      tilePadding: widget.tilePadding,
+      childrenPadding: widget.childrenPadding,
+      initiallyExpanded: _isExpanded,
+      onExpansionChanged: (value) {
+        setState(() {
+          _isExpanded = value;
+        });
+      },
+      children: widget.children,
+    );
   }
 }
