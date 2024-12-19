@@ -11,10 +11,11 @@ import 'package:provider/provider.dart';
 class PlayerCard extends StatelessWidget {
   final Player player;
   final double buyInAmount;
-  final VoidCallback? onReEntry;
-  final Function(String recipientId, double amount)? onLoan; // Updated type
+  final Function(double amount)? onReEntry; // Update callback type
+  final Function(String recipientId, double amount)? onLoan;
   final Function(double)? onSettle;
   final VoidCallback? onRemoveEntry;
+  final bool isSettled; // Add this parameter
 
   const PlayerCard({
     super.key,
@@ -24,230 +25,156 @@ class PlayerCard extends StatelessWidget {
     this.onLoan,
     this.onSettle,
     this.onRemoveEntry,
-    required bool isSettled,
+    required this.isSettled, // Add this to constructor
   });
 
   @override
-  @override
   Widget build(BuildContext context) {
-    final isPlayerSettled = player.isSettled;
+    // Override text scaling to maintain consistent sizing
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.backgroundMedium,
+          borderRadius: BorderRadius.circular(12.dp),
+        ),
+        margin: EdgeInsets.only(bottom: 8.dp),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(child: _buildPlayerInfo()),
+                if (!isSettled) _buildOptionsMenu(context),
+              ],
+            ),
+            _buildTransactionInfo(),
+            SizedBox(height: 16.dp),
+            _buildActionButtons(context),
+          ],
+        ),
+      ),
+    );
+  }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.backgroundMedium,
+  Widget _buildOptionsMenu(BuildContext context) {
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.more_vert,
+        color: AppColors.textSecondary,
+        size: 24.dp,
+      ),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.dp),
       ),
-      margin: EdgeInsets.only(bottom: 8.dp),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Player Info
-          Padding(
-            padding: EdgeInsets.all(16.dp),
+      color: AppColors.backgroundDark,
+      itemBuilder: (context) => [
+        if (player.buyIns > 1)
+          PopupMenuItem(
+            value: 'remove_entry',
             child: Row(
               children: [
-                // Avatar
-                Container(
-                  width: 40.dp,
-                  height: 40.dp,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: AppColors.primaryGradient,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      player.name[0].toUpperCase(),
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 20.dp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
+                Icon(Icons.remove_circle, color: AppColors.error, size: 20.dp),
                 SizedBox(width: 12.dp),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        player.name,
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 18.dp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        (player.isSettled) ? 'Settled' : 'Active',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 14.dp,
-                        ),
-                      ),
-                    ],
+                Text(
+                  'Remove Entry',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.dp,
                   ),
                 ),
-                _buildOptionsMenu(context, player.isSettled),
               ],
             ),
           ),
-
-          // Buy-ins and Loans info
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.dp),
-            child: Column(
-              children: [
-                // Buy-ins Row
-                Row(
-                  children: [
-                    Icon(
-                      Icons.shopping_cart,
-                      color: AppColors.textSecondary,
-                      size: 16.dp,
-                    ),
-                    SizedBox(width: 8.dp),
-                    Text(
-                      'Buy-ins',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14.dp,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${player.buyIns}x \$${buyInAmount.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 14.dp,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+        PopupMenuItem(
+          value: 'give_loan',
+          child: Row(
+            children: [
+              Icon(Icons.account_balance,
+                  color: Colors.purple[300], size: 20.dp),
+              SizedBox(width: 12.dp),
+              Text(
+                'Give Loan',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14.dp,
                 ),
-                // Only show Loans row if there are loans
-                if (player.loans != 0) ...[
-                  SizedBox(height: 8.dp),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.account_balance_wallet,
-                        color: player.loans > 0
-                            ? AppColors.success
-                            : AppColors.error,
-                        size: 16.dp,
-                      ),
-                      SizedBox(width: 8.dp),
-                      Text(
-                        'Loans',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14.dp,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${player.loans > 0 ? '+' : ''}\$${player.loans.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          color: player.loans > 0
-                              ? AppColors.success
-                              : AppColors.error,
-                          fontSize: 14.dp,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                // Add Cash-out row if the player has settled
-                if (player.isSettled) ...[
-                  SizedBox(height: 8.dp),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.money_off,
-                        color: AppColors.textSecondary,
-                        size: 16.dp,
-                      ),
-                      SizedBox(width: 8.dp),
-                      Text(
-                        'Cash-out',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14.dp,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '\$${player.cashOut?.toStringAsFixed(2) ?? ''}',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 14.dp,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ]
-              ],
-            ),
+              ),
+            ],
           ),
-          SizedBox(height: 16.dp),
+        ),
+      ],
+      onSelected: (value) async {
+        switch (value) {
+          case 'remove_entry':
+            final confirmed = await _showRemoveEntryConfirmation(context);
+            if (confirmed == true && onRemoveEntry != null) {
+              onRemoveEntry!();
+            }
+            break;
+          case 'give_loan':
+            await _showLoanDialog(context);
+            break;
+        }
+      },
+    );
+  }
 
-          // Action Buttons
-          Padding(
-            padding: EdgeInsets.all(16.dp),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final buttonWidth = (constraints.maxWidth - 16.dp) / 3;
-                return Row(
-                  children: [
-                    SizedBox(
-                      width: buttonWidth,
-                      child: _buildActionButton(
-                        label: 'Re-Entry',
-                        icon: Icons.refresh,
-                        color: AppColors.secondary,
-                        isDisabled: isPlayerSettled,
-                        onPressed: onReEntry != null
-                            ? () => _showReEntryConfirmation(context)
-                            : null,
-                      ),
-                    ),
-                    SizedBox(width: 8.dp),
-                    SizedBox(
-                      width: buttonWidth,
-                      child: _buildActionButton(
-                        label: 'Loan',
-                        icon: Icons.account_balance,
-                        color: Colors.purple,
-                        isDisabled: isPlayerSettled,
-                        onPressed: onLoan != null
-                            ? () => _showLoanDialog(context)
-                            : null,
-                      ),
-                    ),
-                    SizedBox(width: 8.dp),
-                    SizedBox(
-                      width: buttonWidth,
-                      child: _buildActionButton(
-                        label: 'Settle',
-                        icon: Icons.check_circle,
-                        color: AppColors.success,
-                        onPressed: isPlayerSettled
-                            ? null
-                            : () => _showSettleDialog(
-                                context), // Disable button if player is settled
-                        isDisabled:
-                            isPlayerSettled, // Pass isPlayerSettled to _buildActionButton
-                      ),
-                    ),
-                  ],
-                );
-              },
+  Widget _buildPlayerInfo() {
+    return Padding(
+      padding: EdgeInsets.all(16.dp),
+      child: Row(
+        children: [
+          _buildAvatar(),
+          SizedBox(width: 12.dp),
+          _buildPlayerDetails(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    return Container(
+      width: 40.dp,
+      height: 40.dp,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: AppColors.primaryGradient,
+        ),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          player.name[0].toUpperCase(),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 20.dp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayerDetails() {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            player.name,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18, // Fixed size instead of responsive
+              fontWeight: FontWeight.w600,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            player.isSettled ? 'Settled' : 'Active',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 14, // Fixed size
             ),
           ),
         ],
@@ -255,7 +182,126 @@ class PlayerCard extends StatelessWidget {
     );
   }
 
-  Future<void> _showRemoveEntryConfirmation(BuildContext context) async {
+  Widget _buildTransactionInfo() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.dp),
+      child: Column(
+        children: [
+          _buildTransactionRow(
+            icon: Icons.shopping_cart,
+            label: 'Buy-ins',
+            value: '${player.buyIns}x \$${buyInAmount.toStringAsFixed(2)}',
+            valueColor: AppColors.textPrimary,
+          ),
+          if (player.loans != 0) ...[
+            SizedBox(height: 8.dp),
+            _buildTransactionRow(
+              icon: Icons.account_balance_wallet,
+              label: 'Loans',
+              value:
+                  '${player.loans > 0 ? '+' : ''}\$${player.loans.toStringAsFixed(2)}',
+              valueColor:
+                  player.loans > 0 ? AppColors.success : AppColors.error,
+              iconColor: player.loans > 0 ? AppColors.success : AppColors.error,
+            ),
+          ],
+          if (player.isSettled) ...[
+            SizedBox(height: 8.dp),
+            _buildTransactionRow(
+              icon: Icons.money_off,
+              label: 'Cash-out',
+              value: '\$${player.cashOut?.toStringAsFixed(2) ?? ''}',
+              valueColor: AppColors.textPrimary,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color valueColor,
+    Color? iconColor,
+  }) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          color: iconColor ?? AppColors.textSecondary,
+          size: 16, // Fixed size
+        ),
+        SizedBox(width: 8.dp),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14, // Fixed size
+          ),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 14, // Fixed size
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSlideBackground({
+    required Alignment alignment,
+    required Color color,
+    required IconData icon,
+    required String label,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(12.dp),
+      ),
+      margin: EdgeInsets.only(bottom: 8.dp),
+      child: Row(
+        mainAxisAlignment: alignment == Alignment.centerLeft
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.end,
+        children: [
+          if (alignment == Alignment.centerLeft) ...[
+            SizedBox(width: 20.dp),
+            Icon(icon, color: Colors.white),
+            SizedBox(width: 8.dp),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: AppSizes.fontM.sp,
+              ),
+            ),
+          ] else ...[
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: AppSizes.fontM.sp,
+              ),
+            ),
+            SizedBox(width: 8.dp),
+            Icon(icon, color: Colors.white),
+            SizedBox(width: 20.dp),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<bool?> _showRemoveEntryConfirmation(BuildContext context) async {
     HapticFeedback.heavyImpact();
 
     final result = await showDialog<bool>(
@@ -266,7 +312,7 @@ class PlayerCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSizes.radiusXL.dp),
         ),
         title: Text(
-          'Remove Entry?',
+          'Remove Re-Entry?',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: AppSizes.fontXL.sp,
@@ -376,52 +422,90 @@ class PlayerCard extends StatelessWidget {
       ),
     );
 
-    if (result == true && onRemoveEntry != null) {
-      onRemoveEntry!();
-    }
+    return result;
   }
 
-  // Add options menu to player info section
-  Widget _buildOptionsMenu(BuildContext context, bool isPlayerSettled) {
-    return PopupMenuButton<String>(
-      icon: Icon(
-        Icons.more_vert,
-        color: AppColors.textSecondary,
-        size: AppSizes.iconM.dp,
-      ),
-      onSelected: (String choice) {
-        if (choice == 'remove') {
-          _showRemoveEntryConfirmation(context);
-        }
-      },
-      itemBuilder: (BuildContext context) => [
-        PopupMenuItem<String>(
-          value: 'remove',
-          enabled: !isPlayerSettled && player.buyIns > 0,
-          child: Row(
+  Widget _buildActionButtons(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(16.dp),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final buttonWidth = (constraints.maxWidth - 8.dp) / 2;
+          return Row(
             children: [
-              Icon(
-                Icons.remove_circle_outline,
-                color: AppColors.error,
-                size: AppSizes.iconM.dp,
+              SizedBox(
+                width: buttonWidth,
+                child: _buildActionButton(
+                  label: 'Re-Entry',
+                  icon: Icons.refresh,
+                  color: AppColors.secondary,
+                  isDisabled: isSettled,
+                  onPressed: onReEntry == null
+                      ? null
+                      : () {
+                          _showReEntryConfirmation(context);
+                        },
+                ),
               ),
               SizedBox(width: 8.dp),
-              Text(
-                'Remove Entry',
-                style: TextStyle(
-                  color: AppColors.error,
-                  fontSize: AppSizes.fontM.sp,
+              SizedBox(
+                width: buttonWidth,
+                child: _buildActionButton(
+                  label: 'Settle',
+                  icon: Icons.check_circle,
+                  color: AppColors.success,
+                  onPressed: isSettled
+                      ? null
+                      : () =>
+                          _showSettleDialog(context), // Use the new parameter
+                  isDisabled: isSettled, // Use the new parameter
                 ),
               ),
             ],
-          ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    VoidCallback? onPressed,
+    bool isDisabled = false,
+  }) {
+    return ElevatedButton(
+      onPressed: isDisabled ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isDisabled ? AppColors.backgroundDark : color,
+        foregroundColor: AppColors.textPrimary,
+        disabledForegroundColor: AppColors.textSecondary,
+        disabledBackgroundColor: AppColors.backgroundDark,
+        padding: EdgeInsets.symmetric(vertical: 12.dp),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.dp),
         ),
-      ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16.dp),
+          SizedBox(width: 8.dp),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14.dp,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Future<void> _showReEntryConfirmation(BuildContext context) async {
-    HapticFeedback.heavyImpact(); // Add haptic feedback
+    HapticFeedback.heavyImpact();
 
     final result = await showDialog<bool>(
       context: context,
@@ -438,38 +522,38 @@ class PlayerCard extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        content: RichText(
-          text: TextSpan(
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: AppSizes.fontM.sp,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: AppSizes.fontM.sp,
+                ),
+                children: [
+                  const TextSpan(text: 'Add another buy-in for '),
+                  TextSpan(
+                    text: player.name,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const TextSpan(text: ' with amount '),
+                  TextSpan(
+                    text: '\$${buyInAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const TextSpan(text: '?'),
+                ],
+              ),
             ),
-            children: [
-              const TextSpan(
-                text: 'Add another buy-in for ',
-              ),
-              TextSpan(
-                text: player.name,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const TextSpan(
-                text: ' with amount ',
-              ),
-              TextSpan(
-                text: '\$${buyInAmount.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const TextSpan(
-                text: '?',
-              ),
-            ],
-          ),
+          ],
         ),
         actions: [
           TextButton(
@@ -517,81 +601,14 @@ class PlayerCard extends StatelessWidget {
     );
 
     if (result == true && onReEntry != null) {
-      onReEntry!();
+      onReEntry!(buyInAmount);
     }
-  }
-
-// Update _buildActionButton to handle constrained space
-  Widget _buildActionButton({
-    required String label,
-    required IconData icon,
-    required Color color,
-    VoidCallback? onPressed,
-    bool isDisabled = false,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.dp),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: isDisabled
-            ? null
-            : () {
-                HapticFeedback.lightImpact();
-                if (onPressed != null) {
-                  onPressed();
-                }
-              },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isDisabled ? Colors.grey[800] : color,
-          foregroundColor: AppColors.textPrimary,
-          disabledBackgroundColor: Colors.grey[800],
-          padding: EdgeInsets.symmetric(
-            vertical: 12.dp,
-            horizontal: 4.dp,
-          ),
-          elevation: isDisabled ? 0 : 4,
-          shadowColor: color.withOpacity(0.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.dp),
-          ),
-        ),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 18.dp,
-              ),
-              SizedBox(width: 4.dp),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14.dp,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Future<void> _showLoanDialog(BuildContext context) async {
     String? selectedRecipientId;
     final amountController = TextEditingController();
 
-    // Get all players except the current player (lender)
     final recipients = Provider.of<GameProvider>(context, listen: false)
             .currentGame
             ?.players
@@ -616,7 +633,6 @@ class PlayerCard extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        // Use StatefulBuilder for dropdown
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppColors.backgroundMedium,
           shape: RoundedRectangleBorder(
@@ -634,7 +650,6 @@ class PlayerCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Recipient Dropdown
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8.dp),
@@ -676,7 +691,6 @@ class PlayerCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 16.dp),
-              // Amount Input
               CustomTextField(
                 controller: amountController,
                 label: 'Amount',
@@ -686,7 +700,6 @@ class PlayerCard extends StatelessWidget {
                 fontSize: AppSizes.fontL.sp,
                 prefixIconSize: AppSizes.iconM.dp,
                 style: const TextStyle(
-                  // Add this
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -733,7 +746,6 @@ class PlayerCard extends StatelessWidget {
     );
 
     if (result != null && onLoan != null) {
-      // We need to modify PlayerCard's onLoan type to handle both recipientId and amount
       onLoan!(result['recipientId'] as String, result['amount']);
     }
   }
@@ -789,7 +801,6 @@ class PlayerCard extends StatelessWidget {
               prefixIconSize: AppSizes.iconM.dp,
               autofocus: true,
               style: const TextStyle(
-                // Add this
                 color: AppColors.textPrimary,
               ),
             ),

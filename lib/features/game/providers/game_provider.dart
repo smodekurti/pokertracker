@@ -220,7 +220,7 @@ class GameProvider with ChangeNotifier {
         id: const Uuid().v4(),
         playerId: playerId,
         type: TransactionType.reEntry,
-        amount: _currentGame!.buyInAmount,
+        amount: _currentGame!.buyInAmount, // Always use game's buy-in amount
         timestamp: DateTime.now(),
         note: 'Re-entry',
       );

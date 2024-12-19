@@ -32,4 +32,17 @@ class DatabaseInitializer {
     await deleteDatabaseFile();
     await initDatabase();
   }
+
+  static Future<void> _createTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS game_members (
+        id TEXT PRIMARY KEY,
+        gameId TEXT,
+        // buyInAmount field removed or kept with default value
+        // ...existing fields...
+        FOREIGN KEY (gameId) REFERENCES games (id)
+      )
+    ''');
+    // ...existing code...
+  }
 }

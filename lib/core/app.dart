@@ -57,6 +57,7 @@ class PokerTrackerApp extends StatelessWidget {
       ],
       child: Builder(
         builder: (context) => MaterialApp.router(
+          debugShowCheckedModeBanner: false,
           builder: (context, child) {
             return MediaQuery(
               data: MediaQuery.of(context).copyWith(
