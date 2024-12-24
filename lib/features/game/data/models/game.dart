@@ -33,11 +33,14 @@ class Game {
 
   // Calculate total pot including all buy-ins, re-entries, and loans
   double get totalPot {
-    double total = 0;
-    total +=
-        players.fold(0.0, (sum, player) => sum + (player.buyIns * buyInAmount));
-    total += players.fold(0.0, (sum, player) => sum + player.loans);
-    return total;
+    final uniquePlayers = <String>{};
+    return players.fold(0.0, (sum, player) {
+      final originalId = player.originalPlayerId ?? player.id;
+      if (!uniquePlayers.contains(originalId)) {
+        uniquePlayers.add(originalId);
+      }
+      return sum + (player.buyIns * buyInAmount) + player.loans;
+    });
   }
 
   // Calculate cut amount
@@ -255,6 +258,26 @@ class Game {
 
   bool hasUnsettledLoans() {
     return players.any((p) => p.loans > 0 && !p.isSettled);
+  }
+
+  // Add method to handle rejoins
+  List<Player> getPlayerRejoins(String originalPlayerId) {
+    return players
+        .where((p) =>
+            p.originalPlayerId == originalPlayerId || p.id == originalPlayerId)
+        .toList();
+  }
+
+  // Add method to get consolidated player stats
+  Map<String, dynamic> getConsolidatedPlayerStats(String originalPlayerId) {
+    final allEntries = getPlayerRejoins(originalPlayerId);
+
+    return {
+      'totalBuyIns': allEntries.fold(0, (sum, p) => sum + p.buyIns),
+      'totalLoans': allEntries.fold(0.0, (sum, p) => sum + p.loans),
+      'totalCashOut': allEntries.fold(0.0, (sum, p) => sum + (p.cashOut ?? 0)),
+      'entries': allEntries.length,
+    };
   }
 
   // For debugging
