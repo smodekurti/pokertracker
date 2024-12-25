@@ -41,10 +41,9 @@ class PlayerSettlementDisplay {
 
 class _ActiveGameScreenState extends State<ActiveGameScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  late TabController _tabController; // Add late keyword
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  double loanAmount = 0;
   String? selectedPlayerId;
 
   bool _isInitialized = false;
@@ -556,9 +555,9 @@ class _ActiveGameScreenState extends State<ActiveGameScreen>
           buyInAmount: game.buyInAmount,
           onReEntry: _isProcessing
               ? null
-              : (_) {
-                  _handleReEntry(gameProvider, player);
-                  return game.buyInAmount; // Return the buy-in amount
+              : (_) async {
+                  await _handleReEntry(gameProvider, player);
+                  return game.buyInAmount;
                 },
           onLoan: _isProcessing
               ? null
@@ -566,8 +565,8 @@ class _ActiveGameScreenState extends State<ActiveGameScreen>
                   _handleLoan(gameProvider, player, recipientId, amount),
           onSettle: _isProcessing
               ? null
-              : (amount) {
-                  _handleSettle(gameProvider, player, amount);
+              : (amount) async {
+                  await _handleSettle(gameProvider, player, amount);
                   return amount;
                 },
           onRemoveEntry: () => _handleRemoveEntry(player),
