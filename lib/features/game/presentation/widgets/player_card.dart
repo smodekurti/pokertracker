@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
@@ -31,16 +33,16 @@ class PlayerCard extends StatefulWidget {
 }
 
 class _PlayerCardState extends State<PlayerCard> {
-  bool _isLoading = false;
-
   @override
   Widget build(BuildContext context) {
     final gameProvider = Provider.of<GameProvider>(context);
     final activePlayers =
         gameProvider.currentGame?.players.where((p) => !p.isSettled).length ??
             0;
-    final minActivePlayers =
+    const minActivePlayers =
         2; // Define the minimum number of active players required
+
+    final totalIn = widget.player.calculateTotalIn(widget.buyInAmount);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: AppSizes.paddingXS),
@@ -97,41 +99,14 @@ class _PlayerCardState extends State<PlayerCard> {
                   ],
                 ),
               ),
-              if (!widget.isSettled && activePlayers >= minActivePlayers)
-                PopupMenuButton(
-                  icon: const Icon(Icons.more_vert,
-                      color: AppColors.textSecondary),
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'loan',
-                      child: Row(
-                        children: [
-                          Icon(Icons.swap_horiz, color: Colors.purple[400]),
-                          const SizedBox(width: AppSizes.spacingS),
-                          const Text('Loan'),
-                        ],
-                      ),
-                    ),
-                    if (widget.player.buyIns > 1)
-                      const PopupMenuItem(
-                        value: 'remove',
-                        child: Row(
-                          children: [
-                            Icon(Icons.remove_circle, color: AppColors.error),
-                            SizedBox(width: AppSizes.spacingS),
-                            Text('Remove Entry'),
-                          ],
-                        ),
-                      ),
-                  ],
-                  onSelected: (value) {
-                    if (value == 'loan') {
-                      _showLoanDialog();
-                    } else if (value == 'remove') {
-                      widget.onRemoveEntry?.call();
-                    }
-                  },
+              Text(
+                '\$${totalIn.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: AppSizes.fontM,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
+              ),
             ],
           ),
           const SizedBox(height: AppSizes.spacingM),
@@ -154,6 +129,45 @@ class _PlayerCardState extends State<PlayerCard> {
               ),
             ],
           ),
+          if (widget.player.loans > 0) ...[
+            const SizedBox(height: AppSizes.spacingS),
+            Row(
+              children: [
+                const Icon(Icons.attach_money,
+                    color: AppColors.warning, size: 20),
+                const SizedBox(width: AppSizes.spacingXS),
+                const Text(
+                  'Loans',
+                  style: TextStyle(color: AppColors.warning),
+                ),
+                const Spacer(),
+                Text(
+                  '\$${widget.player.loans.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSizes.spacingS),
+            ...widget.player.loansDetails.map((loan) {
+              final lender = gameProvider.currentGame?.players
+                  .firstWhere((p) => p.id == loan.lenderId);
+              return Row(
+                children: [
+                  const SizedBox(width: AppSizes.spacingL),
+                  Text(
+                    'From: ${lender?.name ?? 'Unknown'}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: AppSizes.fontS,
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ],
           if (!widget.isSettled) ...[
             const SizedBox(height: AppSizes.spacingM),
             Row(
@@ -209,6 +223,51 @@ class _PlayerCardState extends State<PlayerCard> {
                     ),
                   ),
                 ),
+                const SizedBox(width: AppSizes.spacingM),
+                PopupMenuButton(
+                  icon: const Icon(Icons.more_horiz,
+                      color: AppColors.textSecondary),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'loan',
+                      child: Row(
+                        children: [
+                          Icon(Icons.swap_horiz, color: Colors.purple[400]),
+                          const SizedBox(width: AppSizes.spacingS),
+                          const Text(
+                            'Loan',
+                            style: TextStyle(color: AppColors.textPrimary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (widget.player.buyIns > 1)
+                      const PopupMenuItem(
+                        value: 'remove',
+                        child: Row(
+                          children: [
+                            Icon(Icons.remove_circle, color: AppColors.error),
+                            SizedBox(width: AppSizes.spacingS),
+                            Text(
+                              'Remove Entry',
+                              style: TextStyle(color: AppColors.textPrimary),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                  ),
+                  color: AppColors.backgroundMedium,
+                  onSelected: (value) {
+                    if (value == 'loan') {
+                      _showLoanDialog();
+                    } else if (value == 'remove') {
+                      widget.onRemoveEntry?.call();
+                    }
+                  },
+                ),
               ],
             ),
           ],
@@ -218,7 +277,6 @@ class _PlayerCardState extends State<PlayerCard> {
   }
 
   Future<void> _handleReEntry() async {
-    setState(() => _isLoading = true);
     try {
       final amount = await widget.onReEntry!(widget.buyInAmount);
       if (mounted) {
@@ -244,9 +302,7 @@ class _PlayerCardState extends State<PlayerCard> {
           ),
         );
       }
-    } finally {
-      setState(() => _isLoading = false);
-    }
+    } finally {}
   }
 
   Future<void> _handleSettle() async {
@@ -492,7 +548,6 @@ class _PlayerCardState extends State<PlayerCard> {
     );
 
     if (result != null && widget.onSettle != null) {
-      setState(() => _isLoading = true);
       try {
         await widget.onSettle!(result);
         if (mounted) {
@@ -518,9 +573,7 @@ class _PlayerCardState extends State<PlayerCard> {
             ),
           );
         }
-      } finally {
-        setState(() => _isLoading = false);
-      }
+      } finally {}
     }
   }
 }
