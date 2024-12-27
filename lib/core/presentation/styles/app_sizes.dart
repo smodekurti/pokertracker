@@ -5,6 +5,7 @@ class AppSizes {
   static const double minScreenHeight = 812;
 
   // Base paddings
+  static const double paddingXXS = 2; // Added
   static const double paddingXS = 4;
   static const double paddingS = 8;
   static const double paddingM = 12;
@@ -23,12 +24,14 @@ class AppSizes {
   static const double font3XL = 24;
 
   // Base icon sizes
+  static const double iconXS = 12; // Added
   static const double iconS = 16;
   static const double iconM = 24;
   static const double iconL = 32;
   static const double iconXL = 48;
 
   // Base border radius
+  static const double radiusXS = 2; // Added
   static const double radiusS = 4;
   static const double radiusM = 8;
   static const double radiusL = 12;
@@ -36,6 +39,7 @@ class AppSizes {
   static const double radius2XL = 24;
 
   // Base spacing
+  static const double spacingXXS = 2; // Added
   static const double spacingXS = 4;
   static const double spacingS = 8;
   static const double spacingM = 12;

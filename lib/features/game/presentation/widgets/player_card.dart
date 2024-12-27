@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
 import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
-import 'package:poker_tracker/core/utils/ui_helpers.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/shared/widgets/custom_text_field.dart';
@@ -37,219 +35,183 @@ class _PlayerCardState extends State<PlayerCard> {
 
   @override
   Widget build(BuildContext context) {
-    final totalIn = widget.player.calculateTotalIn(widget.buyInAmount);
+    final gameProvider = Provider.of<GameProvider>(context);
+    final activePlayers =
+        gameProvider.currentGame?.players.where((p) => !p.isSettled).length ??
+            0;
+    final minActivePlayers =
+        2; // Define the minimum number of active players required
 
     return Container(
-      margin: EdgeInsets.only(bottom: AppSizes.paddingM.dp),
+      margin: const EdgeInsets.symmetric(vertical: AppSizes.paddingXS),
+      padding: const EdgeInsets.all(AppSizes.paddingM),
       decoration: BoxDecoration(
-        color: widget.isSettled
-            ? AppColors.backgroundMedium.withOpacity(0.5)
-            : AppColors.backgroundMedium,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM.dp),
-        border: widget.isSettled
-            ? Border.all(color: AppColors.success.withOpacity(0.3))
-            : null,
+        color: AppColors.backgroundDark,
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
       ),
       child: Column(
         children: [
-          // Player Info Section
-          Padding(
-            padding: EdgeInsets.all(AppSizes.paddingM.dp),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Row(
+            children: [
+              // Avatar circle with initial
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    widget.player.name[0].toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: AppSizes.fontXL,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSizes.spacingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        widget.player.name,
-                        style: TextStyle(
-                          fontSize: AppSizes.fontXL.sp,
-                          fontWeight: FontWeight.bold,
-                          color: widget.isSettled
-                              ? AppColors.textPrimary.withOpacity(0.7)
-                              : AppColors.textPrimary,
-                        ),
+                    Text(
+                      widget.player.name,
+                      style: const TextStyle(
+                        fontSize: AppSizes.fontL,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    if (widget.isSettled)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppSizes.paddingS.dp,
-                          vertical: AppSizes.paddingXS.dp,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSizes.radiusS.dp),
-                        ),
+                    Text(
+                      widget.isSettled ? 'Settled' : 'Active',
+                      style: TextStyle(
+                        fontSize: AppSizes.fontS,
+                        color: widget.isSettled
+                            ? AppColors.success
+                            : const Color(0xFF4ADE80),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!widget.isSettled && activePlayers >= minActivePlayers)
+                PopupMenuButton(
+                  icon: const Icon(Icons.more_vert,
+                      color: AppColors.textSecondary),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'loan',
+                      child: Row(
+                        children: [
+                          Icon(Icons.swap_horiz, color: Colors.purple[400]),
+                          const SizedBox(width: AppSizes.spacingS),
+                          const Text('Loan'),
+                        ],
+                      ),
+                    ),
+                    if (widget.player.buyIns > 1)
+                      const PopupMenuItem(
+                        value: 'remove',
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.check_circle,
-                              color: AppColors.success,
-                              size: AppSizes.iconS.dp,
-                            ),
-                            SizedBox(width: AppSizes.spacingXS.dp),
-                            Text(
-                              'Settled',
-                              style: TextStyle(
-                                color: AppColors.success,
-                                fontSize: AppSizes.fontS.sp,
-                              ),
-                            ),
+                            Icon(Icons.remove_circle, color: AppColors.error),
+                            SizedBox(width: AppSizes.spacingS),
+                            Text('Remove Entry'),
                           ],
                         ),
                       ),
                   ],
+                  onSelected: (value) {
+                    if (value == 'loan') {
+                      _showLoanDialog();
+                    } else if (value == 'remove') {
+                      widget.onRemoveEntry?.call();
+                    }
+                  },
                 ),
-                SizedBox(height: AppSizes.spacingS.dp),
-                // Stats row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStatItem(
-                      label: 'Buy-ins',
-                      value: widget.player.buyIns.toString(),
-                      icon: Icons.attach_money,
-                    ),
-                    _buildStatItem(
-                      label: 'Total In',
-                      value: '\$${totalIn.toStringAsFixed(2)}',
-                      icon: Icons.account_balance_wallet,
-                    ),
-                    if (widget.player.loans > 0)
-                      _buildStatItem(
-                        label: 'Loans',
-                        value: '\$${widget.player.loans.toStringAsFixed(2)}',
-                        icon: Icons.swap_horiz,
-                        color: AppColors.warning,
+            ],
+          ),
+          const SizedBox(height: AppSizes.spacingM),
+          Row(
+            children: [
+              const Icon(Icons.shopping_cart,
+                  color: AppColors.textSecondary, size: 20),
+              const SizedBox(width: AppSizes.spacingXS),
+              const Text(
+                'Buy-ins',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const Spacer(),
+              Text(
+                '${widget.player.buyIns}x \$${widget.buyInAmount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          if (!widget.isSettled) ...[
+            const SizedBox(height: AppSizes.spacingM),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: activePlayers >= minActivePlayers &&
+                            widget.onReEntry != null
+                        ? () => _handleReEntry()
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B82F6),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: AppSizes.paddingM),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusM),
                       ),
-                    if (widget.player.cashOut != null)
-                      _buildStatItem(
-                        label: 'Cash Out',
-                        value: '\$${widget.player.cashOut!.toStringAsFixed(2)}',
-                        icon: Icons.payments,
-                        color: AppColors.success,
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.refresh, size: 20),
+                        SizedBox(width: AppSizes.spacingXS),
+                        Text('Re-Entry'),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSizes.spacingM),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: activePlayers >= minActivePlayers &&
+                            widget.onSettle != null
+                        ? () => _handleSettle()
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4ADE80),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: AppSizes.paddingM),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusM),
                       ),
-                  ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, size: 20),
+                        SizedBox(width: AppSizes.spacingXS),
+                        Text('Settle'),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-          // Action Buttons Section - Only show if not settled
-          if (!widget.isSettled) ...[
-            Divider(
-              color: Colors.grey[700],
-              height: 1,
-            ),
-            Padding(
-              padding: EdgeInsets.all(AppSizes.paddingS.dp),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildActionButton(
-                    icon: Icons.add_circle,
-                    label: 'Re-entry',
-                    onPressed: widget.onReEntry != null
-                        ? () => _handleReEntry()
-                        : null,
-                  ),
-                  _buildActionButton(
-                    icon: Icons.swap_horiz,
-                    label: 'Loan',
-                    onPressed:
-                        widget.onLoan != null ? () => _showLoanDialog() : null,
-                  ),
-                  _buildActionButton(
-                    icon: Icons.payments,
-                    label: 'Settle',
-                    onPressed: widget.onSettle != null
-                        ? () => _showSettleDialog()
-                        : null,
-                  ),
-                  if (widget.player.buyIns > 1)
-                    _buildActionButton(
-                      icon: Icons.remove_circle,
-                      label: 'Remove Entry',
-                      onPressed: widget.onRemoveEntry,
-                      color: AppColors.error,
-                    ),
-                ],
-              ),
-            ),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem({
-    required String label,
-    required String value,
-    required IconData icon,
-    Color? color,
-  }) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          color: color ?? AppColors.textSecondary,
-          size: AppSizes.iconM.dp,
-        ),
-        SizedBox(height: AppSizes.spacingXS.dp),
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: AppSizes.fontS.sp,
-          ),
-        ),
-        SizedBox(height: AppSizes.spacingXS.dp),
-        Text(
-          value,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: AppSizes.fontM.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    VoidCallback? onPressed,
-    Color? color,
-  }) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color ?? AppColors.primary,
-        foregroundColor: AppColors.textPrimary,
-        padding: EdgeInsets.symmetric(
-          vertical: AppSizes.paddingS.dp,
-          horizontal: AppSizes.paddingM.dp,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusS.dp),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: AppSizes.iconM.dp),
-          SizedBox(height: AppSizes.spacingXS.dp),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: AppSizes.fontS.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
         ],
       ),
     );
@@ -259,28 +221,36 @@ class _PlayerCardState extends State<PlayerCard> {
     setState(() => _isLoading = true);
     try {
       final amount = await widget.onReEntry!(widget.buyInAmount);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Re-entry successful: \$${amount.toStringAsFixed(2)}',
-            style: TextStyle(fontSize: AppSizes.fontM.sp),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Re-entry successful: \$${amount.toStringAsFixed(2)}',
+              style: const TextStyle(fontSize: AppSizes.fontS),
+            ),
+            backgroundColor: AppColors.success,
           ),
-          backgroundColor: AppColors.success,
-        ),
-      );
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Re-entry failed: $e',
-            style: TextStyle(fontSize: AppSizes.fontM.sp),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Re-entry failed: $e',
+              style: const TextStyle(fontSize: AppSizes.fontS),
+            ),
+            backgroundColor: AppColors.error,
           ),
-          backgroundColor: AppColors.error,
-        ),
-      );
+        );
+      }
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _handleSettle() async {
+    await _showSettleDialog();
   }
 
   Future<void> _showLoanDialog() async {
@@ -295,15 +265,17 @@ class _PlayerCardState extends State<PlayerCard> {
         [];
 
     if (recipients.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'No available players to loan to',
-            style: TextStyle(fontSize: AppSizes.fontM.sp),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No available players to loan to',
+              style: TextStyle(fontSize: AppSizes.fontS),
+            ),
+            backgroundColor: AppColors.error,
           ),
-          backgroundColor: AppColors.error,
-        ),
-      );
+        );
+      }
       return;
     }
 
@@ -314,13 +286,13 @@ class _PlayerCardState extends State<PlayerCard> {
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppColors.backgroundMedium,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusXL.dp),
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
           ),
           title: Text(
             'Loan from ${widget.player.name}',
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textPrimary,
-              fontSize: AppSizes.fontXL.sp,
+              fontSize: AppSizes.fontL,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -330,18 +302,19 @@ class _PlayerCardState extends State<PlayerCard> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.dp),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusS),
                   color: AppColors.backgroundDark,
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 12.dp),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSizes.paddingS),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedRecipientId,
-                    hint: Text(
+                    hint: const Text(
                       'Select Player',
                       style: TextStyle(
                         color: AppColors.textSecondary,
-                        fontSize: AppSizes.fontM.sp,
+                        fontSize: AppSizes.fontS,
                       ),
                     ),
                     dropdownColor: AppColors.backgroundDark,
@@ -353,9 +326,9 @@ class _PlayerCardState extends State<PlayerCard> {
                         value: recipient.id,
                         child: Text(
                           recipient.name,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.textPrimary,
-                            fontSize: AppSizes.fontM.sp,
+                            fontSize: AppSizes.fontS,
                           ),
                         ),
                       );
@@ -368,15 +341,15 @@ class _PlayerCardState extends State<PlayerCard> {
                   ),
                 ),
               ),
-              SizedBox(height: 16.dp),
+              const SizedBox(height: AppSizes.spacingS),
               CustomTextField(
                 controller: amountController,
                 label: 'Amount',
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.attach_money,
-                fontSize: AppSizes.fontL.sp,
-                prefixIconSize: AppSizes.iconM.dp,
+                fontSize: AppSizes.fontM,
+                prefixIconSize: AppSizes.iconS,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                 ),
@@ -386,11 +359,11 @@ class _PlayerCardState extends State<PlayerCard> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(
+              child: const Text(
                 'Cancel',
                 style: TextStyle(
                   color: AppColors.textSecondary,
-                  fontSize: AppSizes.fontM.sp,
+                  fontSize: AppSizes.fontS,
                 ),
               ),
             ),
@@ -410,10 +383,10 @@ class _PlayerCardState extends State<PlayerCard> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.textPrimary,
               ),
-              child: Text(
+              child: const Text(
                 'Confirm',
                 style: TextStyle(
-                  fontSize: AppSizes.fontM.sp,
+                  fontSize: AppSizes.fontS,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -437,13 +410,13 @@ class _PlayerCardState extends State<PlayerCard> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.backgroundMedium,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusXL.dp),
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
         ),
         title: Text(
           'Settle ${widget.player.name}',
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textPrimary,
-            fontSize: AppSizes.fontXL.sp,
+            fontSize: AppSizes.fontL,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -453,30 +426,30 @@ class _PlayerCardState extends State<PlayerCard> {
           children: [
             Text(
               'Total Buy-in: \$${(widget.player.calculateTotalIn(widget.buyInAmount)).toStringAsFixed(2)}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontSize: AppSizes.fontM.sp,
+                fontSize: AppSizes.fontS,
               ),
             ),
             if (widget.player.loans > 0) ...[
-              SizedBox(height: 4.dp),
+              const SizedBox(height: AppSizes.spacingXXS),
               Text(
                 'Loans: \$${widget.player.loans.toStringAsFixed(2)}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.warning,
-                  fontSize: AppSizes.fontM.sp,
+                  fontSize: AppSizes.fontS,
                 ),
               ),
             ],
-            SizedBox(height: 16.dp),
+            const SizedBox(height: AppSizes.spacingS),
             CustomTextField(
               controller: controller,
               label: 'Cash-out Amount',
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               prefixIcon: Icons.attach_money,
-              fontSize: AppSizes.fontL.sp,
-              prefixIconSize: AppSizes.iconM.dp,
+              fontSize: AppSizes.fontM,
+              prefixIconSize: AppSizes.iconS,
               autofocus: true,
               style: const TextStyle(
                 color: AppColors.textPrimary,
@@ -487,11 +460,11 @@ class _PlayerCardState extends State<PlayerCard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
+            child: const Text(
               'Cancel',
               style: TextStyle(
                 color: AppColors.textSecondary,
-                fontSize: AppSizes.fontM.sp,
+                fontSize: AppSizes.fontS,
               ),
             ),
           ),
@@ -506,10 +479,10 @@ class _PlayerCardState extends State<PlayerCard> {
               backgroundColor: AppColors.success,
               foregroundColor: AppColors.textPrimary,
             ),
-            child: Text(
+            child: const Text(
               'Settle',
               style: TextStyle(
-                fontSize: AppSizes.fontM.sp,
+                fontSize: AppSizes.fontS,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -519,7 +492,35 @@ class _PlayerCardState extends State<PlayerCard> {
     );
 
     if (result != null && widget.onSettle != null) {
-      widget.onSettle!(result);
+      setState(() => _isLoading = true);
+      try {
+        await widget.onSettle!(result);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Successfully settled ${widget.player.name}',
+                style: const TextStyle(fontSize: AppSizes.fontS),
+              ),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to settle: $e',
+                style: const TextStyle(fontSize: AppSizes.fontS),
+              ),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 }
