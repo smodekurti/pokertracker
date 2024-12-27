@@ -64,6 +64,13 @@ class Player {
     );
   }
 
+  // Add loansDetails getter
+  List<LoanDetail> get loansDetails {
+    // This should return a list of LoanDetail objects
+    // For now, returning an empty list as a placeholder
+    return [];
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -129,6 +136,13 @@ class Player {
   String toString() {
     return 'Player(id: $id, name: $name, baseName: $baseName, buyIns: $buyIns, loans: $loans, cashOut: $cashOut, isSettled: $isSettled, rejoinCount: $rejoinCount, originalPlayerId: $originalPlayerId)';
   }
+}
+
+class LoanDetail {
+  final String lenderId;
+  final double amount;
+
+  LoanDetail({required this.lenderId, required this.amount});
 }
 
 extension PlayerExtensions on Player {
