@@ -35,14 +35,19 @@ class PlayerCard extends StatefulWidget {
 class _PlayerCardState extends State<PlayerCard> {
   @override
   Widget build(BuildContext context) {
-    final gameProvider = Provider.of<GameProvider>(context);
+    final gameProvider = Provider.of<GameProvider>(context, listen: true);
     final activePlayers =
         gameProvider.currentGame?.players.where((p) => !p.isSettled).length ??
             0;
-    const minActivePlayers =
-        2; // Define the minimum number of active players required
+    const minActivePlayers = 2;
 
+    // Get current state of the player
+    final currentPlayer = gameProvider.currentGame?.players
+        .firstWhere((p) => p.id == widget.player.id);
+    final isSettled = currentPlayer?.isSettled ?? widget.isSettled;
     final totalIn = widget.player.calculateTotalIn(widget.buyInAmount);
+    final totalWinnings =
+        widget.player.calculateTotalWinnings(widget.buyInAmount);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: AppSizes.paddingXS),
@@ -53,9 +58,9 @@ class _PlayerCardState extends State<PlayerCard> {
       ),
       child: Column(
         children: [
+          // Player Info Section
           Row(
             children: [
-              // Avatar circle with initial
               Container(
                 width: 48,
                 height: 48,
@@ -79,23 +84,71 @@ class _PlayerCardState extends State<PlayerCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.player.name,
-                      style: const TextStyle(
-                        fontSize: AppSizes.fontL,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          widget.player.name,
+                          style: const TextStyle(
+                            fontSize: AppSizes.fontL,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        if (widget.player.originalPlayerId != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.refresh,
+                                  size: 12,
+                                  color: AppColors.warning,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Rejoin',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.warning,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      widget.isSettled ? 'Settled' : 'Active',
+                      isSettled ? 'Settled' : 'Active',
                       style: TextStyle(
                         fontSize: AppSizes.fontS,
-                        color: widget.isSettled
+                        color: isSettled
                             ? AppColors.success
                             : const Color(0xFF4ADE80),
                       ),
                     ),
+                    if (isSettled)
+                      Text(
+                        'Total Winnings: \$${totalWinnings.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: AppSizes.fontS,
+                          color: totalWinnings >= 0
+                              ? AppColors.success
+                              : AppColors.error,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -109,6 +162,8 @@ class _PlayerCardState extends State<PlayerCard> {
               ),
             ],
           ),
+
+          // Buy-ins Section
           const SizedBox(height: AppSizes.spacingM),
           Row(
             children: [
@@ -129,6 +184,8 @@ class _PlayerCardState extends State<PlayerCard> {
               ),
             ],
           ),
+
+          // Loans Section
           if (widget.player.loans > 0) ...[
             const SizedBox(height: AppSizes.spacingS),
             Row(
@@ -150,25 +207,10 @@ class _PlayerCardState extends State<PlayerCard> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSizes.spacingS),
-            ...widget.player.loansDetails.map((loan) {
-              final lender = gameProvider.currentGame?.players
-                  .firstWhere((p) => p.id == loan.lenderId);
-              return Row(
-                children: [
-                  const SizedBox(width: AppSizes.spacingL),
-                  Text(
-                    'From: ${lender?.name ?? 'Unknown'}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: AppSizes.fontS,
-                    ),
-                  ),
-                ],
-              );
-            }),
           ],
-          if (!widget.isSettled) ...[
+
+          // Action Buttons Section - Only show for active players
+          if (!isSettled) ...[
             const SizedBox(height: AppSizes.spacingM),
             Row(
               children: [
