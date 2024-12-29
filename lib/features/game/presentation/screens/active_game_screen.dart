@@ -12,6 +12,8 @@ import 'package:poker_tracker/features/game/presentation/widgets/player_card.dar
 import 'package:poker_tracker/features/game/presentation/widgets/settlement_dialog.dart';
 import 'package:poker_tracker/features/game/providers/game_provider.dart';
 import 'package:poker_tracker/shared/widgets/loading_overlay.dart';
+import 'package:uuid/uuid.dart';
+import 'package:poker_tracker/core/presentation/styles/app_text_styles.dart';
 
 class ActiveGameScreen extends StatefulWidget {
   const ActiveGameScreen({
@@ -570,10 +572,27 @@ class _ActiveGameScreenState extends State<ActiveGameScreen>
                   return amount;
                 },
           onRemoveEntry: () => _handleRemoveEntry(player),
+          // Add this
           isSettled: settlementState.isPlayerSettled(player.id),
         );
       },
     );
+  }
+
+// Add this method
+  Future<void> _handleRejoin(GameProvider gameProvider, Player player) async {
+    setState(() => _isProcessing = true);
+    try {
+      await gameProvider.handleRejoin(player.id);
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
   }
 
   Future<void> _handleReEntry(GameProvider gameProvider, Player player) async {
@@ -810,6 +829,16 @@ class _ActiveGameScreenState extends State<ActiveGameScreen>
               fontSize: AppSizes.font2XL.sp,
               fontWeight: FontWeight.bold,
             ),
+          ),
+          Spacer(),
+          TextButton.icon(
+            icon:
+                Icon(Icons.add, color: AppColors.primary), // Change icon color
+            label: Text(
+              'Add Player',
+              style: TextStyle(color: AppColors.primary),
+            ),
+            onPressed: () => _showAddPlayerDialog(context),
           ),
         ],
       ),
@@ -1140,6 +1169,81 @@ class _ActiveGameScreenState extends State<ActiveGameScreen>
     final currentTotal =
         state.totalSettled - (state.settlements[playerId] ?? 0.0);
     return state.totalPot - currentTotal;
+  }
+
+  Future<void> _showAddPlayerDialog(BuildContext context) async {
+    final nameController = TextEditingController();
+    final gameProvider = Provider.of<GameProvider>(context, listen: false);
+
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundMedium,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        ),
+        title: Text(
+          'Add Player',
+          style: AppTextStyles.headingMedium
+              .copyWith(color: AppColors.textPrimary),
+        ),
+        content: TextField(
+          controller: nameController,
+          decoration: InputDecoration(
+            labelText: 'Player Name',
+            labelStyle: TextStyle(color: AppColors.textSecondary),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.textSecondary),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+          ),
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              if (name.isNotEmpty) {
+                Navigator.pop(context, name);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textPrimary,
+            ),
+            child: Text('Add'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final newPlayer = Player(
+        id: Uuid().v4(),
+        name: result,
+      );
+
+      try {
+        await gameProvider.addPlayer(context, newPlayer);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Player added successfully')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add player: $e')),
+        );
+      }
+    }
   }
 
   @override

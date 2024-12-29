@@ -9,6 +9,9 @@ class Player {
   final int rejoinCount; // New field to track number of rejoins
   final String?
       originalPlayerId; // Reference to original player if this is a rejoin
+  final int previousBuyIns;
+  final double previousLoans;
+  final double? previousCashOut;
 
   const Player({
     required this.id,
@@ -20,6 +23,9 @@ class Player {
     this.isSettled = false,
     this.rejoinCount = 0,
     this.originalPlayerId,
+    this.previousBuyIns = 0,
+    this.previousLoans = 0,
+    this.previousCashOut,
   }) : baseName = baseName ?? name; // Use name as baseName if not provided
 
   double calculateTotalIn(double buyInAmount) {
@@ -36,6 +42,9 @@ class Player {
     bool? isSettled,
     int? rejoinCount,
     String? originalPlayerId,
+    int? previousBuyIns,
+    double? previousLoans,
+    double? previousCashOut,
   }) {
     return Player(
       id: id ?? this.id,
@@ -47,20 +56,31 @@ class Player {
       isSettled: isSettled ?? this.isSettled,
       rejoinCount: rejoinCount ?? this.rejoinCount,
       originalPlayerId: originalPlayerId ?? this.originalPlayerId,
+      previousBuyIns: previousBuyIns ?? this.previousBuyIns,
+      previousLoans: previousLoans ?? this.previousLoans,
+      previousCashOut: previousCashOut ?? this.previousCashOut,
     );
   }
 
   // Add method to create a rejoin instance
   Player createRejoin() {
+    if (!isSettled) {
+      throw Exception('Player must be settled before rejoining.');
+    }
     final originalId = originalPlayerId ?? id;
+    final newRejoinCount = rejoinCount + 1;
     return copyWith(
       id: '${originalId}_rejoin_${DateTime.now().millisecondsSinceEpoch}',
-      rejoinCount: rejoinCount + 1,
+      name: '$baseName (Rejoin $newRejoinCount)',
+      rejoinCount: newRejoinCount,
       originalPlayerId: originalId,
       isSettled: false,
       cashOut: null,
       buyIns: 1,
       loans: 0,
+      previousBuyIns: buyIns,
+      previousLoans: loans,
+      previousCashOut: cashOut,
     );
   }
 
@@ -82,6 +102,9 @@ class Player {
       'isSettled': isSettled,
       'rejoinCount': rejoinCount,
       'originalPlayerId': originalPlayerId,
+      'previousBuyIns': previousBuyIns,
+      'previousLoans': previousLoans,
+      'previousCashOut': previousCashOut,
     };
   }
 
@@ -99,10 +122,33 @@ class Player {
       isSettled: map['isSettled'] as bool? ?? false,
       rejoinCount: map['rejoinCount'] as int? ?? 0,
       originalPlayerId: map['originalPlayerId'] as String?,
+      previousBuyIns: map['previousBuyIns'] as int? ?? 0,
+      previousLoans: (map['previousLoans'] as num?)?.toDouble() ?? 0.0,
+      previousCashOut: (map['previousCashOut'] as num?)?.toDouble(),
     );
   }
 
   factory Player.fromJson(Map<String, dynamic> json) => Player.fromMap(json);
+
+  double calculateTotalWinnings(double buyInAmount) {
+    if (!isSettled) return 0;
+
+    double totalWinnings = 0;
+
+    // Calculate current session winnings
+    final currentTotalIn = calculateTotalIn(buyInAmount);
+    final currentWinnings = (cashOut ?? 0) - currentTotalIn;
+    totalWinnings += currentWinnings;
+
+    // Add previous session winnings if this is a rejoin
+    if (rejoinCount > 0 && previousCashOut != null) {
+      final previousTotalIn = (previousBuyIns * buyInAmount) + previousLoans;
+      final previousWinnings = previousCashOut! - previousTotalIn;
+      totalWinnings += previousWinnings;
+    }
+
+    return totalWinnings;
+  }
 
   @override
   bool operator ==(Object other) {
@@ -116,7 +162,10 @@ class Player {
         other.cashOut == cashOut &&
         other.isSettled == isSettled &&
         other.rejoinCount == rejoinCount &&
-        other.originalPlayerId == originalPlayerId;
+        other.originalPlayerId == originalPlayerId &&
+        other.previousBuyIns == previousBuyIns &&
+        other.previousLoans == previousLoans &&
+        other.previousCashOut == previousCashOut;
   }
 
   @override
@@ -129,12 +178,15 @@ class Player {
         cashOut.hashCode ^
         isSettled.hashCode ^
         rejoinCount.hashCode ^
-        originalPlayerId.hashCode;
+        originalPlayerId.hashCode ^
+        previousBuyIns.hashCode ^
+        previousLoans.hashCode ^
+        previousCashOut.hashCode;
   }
 
   @override
   String toString() {
-    return 'Player(id: $id, name: $name, baseName: $baseName, buyIns: $buyIns, loans: $loans, cashOut: $cashOut, isSettled: $isSettled, rejoinCount: $rejoinCount, originalPlayerId: $originalPlayerId)';
+    return 'Player(id: $id, name: $name, baseName: $baseName, buyIns: $buyIns, loans: $loans, cashOut: $cashOut, isSettled: $isSettled, rejoinCount: $rejoinCount, originalPlayerId: $originalPlayerId, previousBuyIns: $previousBuyIns, previousLoans: $previousLoans, previousCashOut: $previousCashOut)';
   }
 }
 

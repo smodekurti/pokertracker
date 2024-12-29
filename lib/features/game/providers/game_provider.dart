@@ -1,10 +1,15 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:poker_tracker/features/game/data/models/game.dart';
 import 'package:poker_tracker/features/game/data/models/player.dart';
 import 'package:poker_tracker/features/game/data/models/poker_transaction.dart';
 import 'package:poker_tracker/features/game/data/repositories/game_repository.dart';
 import 'package:uuid/uuid.dart';
+import 'package:collection/collection.dart'; // Import the collection package
+import 'package:poker_tracker/core/presentation/styles/app_text_styles.dart';
+import 'package:poker_tracker/core/presentation/styles/app_colors.dart';
+import 'package:poker_tracker/core/presentation/styles/app_sizes.dart';
 
 class GameProvider with ChangeNotifier {
   final GameRepository _repository;
@@ -185,17 +190,239 @@ class GameProvider with ChangeNotifier {
         );
   }
 
-  Future<void> addPlayer(Player player) async {
+  // Helper method to check if a player has any active related sessions
+  bool hasActiveRelatedSessions(String playerId) {
+    if (_currentGame == null) return false;
+
+    // Get all related players (either this player or players sharing same original ID)
+    final relatedPlayers = _currentGame!.players.where((p) {
+      // If this is the player themselves
+      if (p.id == playerId) return true;
+
+      // If this player is a rejoin of the target player
+      if (p.originalPlayerId == playerId) return true;
+
+      // If they share the same original player
+      if (p.originalPlayerId != null &&
+          p.originalPlayerId ==
+              _currentGame!.players
+                  .firstWhere((op) => op.id == playerId)
+                  .originalPlayerId) return true;
+
+      return false;
+    }).toList();
+
+    print('Related players for ID $playerId:');
+    for (var p in relatedPlayers) {
+      print(
+          '- ${p.name} (ID: ${p.id}, Original ID: ${p.originalPlayerId}, Settled: ${p.isSettled})');
+    }
+
+    // Check if any related player has an active session
+    return relatedPlayers.any((p) => !p.isSettled);
+  }
+
+  Future<void> handleRejoin(String playerId) async {
     try {
       if (_currentGame == null) throw Exception('No active game');
       _setLoading(true);
-      await _repository.addPlayer(_currentGame!.id, player);
+
+      print('Handling rejoin for player ID: $playerId');
+
+      // Find the original player who wants to rejoin
+      final settledPlayer = _currentGame!.players.firstWhere(
+        (p) => p.id == playerId && p.isSettled,
+        orElse: () => throw Exception('Player not found or not settled'),
+      );
+
+      // Check for any active related sessions
+      if (hasActiveRelatedSessions(playerId)) {
+        throw Exception('Player already has an active session');
+      }
+
+      // Create rejoin player instance
+      final rejoinPlayer = settledPlayer.createRejoin();
+
+      print('Creating rejoin player:');
+      print('Original ID: ${rejoinPlayer.originalPlayerId}');
+      print('New Player ID: ${rejoinPlayer.id}');
+      print('Player Name: ${rejoinPlayer.name}');
+      print('Rejoin Count: ${rejoinPlayer.rejoinCount}');
+
+      await _repository.addPlayer(_currentGame!.id, rejoinPlayer);
+
+      // Add initial buy-in transaction
+      final transaction = PokerTransaction(
+        id: const Uuid().v4(),
+        playerId: rejoinPlayer.id,
+        type: TransactionType.buyIn,
+        amount: _currentGame!.buyInAmount,
+        timestamp: DateTime.now(),
+        note: 'Rejoin session initial buy-in',
+      );
+
+      await _repository.addTransaction(_currentGame!.id, transaction);
     } catch (e) {
       _setError(e.toString());
       rethrow;
     } finally {
       _setLoading(false);
     }
+  }
+
+  Future<void> addPlayer(BuildContext context, Player player) async {
+    try {
+      if (_currentGame == null) throw Exception('No active game');
+      _setLoading(true);
+
+      // If this is a new player (not a rejoin), check if they share name with any existing player
+      if (player.originalPlayerId == null) {
+        final existingPlayer = _currentGame!.players
+            .firstWhereOrNull((p) => p.name == player.name);
+
+        if (existingPlayer != null) {
+          final action = await _showDuplicateNameDialog(context, player.name);
+          if (action == 'change') {
+            final newName = await _showChangeNameDialog(context);
+            if (newName != null && newName.isNotEmpty) {
+              player = player.copyWith(name: newName);
+            } else {
+              throw Exception('Player name cannot be empty');
+            }
+          } else if (action == 'rejoin') {
+            if (!existingPlayer.isSettled) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Player must be settled before rejoining'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+            // Check for active related sessions before allowing rejoin
+            if (hasActiveRelatedSessions(existingPlayer.id)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('This player already has an active session'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+            player = existingPlayer.createRejoin();
+          } else {
+            throw Exception('Action cancelled');
+          }
+        }
+      }
+
+      await _repository.addPlayer(_currentGame!.id, player);
+      _currentGame = await _repository.getGame(_currentGame!.id).first;
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<String?> _showDuplicateNameDialog(
+      BuildContext context, String name) async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundMedium,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        ),
+        title: Text(
+          'Duplicate Name',
+          style: AppTextStyles.headingMedium
+              .copyWith(color: AppColors.textPrimary),
+        ),
+        content: Text(
+          'A player with the name "$name" already exists.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'change'),
+            child: Text(
+              'Change Name',
+              style: TextStyle(color: AppColors.primary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'rejoin'),
+            child: Text(
+              'Rejoin',
+              style: TextStyle(color: AppColors.primary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<String?> _showChangeNameDialog(BuildContext context) async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundMedium,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        ),
+        title: Text(
+          'Change Name',
+          style: AppTextStyles.headingMedium
+              .copyWith(color: AppColors.textPrimary),
+        ),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: 'New Name',
+            labelStyle: TextStyle(color: AppColors.textSecondary),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.textSecondary),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+          ),
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textPrimary,
+            ),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> addTransaction(PokerTransaction transaction) async {
@@ -500,6 +727,62 @@ class GameProvider with ChangeNotifier {
   void _clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  Future<void> _showAddPlayerDialog(BuildContext context) async {
+    final nameController = TextEditingController();
+
+    await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundMedium,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        ),
+        title: Text(
+          'Add Player',
+          style: AppTextStyles.headingMedium
+              .copyWith(color: AppColors.textPrimary),
+        ),
+        content: TextField(
+          controller: nameController,
+          decoration: InputDecoration(
+            labelText: 'Player Name',
+            labelStyle: TextStyle(color: AppColors.textSecondary),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.textSecondary),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+          ),
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              if (name.isNotEmpty) {
+                Navigator.pop(context, name);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textPrimary,
+            ),
+            child: Text('Add'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
