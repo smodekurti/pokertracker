@@ -1,6 +1,29 @@
-key.properties
-.jks
-.env.production
-.env.development
+# Flutter and Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# Generated Firebase configuration
+lib/firebase_options.dart
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+
+# Secrets and signing
 .env
-.env.staging
+.env.*
+!.env.example
+key.properties
+*.jks
+*.keystore
+
+# IDE and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
